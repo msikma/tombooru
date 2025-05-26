@@ -1,0 +1,11 @@
+First of all, thank you for considering contributing to Tombooru! We're aiming to build a complete archive of all fanart related to the [[Tomba!]] franchise. Every piece helps build our collection and we appreciate your help.
+
+== Quick upload guide ==
+
+Use the form below to upload a new file to the imageboard. Pick a file and then fill out the form below.
+
+All uploads are logged on the [[Special:RecentChanges|Recent Changes]] and [[Special:NewFiles|New Files]] pages. Before uploading, make sure to check out the [[Special:Tombooru/page/Help/Content_guide|content guide]]. Not sure how to tag your post? The [[Special:Tombooru/page/Help/How_to_tag|how to tag]] page can help. And, of course, you could look at other posts and generally copy what they do.
+
+You can always edit all of this information later on, after your upload has gone through.
+
+Please try to upload images in as high quality as possible. If you're not sure how to grab the highest quality image from a particular website, ask around on [https://discord.com/invite/zx45UfVP5t Discord] and we'll help you out.

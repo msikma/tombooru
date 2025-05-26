@@ -1,0 +1,55 @@
+{
+  "name": "Tombooru",
+  "type": "extension",
+  "version": "1.0",
+  "author": "Dada78641",
+  "license-name": "MIT",
+  "descriptionmsg": "tombooru-desc",
+  "requires": {
+    "MediaWiki": ">= 1.43.0"
+  },
+  "config": {
+    "TombooruEnableExplicitContent": {
+      "value": false,
+      "description": "Allows \"questionable\" and \"explicit\" ratings to be used or shown."
+    },
+    "TombooruGenAIPolicy": {
+      "value": 0,
+      "description": "Whether AI generated content is permitted and displayed by default."
+    }
+  },
+  "namespaces": [
+    {
+      "id": 7500,
+      "constant": "NS_TOMBOORU_DATA",
+      "name": "Tombooru_data",
+      "subpages": true,
+      "capitallinkoverride": false
+    },
+    {
+      "id": 7501,
+      "constant": "NS_TOMBOORU_DATA_TALK",
+      "name": "Tombooru_data_talk",
+      "subpages": true,
+      "capitallinkoverride": false
+    }
+  ],
+  "AutoloadNamespaces": {
+    "Tombooru\\": "includes/",
+    "Tombooru\\API\\": "includes/APIMethods"
+  },
+  "MessagesDirs": {
+    "Tombooru": ["i18n"]
+  },
+  "SpecialPages": {
+    "Tombooru": "Tombooru\\SpecialTombooru"
+  },
+  "Hooks": {
+    "BeforePageDisplay": "Tombooru\\Hooks::onBeforePageDisplay",
+    "SkinTemplateNavigation::Universal": "Tombooru\\Hooks::onSkinTemplateNavigation",
+    "SkinAddFooterLinks": "Tombooru\\Hooks::onSkinAddFooterLinks",
+    "SkinBuildSidebar": "Tombooru\\Hooks::onSkinBuildSidebar",
+    "LoadExtensionSchemaUpdates": "Tombooru\\Hooks::onLoadExtensionSchemaUpdates"
+  },
+  "manifest_version": 2
+}

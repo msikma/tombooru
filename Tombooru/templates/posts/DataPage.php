@@ -1,0 +1,42 @@
+<?= Template::getComponent('MediaSidebarPanel', ['post' => $post]); ?>
+
+<div class="tombooru-page page-detail subpage-view">
+  <h1>Post ID: <?= $post['pageID']; ?></h1>
+  <p>This file was uploaded on <time datetime="<?= $post['createdAt'] ?>"><?= Template::formatTimestamp($post['createdAt']); ?></time>.</p>
+  <h2>History</h2>
+  <p>TODO.</p>
+  <h2>Basic information</h2>
+  <?php
+    $explicitContentAllowed = Settings::explicitContentIsEnabled();
+    $genAIPolicy = Settings::getGenAIPolicy();
+    $rows = [
+      ['ID', 'id'],
+      ['Page ID', 'pageID'],
+      ['Page namespace', 'pageNamespace'],
+      ['Filename', 'file.name'],
+      ['Size', 'file.size'],
+      ['Width', 'file.media.original.width'],
+      ['Height', 'file.media.original.height'],
+      ['MIME type', 'file.mime'],
+      $explicitContentAllowed ? ['Rating', 'data.rating'] : null,
+      ['License', 'data.license'],
+      ['Status', 'data.status'],
+      $genAIPolicy > 0 ? ['Is AI generated', 'data.isAIGenerated'] : null,
+      ['Description page ID', 'description.pageID'],
+      ['Description page namespace', 'description.pageNamespace'],
+      ['Favorites', 'ranking.favorites'],
+      ['Score', 'ranking.score'],
+      ['Upvotes', 'ranking.upvotes'],
+      ['Downvotes', 'ranking.downvotes'],
+      ['Poster ID', 'poster.id'],
+      ['Poster name', 'poster.name'],
+      ['Approver ID', 'approver.id'],
+      ['Approver name', 'approver.name'],
+      ['Created at', 'createdAt'],
+      ['Updated at', 'updatedAt'],
+    ];
+  ?>
+  <?= Template::getComponent('DataTable', ['rows' => $rows, 'data' => $post]); ?>
+  <h2>Data</h2>
+  <pre id="tombooru_page_data"><?= htmlspecialchars(Template::formatJSON($post)); ?></pre>
+</div>
