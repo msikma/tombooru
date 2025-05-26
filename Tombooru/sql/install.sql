@@ -60,7 +60,7 @@ create table /*_*/tombooru_tag (
   index (description_page_id),
   index (description_page_namespace),
   index page_namespace_id (description_page_namespace, description_page_id),
-  index (count)
+  index (count),
   index (created_at)
 );
 
