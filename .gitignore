@@ -1,0 +1,11 @@
+# Development files
+_source/
+_test/
+_test*.*
+_todo.txt
+/.scratch
+
+# OS
+.DS_Store
+Icon[^M]
+Thumbs.db
