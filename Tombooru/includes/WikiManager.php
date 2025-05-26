@@ -562,6 +562,7 @@ class WikiManager {
     $user = self::getUserData($userID);
     $context = RequestContext::getMain();
     $options = ParserOptions::newFromUser($user['user']);
+    $options->setSuppressSectionEditLinks(true);
     $parser = MediaWikiServices::getInstance()->getParser();
     return $parser->parse($code, $context->getTitle(), $options)->getText();
   }
