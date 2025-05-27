@@ -49,6 +49,20 @@
         'entityData' => $entityData,
       ]); ?>
 
+      <?= Template::getComponent('Form/FieldTextMultiline', [
+        'title' => 'Notes',
+        'key' => 'notes',
+        'name' => 'notes',
+        'rows' => 6,
+        'inputHelp' => '
+          <p>Also wiki markup.</p>
+        ',
+        'help' => '
+          <p>Describe any information needed for users to understand how and when to use this tag, if applicable.</p>
+        ',
+        'entityData' => $entityData,
+      ]); ?>
+
       <div class="group">
         <div class="group-inner">
           <div class="group-content">

@@ -9,7 +9,7 @@
       <th><?= $key; ?></th>
       <td>
         <?php if ($type === 'string'): ?>
-          <?= $value; ?>
+          <?= is_null($value) ? '<em>null</em>' : $value; ?>
         <?php elseif ($type === 'boolean'): ?>
           <?= boolval($value) ? 'true' : 'false'; ?>
         <?php endif; ?>

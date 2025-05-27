@@ -13,6 +13,7 @@
       ['Type', 'type'],
       ['Count', 'count'],
       ['Description page ID', 'description.pageID'],
+      ['Notes page ID', 'notes.pageID'],
       ['Created at', 'createdAt'],
     ];
   ?>

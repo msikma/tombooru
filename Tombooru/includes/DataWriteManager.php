@@ -40,10 +40,10 @@ class DataWriteManager {
    * 
    * This either edits an existing post, or creates a new one.
    * 
-   * Since posts have wiki pages as description, we will do the update in several steps.
-   * First, we update all data except for the description. If that succeeds, we will
-   * create or edit the description page. If that succeeds, we'll update the post data
-   * to include the new description page ID and namespace.
+   * Since posts have wiki pages as description and notes, we will do the update in several steps.
+   * First, we update all data except for the text sections. If that succeeds, we will
+   * create or edit the pages for the text sections. Then if that succeeds, we'll update the post data
+   * to include the new description and notes page IDs.
    */
   public static function updatePostData($pageData, $postUpdateData) {
     if (self::hasAnyErrors($postUpdateData)) {
@@ -55,18 +55,18 @@ class DataWriteManager {
     // Get existing post data. If not found, we'll insert a new post.
     $postID = self::ensurePost($pageID, $postUpdateData);
 
-    // First, update all data *except* for the description.
-    // This is because we don't yet know if updating the description results
+    // First, update all data *except* for the text.
+    // This is because we don't yet know if updating the text pages will result
     // in a new page being created on the wiki.
     DB::updatePostData($pageID, $postUpdateData);
 
     // Post descriptions and notes are stored as pages in the imageboard namespace.
-    // These pages are created as needed (as soon as they are no longer empty),
+    // These pages are created as needed (as soon as the user posts some content),
     // and stored on e.g. "Tombooru_data:Post_description/1" (where 1 is the post ID, not the page ID).
-    foreach (['description'] as $subpage) {
+    foreach (['description', 'notes'] as $subpage) {
       if (!empty($postUpdateData[$subpage])) {
         $id = WikiManager::updateEntityPageData('post', $postID, $subpage, $postUpdateData[$subpage]);
-        DB::updatePostTextPage($postID, $id);
+        DB::updatePostTextPage($postID, $id, $subpage);
       }
     }
     
@@ -76,7 +76,7 @@ class DataWriteManager {
   /**
    * Performs a write operation on a single tag.
    * 
-   * Same as with posts, we edit the tag description page separately.
+   * Same as with posts, we edit the tag description/notes pages separately.
    */
   public static function updateTagData($tagID, $tagUpdateData) {
     if (self::hasAnyErrors($tagUpdateData)) {
@@ -84,13 +84,15 @@ class DataWriteManager {
     }
     $tagUpdateData = DataHelper::removeUpdateErrorStubs($tagUpdateData);
     
-    // First, update all data *except* for the description.
+    // First, update all data *except* for the text.
     DB::updateTagData($tagID, $tagUpdateData);
 
     // Post descriptions are stored e.g. "Tombooru_data/Tag_description/1" pages.
-    if (!empty($tagUpdateData['description'])) {
-      $id = WikiManager::updateEntityPageData('tag', $tagID, 'description', $tagUpdateData['description']);
-      DB::updateTagDescriptionPage($tagID, $id);
+    foreach (['description', 'notes'] as $subpage) {
+      if (!empty($tagUpdateData[$subpage])) {
+        $id = WikiManager::updateEntityPageData('tag', $tagID, $subpage, $tagUpdateData[$subpage]);
+        DB::updateTagTextPage($tagID, $id, $subpage);
+      }
     }
     
     return true;
@@ -148,6 +150,7 @@ class DataWriteManager {
     $data = [];
     $data['filename'] = @$post['file']['name'];
     $data['description'] = @$post['description']['content'];
+    $data['notes'] = @$post['notes']['content'];
     $data['tags'] = self::sanitizeTags(DataHelper::convertTagsToPlaintext(@$post['tags']));
     $data['sources'] = self::sanitizeSources(DataHelper::convertSourcesToPlaintext(@$post['sources']));
     $data['rating'] = @$post['data']['rating'];
@@ -165,6 +168,7 @@ class DataWriteManager {
     $data = [];
     $data['filename'] = '';
     $data['description'] = '';
+    $data['notes'] = '';
     $data['tags'] = [];
     $data['sources'] = [];
     $data['rating'] = null;
@@ -197,6 +201,7 @@ class DataWriteManager {
     $data = [];
     $data['filename'] = self::sanitizeDestinationFilename(@$params['destination_filename'], $source->getName());
     $data['description'] = self::sanitizeDescription(trim($params['description']));
+    $data['notes'] = self::sanitizeDescription(trim($params['notes']));
     $data['tags'] = self::sanitizeTags(trim($params['tags']));
     $data['sources'] = self::sanitizeSources(trim($params['sources']));
     $data['rating'] = self::sanitizeRating(@$params['rating']);
@@ -214,6 +219,7 @@ class DataWriteManager {
     $data = [];
     $data['name'] = @$tag['name'];
     $data['description'] = @$tag['description']['content'];
+    $data['notes'] = @$tag['notes']['content'];
     $data['tagType'] = @$tag['type'];
     
     return DataHelper::addUpdateErrorStubs($data);
@@ -226,6 +232,7 @@ class DataWriteManager {
     $data = [];
     $data['name'] = '';
     $data['description'] = '';
+    $data['notes'] = '';
     $data['tagType'] = '';
 
     return DataHelper::addUpdateErrorStubs($data);
@@ -246,6 +253,7 @@ class DataWriteManager {
     $data = [];
     $data['name'] = self::sanitizeTagName(trim($params['name']));
     $data['description'] = self::sanitizeDescription(trim($params['description']));
+    $data['notes'] = self::sanitizeDescription(trim($params['notes']));
     $data['tagType'] = self::sanitizeTagType(trim($params['tag-type']));
 
     return $data;

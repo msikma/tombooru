@@ -30,6 +30,20 @@
   'entityData' => $entityData,
 ]); ?>
 
+<?= Template::getComponent('Form/FieldTextMultiline', [
+  'title' => 'Notes',
+  'key' => 'notes',
+  'name' => 'notes',
+  'rows' => 6,
+  'inputHelp' => '
+    <p>Also wiki markup.</p>
+  ',
+  'help' => '
+    <p>Additional notes. Add whatever other important information there is. Not displayed if left empty.</p>
+  ',
+  'entityData' => $entityData,
+]); ?>
+
 <?= Template::getComponent('Form/FieldTextSources', [
   'title' => 'Sources',
   'key' => 'sources',

@@ -70,10 +70,24 @@ class URL {
   }
 
   /**
+   * Returns a URL to a post's notes page on the wiki.
+   */
+  public static function getPostNotesPageURL($postID) {
+    return self::getWikiURL('Tombooru_data:Post_notes/'.$postID);
+  }
+
+  /**
    * Returns a URL to a tag's description page on the wiki.
    */
   public static function getTagDescriptionPageURL($tagID) {
     return self::getWikiURL('Tombooru_data:Tag_description/'.$tagID);
+  }
+
+  /**
+   * Returns a URL to a tag's notes page on the wiki.
+   */
+  public static function getTagNotesPageURL($tagID) {
+    return self::getWikiURL('Tombooru_data:Tag_notes/'.$tagID);
   }
 
   /**

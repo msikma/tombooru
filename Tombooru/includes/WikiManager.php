@@ -265,18 +265,6 @@ class WikiManager {
   }
 
   /**
-   * Returns a file's description page content.
-   * 
-   * This 
-   */
-  public static function getFileDescriptionPage($pageID) {
-    if (!isset($pageID)) {
-      return null;
-    }
-
-  }
-
-  /**
    * Retrieves user data for a given user.
    * 
    * If the user ID is not passed, the current user is checked.
@@ -510,11 +498,20 @@ class WikiManager {
     if (empty($pageTitle)) {
       // todo
     }
-    $pageContent = self::makeTitleWikiContent($pageTitle, $postData['description']);
+    $pageContent = self::makeTitleWikiContent($pageTitle, self::getFilePageDescriptionWikiText());
     $page = $wikiPageFactory->newFromTitle($pageTitle);
     $page->doUserEditContent($pageContent, $postData['author'], $postData['reason'], EDIT_NEW);
 
     return $page;
+  }
+
+  /**
+   * Returns content for an uploaded file's description.
+   * 
+   * This is only displayed on the File: namespace page, not on the imageboard.
+   */
+  private static function getFilePageDescriptionWikiText() {
+    return '[[Category:Tombooru Images]]';
   }
 
   /**

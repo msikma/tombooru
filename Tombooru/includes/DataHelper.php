@@ -192,6 +192,7 @@ class DataHelper {
         'name' => $tag['name'],
         'count' => $tag['count'],
         'description' => @$tag['description'],
+        'notes' => @$tag['notes'],
       ];
     }
     return array_values($tagTypes);

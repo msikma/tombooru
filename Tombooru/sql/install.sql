@@ -11,6 +11,7 @@ create table /*_*/tombooru_post (
 create table /*_*/tombooru_post_data (
   id int unsigned auto_increment primary key,   -- fk to tombooru_post.id
   description_page_id int unsigned null,        -- page that stores the description
+  notes_page_id int unsigned null,              -- page that stores the notes
   rating enum('safe', 'questionable', 'explicit') null,
   favorites int unsigned not null default 0,
   score int signed not null default 0,          -- upvotes minus downvotes
@@ -37,6 +38,7 @@ create table /*_*/tombooru_post_data (
   index (score),
   index (is_ai_generated),
   index (description_page_id),
+  index (notes_page_id),
   constraint fk_post_data_post foreign key (id) references /*_*/tombooru_post(id) on delete cascade
 );
 
@@ -45,11 +47,13 @@ create table /*_*/tombooru_tag (
   name varchar(300) not null unique,            -- case insensitive, case preserving
   type varchar(300) not null default '',        -- free input; the extension recognizes certain special terms here
   description_page_id int unsigned null,        -- page that stores the description
+  notes_page_id int unsigned null,              -- page that stores the notes
   count int unsigned default 0,
   created_at timestamp not null default current_timestamp,
 
   index (type),
   index (description_page_id),
+  index (notes_page_id),
   index (count),
   index (created_at)
 );

@@ -51,6 +51,7 @@ class DB {
         'p.created_at',
         'pd.id as post_data_id',
         'pd.description_page_id',
+        'pd.notes_page_id',
         'pd.rating',
         'pd.favorites',
         'pd.score',
@@ -265,8 +266,8 @@ class DB {
         self::updateTagCount($tagsToIncrement, 1, $dbw, $scope);
         self::updateTagCount($tagsToDecrement, -1, $dbw, $scope);
         
-        // At this point, we've updated everything *except* the new page description.
-        // What we'll do is commit this transaction for now. The description page
+        // At this point, we've updated everything *except* the new page description and notes content.
+        // What we'll do is commit this transaction for now. The description/notes pages
         // should then be updated (using the WikiManager), which could potentially result in
         // a new page ID and namespace, which we'll then save to this post's data as well
         // using self::updatePostTextPage().
@@ -586,14 +587,15 @@ class DB {
   }
 
   /**
-   * Sets the tag page ID and namespace for a given tag.
+   * Sets the description/notes page ID for a given tag.
    */
-  public static function updateTagDescriptionPage($tagID, $descriptionPageID) {
+  public static function updateTagTextPage($tagID, $textPageID, $textType) {
     $dbw = self::instPrimaryDB();
+    $col = $textType.'_page_id';
     $dbw->newUpdateQueryBuilder()
       ->update('tombooru_tag')
       ->set([
-        'description_page_id' => $descriptionPageID,
+        "$col" => $textPageID,
       ])
       ->where(['id' => $tagID])
       ->caller(__METHOD__)
@@ -601,16 +603,17 @@ class DB {
   }
 
   /**
-   * Sets the description page ID and namespace for a given post.
+   * Sets the description/notes page ID for a given post.
    * 
    * This takes a post ID, not a page ID.
    */
-  public static function updatePostTextPage($postID, $descriptionPageID) {
+  public static function updatePostTextPage($postID, $textPageID, $textType) {
     $dbw = self::instPrimaryDB();
+    $col = $textType.'_page_id';
     $dbw->newUpdateQueryBuilder()
       ->update('tombooru_post_data')
       ->set([
-        'description_page_id' => $descriptionPageID,
+        "$col" => $textPageID,
       ])
       ->where(['id' => $postID])
       ->caller(__METHOD__)
@@ -662,6 +665,7 @@ class DB {
         't.name',
         't.type',
         't.description_page_id',
+        't.notes_page_id',
         't.count',
         't.created_at',
       ])
@@ -693,6 +697,7 @@ class DB {
         't.name',
         't.type',
         't.description_page_id',
+        't.notes_page_id',
         't.created_at',
         't.count',
       ])
@@ -1096,6 +1101,7 @@ class DB {
         't.name',
         't.type',
         't.description_page_id',
+        't.notes_page_id',
         't.count',
         't.created_at',
       ])

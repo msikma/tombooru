@@ -391,8 +391,9 @@ class DataReadManager {
     // Get the actual file object this is pointing to.
     $file = WikiManager::getFileData($post['page_id']);
 
-    // Get the description page content, if in existence.
+    // Get the description and notes page content, if in existence.
     $descriptionPageData = WikiManager::getPageData($post['description_page_id']);
+    $notesPageData = WikiManager::getPageData($post['notes_page_id']);
 
     // Get the poster and approver.
     $posterData = WikiManager::getUserBasicData($post['poster_user_id']);
@@ -415,6 +416,7 @@ class DataReadManager {
         'isAIGenerated' => boolval($post['is_ai_generated']),
       ],
       'description' => $descriptionPageData,
+      'notes' => $notesPageData,
       'poster' => $posterData,
       'approver' => $approverData,
       'media' => [
@@ -470,9 +472,9 @@ class DataReadManager {
   /**
    * Returns tags data.
    * 
-   * The description is optionally included (it's only displayed on the tag's detail page).
+   * The description and notes are optionally included (they're only displayed on the tag's detail page).
    */
-  private static function collectPostTagsData($tags, $includeDescription = false) {
+  private static function collectPostTagsData($tags, $includeText = false) {
     $postTags = [];
     foreach ($tags as $tag) {
       $postTag = [
@@ -482,9 +484,11 @@ class DataReadManager {
         'count' => intval($tag['count']),
         'createdAt' => Template::sqlTimestampToISO($tag['created_at']),
       ];
-      if ($includeDescription) {
+      if ($includeText) {
         $description = WikiManager::getPageData($tag['description_page_id']);
+        $notes = WikiManager::getPageData($tag['notes_page_id']);
         $postTag['description'] = $description;
+        $postTag['notes'] = $notes;
       }
       $postTags[] = $postTag;
     }

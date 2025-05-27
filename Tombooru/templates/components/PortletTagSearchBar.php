@@ -3,7 +3,6 @@
 <div class="vector-menu-content-static">
   <form action="<?= URL::getURL('/tags') ?>" data-tombooru-component="SidebarTagSearchBar">
     <div class="search-input">
-      
       <input
         type="search"
         name="search"

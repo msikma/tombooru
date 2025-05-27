@@ -22,6 +22,7 @@
       ['Status', 'data.status'],
       $genAIPolicy > 0 ? ['Is AI generated', 'data.isAIGenerated', 'boolean'] : null,
       ['Description page ID', 'description.pageID'],
+      ['Notes page ID', 'notes.pageID'],
       ['Favorites', 'ranking.favorites'],
       ['Score', 'ranking.score'],
       ['Upvotes', 'ranking.upvotes'],
