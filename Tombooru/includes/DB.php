@@ -60,8 +60,7 @@ class DB {
         'pd.downvotes',
         'pd.media_type',
         'pd.license',
-        'pd.source_post_date',
-        'pd.source_archive_url',
+        'pd.original_publication_date',
         'pd.updated_at',
         'pd.status',
         'pd.is_ai_generated',
@@ -251,6 +250,8 @@ class DB {
         $query = $dbw->newUpdateQueryBuilder()
           ->update('tombooru_post_data')
           ->set(['license' => $data['license']])
+          ->set(['original_publication_date' => $data['original_publication_date']])
+          ->set(['is_ai_generated' => $data['is_ai_generated']])
           ->where(['id' => $id])
           ->caller($scope)
           ->execute();

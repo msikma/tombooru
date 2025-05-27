@@ -402,6 +402,7 @@ class DataReadManager {
         'rating' => $post['rating'],
         'license' => $post['license'],
         'status' => $post['status'],
+        'originalPublicationDate' => Template::sqlTimestampToISO($post['original_publication_date']),
         'isAIGenerated' => boolval($post['is_ai_generated']),
       ],
       'description' => $descriptionPageData,
@@ -409,10 +410,6 @@ class DataReadManager {
       'approver' => $approverData,
       'media' => [
         'type' => $post['media_type'],
-      ],
-      'source' => [
-        'postDate' => Template::sqlTimestampToISO($post['source_post_date']),
-        'archiveURL' => $post['source_archive_url'],
       ],
       'ranking' => [
         'favorites' => intval($post['favorites']),
@@ -426,17 +423,24 @@ class DataReadManager {
       'updatedAt' => Template::sqlTimestampToISO($post['updated_at']),
     ];
 
+    return $postData;
+  }
+
+  /**
+   * Sanitizes the post data before displaying it to the end user.
+   */
+  public static function sanitizePostData($post) {
     // If we don't permit explicit content, remove the rating value altogether.
     if (!Settings::explicitContentIsEnabled()) {
-      unset($postData['data']['rating']);
+      unset($post['data']['rating']);
     }
 
     // Same for AI content.
     if (Settings::getGenAIPolicy() === 0) {
-      unset($postData['data']['isAIGenerated']);
+      unset($post['data']['isAIGenerated']);
     }
 
-    return $postData;
+    return $post;
   }
 
   /**

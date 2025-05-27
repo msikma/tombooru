@@ -21,7 +21,7 @@
       $explicitContentAllowed ? ['Rating', 'data.rating'] : null,
       ['License', 'data.license'],
       ['Status', 'data.status'],
-      $genAIPolicy > 0 ? ['Is AI generated', 'data.isAIGenerated'] : null,
+      $genAIPolicy > 0 ? ['Is AI generated', 'data.isAIGenerated', 'boolean'] : null,
       ['Description page ID', 'description.pageID'],
       ['Description page namespace', 'description.pageNamespace'],
       ['Favorites', 'ranking.favorites'],

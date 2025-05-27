@@ -54,7 +54,7 @@ class Template {
    */
   public static function parseURL($url) {
     if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
-      throw new \Exception('invalid_url');
+      throw new \Exception('This is not a valid URL.');
     }
     return parse_url($url);
   }
@@ -268,6 +268,31 @@ class Template {
     $timestamp = MWTimestamp::getInstance($mwTs);
 
     return $language->userTimeAndDate($timestamp, $user);
+  }
+
+  /**
+   * Formats a timestamp for a "datetime-local" field.
+   */
+  public static function formatDatetimeLocal($ts) {
+    if (empty($ts)) {
+      return '';
+    }
+    $date = new DateTime($ts);
+    return $date->format('Y-m-d\TH:i');
+  }
+
+  /**
+   * Ensures that a sentence ends with a period.
+   */
+  public static function formatPeriodSentence($sentence) {
+    if (empty($sentence)) {
+      return '';
+    }
+    $sentence = trim($sentence);
+    if (substr($sentence, -1) !== '.') {
+      $sentence .= '.';
+    }
+    return $sentence;
   }
   
   /**

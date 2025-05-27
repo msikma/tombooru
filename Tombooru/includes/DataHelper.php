@@ -9,6 +9,9 @@ class DataHelper {
    * This is used to make the list of post tags on the edit page.
    */
   public static function convertTagsToPlaintext($tags) {
+    if (empty($tags)) {
+      return '';
+    }
     $textTags = [];
     foreach ($tags as $type) {
       foreach ($type['tags'] as $tag) {
@@ -24,6 +27,9 @@ class DataHelper {
    * This is used to allow the user to edit the sources list.
    */
   public static function convertSourcesToPlaintext($sources) {
+    if (empty($sources)) {
+      return '';
+    }
     $textSources = [];
     foreach ($sources as $source) {
       $textSources[] = $source['url'];
@@ -232,5 +238,55 @@ class DataHelper {
     }
     $segments = preg_split('/\s+/', $string, -1, PREG_SPLIT_NO_EMPTY);
     return $segments;
+  }
+
+  /**
+   * Returns a set of three functions used to get data from $updateData and $originalData.
+   */
+  public static function createTemplateDataHelpers($updateData, $originalData) {
+    $data = function($name, $type, $default) use ($updateData, $originalData) {
+      $data = @$updateData[$name];
+      if (empty($data)) {
+        $data = @$originalData[$name];
+      }
+      return (@$data[$type] ?? $default);
+    };
+
+    $value = function($name, $default) use ($data) {
+      return $data($name, 'value', $default);
+    };
+    $errors = function($name) use ($data) {
+      return $data($name, 'errors', []);
+    };
+
+    return [
+      $value,
+      $errors,
+      $data,
+    ];
+  }
+
+  /**
+   * Converts a flat list of values into a value/errors list.
+   */
+  public static function addUpdateErrorStubs($data) {
+    // Add an empty 'errors' value so it has the same interface as update data.
+    foreach ($data as &$item) {
+      if (!isset($item['value'])) {
+        $item = ['value' => $item, 'errors' => []];
+      }
+    }
+    return $data;
+  }
+
+  /**
+   * Removes the error values from a value/errors list.
+   */
+  public static function removeUpdateErrorStubs($data) {
+    $unpackedData = [];
+    foreach ($data as $k => $v) {
+      $unpackedData[$k] = $v['value'];
+    }
+    return $unpackedData;
   }
 }

@@ -108,7 +108,7 @@ class Tombooru {
   }
 }
 
-Tombooru.ComponentEditSubmit = class {
+Tombooru.ComponentPostFormSubmit = class {
   constructor(el) {
     this.el = el;
     this.decorate();
@@ -205,7 +205,7 @@ Tombooru.ComponentUserUpvoteDownvote = class {
 Tombooru.ComponentNewPostDestinationFilename = class {
   constructor(el) {
     this.el = el;
-    this.fnSource = document.querySelector('#source_filename input[name="source_filename"]');
+    this.fnSource = document.querySelector('input[name="source_filename"]');
     this.fnDestination = el.querySelector('input[name="destination_filename"]');
     this.fnSuffix = el.querySelector('.suffix');
     this.decorate();

@@ -78,7 +78,7 @@ class SpecialTombooru extends SpecialPage {
    * Outputs a template.
    */
   private function outputTemplate($template, $data) {
-    if ($data['pagination']) {
+    if (!empty($data['pagination'])) {
       $this->setBodyPaginationClasses($data['pagination']);
     }
     return TemplateManager::outputTemplate($template, $data);
@@ -128,25 +128,38 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runPostsEditPage() {
     $pageID = $this->route['id'];
-    $submittedData = [];
-    $lastError = null;
+    $post = DataReadManager::getPost($pageID);
+
+    $originalData = DataWriteManager::collectPostOriginalData($post);
+    $updateData = [];
+    $updateError = null;
+    $updateSuccess = false;
+
     if ($this->verifyFormPost('post-edit')) {
       try {
-        $submittedData = DataWriteManager::collectPostUpdateData();
-        $result = DataWriteManager::updatePostData(['pageID' => $pageID], $submittedData);
-        return $this->getOutput()->redirect(URL::getURL("/posts/view/{$pageID}", ['result' => $result ? 'success' : 'error']));
+        $updateData = DataWriteManager::collectPostUpdateData();
+        $updateSuccess = DataWriteManager::updatePostData(['pageID' => $pageID], $updateData);
       }
-      // If something went wrong trying to save the data, we'll just redirect back to the edit page.
       catch (\Throwable $e) {
+        // If we're here, it means writing the data somehow went wrong.
         // The user is notified of what went wrong and we can try again.
-        $lastError = $e->getMessage();
+        $updateError = $e->getMessage();
       }
     }
-    $post = DataReadManager::getPost($pageID);
-    return TemplateManager::outputTemplate('posts/EditPage', [
+
+    // If everything went well, redirect to the view page.
+    if ($updateSuccess && empty($updateError)) {
+      return $this->getOutput()->redirect(URL::getURL("/posts/view/{$pageID}", ['result' => 'success']));
+    }
+
+    // If not, either the user needs to fix something about their input, or we could not write
+    // the data for some reason. Send the user back to the edit page to try again.
+    return self::outputTemplate('posts/EditPage', [
       'post' => $post,
-      'lastError' => $lastError,
-      'submittedData' => $submittedData,
+      'originalData' => $originalData,
+      'updateData' => $updateData,
+      'updateError' => $updateError,
+      'updateSuccess' => $updateSuccess,
     ]);
   }
 
@@ -205,28 +218,35 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runTagsEditPage() {
     $tagName = $this->route['id'];
-    $submittedData = [];
-    $lastError = null;
-    if ($this->verifyFormPost('tag-edit')) {
-      try {
-        $tagID = DataReadManager::getTagID($tagName);
-        $submittedData = DataWriteManager::collectTagUpdateData();
-        $result = DataWriteManager::updateTagData($tagID, $submittedData);
-        return $this->getOutput()->redirect(URL::getURL("/tags/view/{$tagName}", ['result' => $result ? 'success' : 'error']));
-      }
-      // If something went wrong trying to save the data, we'll just redirect back to the edit page.
-      catch (\Throwable $e) {
-        // The user is notified of what went wrong and we can try again.
-        $lastError = $e->getMessage();
-      }
-    }
     $tag = DataReadManager::getTag($tagName);
     $tagTypes = DataReadManager::getTypesOfTag();
-    return TemplateManager::outputTemplate('tags/EditPage', [
+
+    $originalData = DataWriteManager::collectTagOriginalData($tag);
+    $updateData = [];
+    $updateError = null;
+    $updateSuccess = false;
+
+    if ($this->verifyFormPost('tag-edit')) {
+      try {
+        $updateData = DataWriteManager::collectTagUpdateData();
+        $updateSuccess = DataWriteManager::updateTagData($tag['id'], $updateData);
+      }
+      catch (\Throwable $e) {
+        $updateError = $e->getMessage();
+      }
+    }
+
+    if ($updateSuccess && empty($updateError)) {
+      return $this->getOutput()->redirect(URL::getURL("/tags/view/{$tagName}", ['result' => 'success']));
+    }
+    
+    return self::outputTemplate('tags/EditPage', [
       'tag' => $tag,
       'tagTypes' => array_values($tagTypes),
-      'lastError' => $lastError,
-      'submittedData' => $submittedData,
+      'originalData' => $originalData,
+      'updateData' => $updateData,
+      'updateError' => $updateError,
+      'updateSuccess' => $updateSuccess,
     ]);
   }
 
@@ -259,33 +279,40 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runUploadPage() {
     $helpSectionData = WikiManager::getPageHierarchy('Help', WikiManager::$pageNamespaceTombooru);
+    $boardUploadPolicy = DataReadManager::getBoardUploadPolicy();
     $pageID = WikiManager::getPageID('System/Upload');
     $pageData = WikiManager::getPageData($pageID);
-    $policy = DataReadManager::getBoardUploadPolicy();
 
+    $originalData = DataWriteManager::collectPostStubData();
+    $updateData = [];
+    $updateError = null;
+    $updateSuccess = false;
 
-    $submittedData = [];
-    $lastError = null;
     if ($this->verifyFormPost('post-new')) {
       try {
-        $submittedData = DataWriteManager::collectPostUpdateData();
-        $uploadedFileData = WikiManager::insertPost($submittedData);
-        $result = DataWriteManager::updatePostData($uploadedFileData, $submittedData);
-        return $this->getOutput()->redirect(URL::getURL("/posts/view/{$uploadedFileData['pageID']}", ['result' => $result ? 'success' : 'error']));
+        $updateData = DataWriteManager::collectPostUpdateData();
+        $uploadedFileData = WikiManager::insertFilePage($updateData);
+        $updateSuccess = DataWriteManager::updatePostData($uploadedFileData, $updateData);
       }
-      // If something went wrong trying to save the data, we'll just redirect back to the edit page.
       catch (\Throwable $e) {
-        // The user is notified of what went wrong and we can try again.
-        $lastError = $e->getMessage();
+        $updateError = $e->getMessage();
       }
     }
 
-    return TemplateManager::outputTemplate('static/UploadPage', [
-      'policy' => $policy,
+    if ($updateSuccess && empty($updateError) && !empty($uploadedFileData)) {
+      return $this->getOutput()->redirect(URL::getURL("/posts/view/{$uploadedFileData['pageID']}", ['result' => 'success']));
+    }
+    
+    // If not, either the user needs to fix something about their input, or we could not write
+    // the data for some reason. Send the user back to the edit page to try again.
+    return self::outputTemplate('static/UploadPage', [
+      'policy' => $boardUploadPolicy,
       'pageData' => $pageData,
       'sectionData' => $helpSectionData,
-      'lastError' => $lastError,
-      'submittedData' => $submittedData,
+      'originalData' => $originalData,
+      'updateData' => $updateData,
+      'updateError' => $updateError,
+      'updateSuccess' => $updateSuccess,
     ]);
   }
 

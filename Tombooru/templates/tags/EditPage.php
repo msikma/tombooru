@@ -1,3 +1,9 @@
+<?php
+  $entityData = [$updateData, $originalData];
+
+  // Whether this tag is a stub or not.
+  $isNewTag = empty($tag);
+?>
 <?= Template::getComponent('TagsSidebarPanel', ['tagTypes' => $tagTypes]); ?>
 
 <div class="tombooru-page page-tags subpage-edit">
@@ -9,100 +15,27 @@
   <div class="edit-form-wrapper">
     <form class="edit-form" method="post" action="<?= URL::getURL("/tags/edit/{$tag['name']}?submit"); ?>">
 
-      <div class="group section-header">
-        <div class="group-inner">
-          <div class="group-content">
-            <div class="group-header">
-              <h3 class="body-font">Basic information</h3>
-            </div>
-            <div class="group-input">
-            </div>
-            <div class="group-help help empty">
-            </div>
-          </div>
-        </div>
-      </div>
+      <?= Template::getComponent('Form/ErrorNotification', ['updateError' => $updateError]); ?>
+      <?= Template::getComponent('Form/Header', ['title' => 'Basic information']); ?>
+      <?= Template::getComponent('Form/FieldTextReadOnly', ['title' => 'ID', 'value' => $tag['id']]); ?>
+      <?= Template::getComponent('Form/FieldTextReadOnly', ['title' => 'Name', 'value' => str_replace('_', ' ', $tag['name'])]); ?>
+      <?= Template::getComponent('Form/FieldTextReadOnly', ['title' => 'Count', 'value' => $tag['count']]); ?>
+      <?= Template::getComponent('Form/Header', ['title' => 'Tag data']); ?>
 
-      <div class="group">
-        <div class="group-inner">
-          <div class="group-content">
-            <div class="group-header">
-              <h4 class="body-font icon">ID</h4>
-            </div>
-            <div class="group-input">
-              <div class="info"><?= $tag['id']; ?></div>
-            </div>
-            <div class="group-help help empty">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="group">
-        <div class="group-inner">
-          <div class="group-content">
-            <div class="group-header">
-              <h4 class="body-font icon">Name</h4>
-            </div>
-            <div class="group-input">
-              <div class="info"><?= str_replace('_', ' ', $tag['name']); ?></div>
-            </div>
-            <div class="group-help help empty">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="group">
-        <div class="group-inner">
-          <div class="group-content">
-            <div class="group-header">
-              <h4 class="body-font icon">Count</h4>
-            </div>
-            <div class="group-input">
-              <div class="info"><?= $tag['count']; ?></div>
-            </div>
-            <div class="group-help help empty">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="group section-header">
-        <div class="group-inner">
-          <div class="group-content">
-            <div class="group-header">
-              <h3 class="body-font">Tag data</h3>
-            </div>
-            <div class="group-input">
-            </div>
-            <div class="group-help help empty">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="group">
-        <div class="group-inner">
-          <div class="group-content">
-            <div class="group-header">
-              <h4 class="body-font icon">Description</h4>
-            </div>
-            <div class="group-input">
-              <textarea name="description" rows="6"><?= htmlspecialchars($tagDescription); ?></textarea>
-              <div class="input-caption help">
-                <p>Text is formatted as <a href="https://www.mediawiki.org/wiki/Help:Formatting" class="external">wiki markup</a>.</p>
-              </div>
-            </div>
-            <div class="group-help help">
-              <div class="help-inner">
-                <p><strong>Describe what this tag is about.</strong> What is depicted in this tag? A tag can be anything, like character, a location, a thing in the games, or it can be something like an artistic style, an action that characters in the image are doing, or some small detail in the background.</p>
-                <p>You can also edit this tag <a href="<?= URL::getTagDescriptionPageURL(DataReadManager::getTagID($tag['name'])); ?>">on the regular wiki interface</a>.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <?= Template::getComponent('Form/FieldTextMultiline', [
+        'title' => 'Description',
+        'key' => 'description',
+        'name' => 'description',
+        'rows' => 6,
+        'inputHelp' => '
+          <p>Text is formatted as <a href="https://www.mediawiki.org/wiki/Help:Formatting" class="external">wiki markup</a>.</p>
+        ',
+        'help' => '
+          <p><strong>Describe what this tag is about.</strong> What is depicted in this tag? A tag can be anything, like character, a location, a thing in the games, or it can be something like an artistic style, an action that characters in the image are doing, or some small detail in the background.</p>
+          <p>You can also edit this tag <a href="'.URL::getTagDescriptionPageURL(DataReadManager::getTagID($tag['name'])).'">using the regular wiki interface</a>.</p>
+        ',
+        'entityData' => $entityData,
+      ]); ?>
 
       <div class="group">
         <div class="group-inner">
@@ -136,7 +69,7 @@
             <div class="group-input">
               <input type="hidden" name="form-type" value="tag-edit" />
               <input type="hidden" name="token" value="<?= htmlspecialchars($request['token']); ?>" />
-              <button action="submit" data-tombooru-component="EditSubmit">Save changes<script>Tombooru.decorateComponent()</script></button>
+              <button action="submit" data-tombooru-component="PostFormSubmit">Save changes<script>Tombooru.decorateComponent()</script></button>
             </div>
             <div class="group-help help empty">
             </div>

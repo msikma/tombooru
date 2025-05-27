@@ -470,7 +470,11 @@ class WikiManager {
    * 
    * All the data is expected to already be sanitized at this point.
    */
-  public static function insertPost($submittedData) {
+  public static function insertFilePage($updateData) {
+    if (DataWriteManager::hasAnyErrors($updateData)) {
+      throw new \Exception('Some submitted data was invalid.');
+    }
+    $updateData = DataHelper::removeUpdateErrorStubs($updateData);
     $context = RequestContext::getMain();
     $services = MediaWikiServices::getInstance();
     $user = $context->getUser();
@@ -478,7 +482,7 @@ class WikiManager {
     $wikiPageFactory = $services->getWikiPageFactory();
 
     // Collect information about the page we'll create for this post.
-    $postData = self::collectNewPostData($submittedData, $user);
+    $postData = self::collectNewPostData($updateData, $user);
     
     // Create the upload handler. This returns the Title object for the uploaded file.
     $fileTitle = self::performFileUpload($postData);
@@ -513,7 +517,7 @@ class WikiManager {
    * Collects data for uploading a new post.
    */
   private static function collectNewPostData($submittedData, $user) {
-    $editReason = 'File upload initiated from TB.';
+    $editReason = 'File upload initiated from Tombooru.';
     $pageDescription = !empty($submittedData['description']) ? $submittedData['description'] : '';
     $pageWatch = false;
     $pageAuthor = $user;

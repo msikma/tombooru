@@ -22,8 +22,7 @@ create table /*_*/tombooru_post_data (
   downvotes int unsigned not null default 0,
   media_type varchar(300) null,                 -- typically "image" or "video"; others may be implemented in the future
   license varchar(300) null,                    -- free input, to be constrained by the extension code
-  source_post_date datetime null,               -- when the media was originally published (not on Tombooru, but at the source)
-  source_archive_url varchar(500) null,         -- archive link to the original publication url of the media file
+  original_publication_date datetime null,      -- when the media was originally published (not on Tombooru, but at the source)
   updated_at timestamp not null default current_timestamp,
   status enum('active', 'flagged', 'pending_approval', 'deleted') null,
   is_ai_generated bool not null default 0,
@@ -35,7 +34,7 @@ create table /*_*/tombooru_post_data (
   index (status),
   index (media_type),
   index (license),
-  index (source_post_date),
+  index (original_publication_date),
   index (poster_user_id),
   index (approver_user_id),
   index (favorites),
