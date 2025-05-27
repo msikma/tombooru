@@ -211,6 +211,7 @@ class DataWriteManager {
    */
   public static function collectTagOriginalData($tag) {
     $data = [];
+    $data['name'] = @$tag['name'];
     $data['description'] = @$tag['description']['content'];
     $data['tagType'] = @$tag['type'];
     
@@ -222,6 +223,7 @@ class DataWriteManager {
    */
   public static function collectTagStubData($tag) {
     $data = [];
+    $data['name'] = '';
     $data['description'] = '';
     $data['tagType'] = '';
 
@@ -241,6 +243,7 @@ class DataWriteManager {
     }
 
     $data = [];
+    $data['name'] = self::sanitizeTagName(trim($params['name']));
     $data['description'] = self::sanitizeDescription(trim($params['description']));
     $data['tagType'] = self::sanitizeTagType(trim($params['tag-type']));
 
@@ -365,6 +368,21 @@ class DataWriteManager {
       }
     }
     $value = array_map('trim', $value);
+
+    return [
+      'value' => $value,
+      'errors' => $errors,
+    ];
+  }
+
+  /**
+   * Sanitizes a tag name.
+   */
+  private static function sanitizeTagName($tagName) {
+    $value = [];
+    $errors = [];
+
+    $value = str_replace(' ', '_', trim($tagName));
 
     return [
       'value' => $value,

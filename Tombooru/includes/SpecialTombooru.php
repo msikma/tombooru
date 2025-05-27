@@ -237,7 +237,9 @@ class SpecialTombooru extends SpecialPage {
     }
 
     if ($updateSuccess && empty($updateError)) {
-      return $this->getOutput()->redirect(URL::getURL("/tags/view/{$tagName}", ['result' => 'success']));
+      $updatedTag = DataReadManager::getTagByID($tag['id']);
+      $updatedTagName = $updatedTag['name'];
+      return $this->getOutput()->redirect(URL::getURL("/tags/view/{$updatedTagName}", ['result' => 'success']));
     }
     
     return self::outputTemplate('tags/EditPage', [

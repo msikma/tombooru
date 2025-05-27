@@ -3,12 +3,14 @@
 
   // Whether this tag is a stub or not.
   $isNewTag = empty($tag);
+
+  $plural = intval($tag['count']) === 1 ? '' : 's';
 ?>
 <?= Template::getComponent('TagsSidebarPanel', ['tagTypes' => $tagTypes]); ?>
 
 <div class="tombooru-page page-tags subpage-edit">
   <h1>Editing Tag ID: <?= $tag['id']; ?></h1>
-  <p>You are editing information for the <strong><?= $tag['name']; ?></strong> tag.</p>
+  <p>You are editing information for the <strong><?= str_replace('_', ' ', $tag['name']); ?></strong> tag, used in <?= Template::formatNumber($tag['count']) ?> post<?= $plural; ?>.</p>
   <?php
     $tagDescription = !empty($tag['description']) ? $tag['description']['content'] : '';
   ?>
@@ -18,8 +20,18 @@
       <?= Template::getComponent('Form/ErrorNotification', ['updateError' => $updateError]); ?>
       <?= Template::getComponent('Form/Header', ['title' => 'Basic information']); ?>
       <?= Template::getComponent('Form/FieldTextReadOnly', ['title' => 'ID', 'value' => $tag['id']]); ?>
-      <?= Template::getComponent('Form/FieldTextReadOnly', ['title' => 'Name', 'value' => str_replace('_', ' ', $tag['name'])]); ?>
-      <?= Template::getComponent('Form/FieldTextReadOnly', ['title' => 'Count', 'value' => $tag['count']]); ?>
+
+      <?= Template::getComponent('Form/FieldText', [
+        'title' => 'Name',
+        'key' => 'name',
+        'name' => 'name',
+        'mwName' => true,
+        'inputHelp' => '
+          <p>Change the name of this tag.</p>
+        ',
+        'entityData' => $entityData,
+      ]); ?>
+      
       <?= Template::getComponent('Form/Header', ['title' => 'Tag data']); ?>
 
       <?= Template::getComponent('Form/FieldTextMultiline', [

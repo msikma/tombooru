@@ -155,6 +155,18 @@ class DataReadManager {
   }
 
   /**
+   * Returns a single tag by name, including all related data.
+   */
+  public static function getTagByID($tagID) {
+    if (empty($tagID)) {
+      throw new \Exception('No tag ID provided.');
+    }
+    $tagData = DB::getTagDataByID($tagID);
+    $extendedTagData = self::collectPostTagsData([$tagData], true);
+    return end($extendedTagData);
+  }
+
+  /**
    * Returns tag suggestions for a given input string.
    * 
    * This treats the input as the prefix of a tag, e.g. "Tom" returns "Tomba".

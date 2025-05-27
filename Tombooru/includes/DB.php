@@ -211,6 +211,7 @@ class DB {
         // Update the tag type. This is the only data we need to update at the moment.
         $query = $dbw->newUpdateQueryBuilder()
           ->update('tombooru_tag')
+          ->set(['name' => $data['name']])
           ->set(['type' => $data['tagType']])
           ->where(['id' => $tagID])
           ->caller($scope)
@@ -620,6 +621,37 @@ class DB {
       ->where(['id' => $postID])
       ->caller(__METHOD__)
       ->execute();
+  }
+
+  /**
+   * Returns tag data by ID.
+   */
+  public static function getTagDataByID($tagID) {
+    $tagName = self::getTagName($tagID);
+    return self::getTagData($tagName);
+  }
+
+  /**
+   * Returns a tag name by ID.
+   */
+  public static function getTagName($tagID) {
+    $db = self::instReplicaDB();
+
+    $query = $db->newSelectQueryBuilder()
+      ->select([
+        't.id',
+        't.name',
+      ])
+      ->from('tombooru_tag', 't')
+      ->where(['t.id' => $tagID])
+      ->caller(__METHOD__);
+    
+    $tag = $query->fetchRow();
+    if (!$tag) {
+      throw new \Exception('not_found');
+    }
+
+    return strval($tag->name);
   }
 
   /**
