@@ -467,15 +467,22 @@ class WikiManager {
    * This process has two steps: first, we perform the upload itself, then we create a new page for the file.
    * 
    * All the data is expected to already be sanitized at this point.
+   * 
+   * The action is either "newUpload" or "updateImage". If it's a new upload, we don't permit
+   * overwriting existing images; if it's an image update, we *only* permit overwriting an existing image.
    */
-  public static function insertFilePage($updateData) {
+  public static function insertFilePage($updateData, $action) {
     if (DataWriteManager::hasAnyErrors($updateData)) {
       throw new \Exception('Some submitted data was invalid.');
+    }
+    if (!in_array($action, ['newUpload', 'imageUpdate'])) {
+      throw new \Exception('$action must either be "newUpload" or "imageUpdate".');
     }
     $updateData = DataHelper::removeUpdateErrorStubs($updateData);
     $context = RequestContext::getMain();
     $services = MediaWikiServices::getInstance();
     $user = $context->getUser();
+    $overwrite = $action === 'newUpload' ? false : true;
 
     $wikiPageFactory = $services->getWikiPageFactory();
 
@@ -483,7 +490,7 @@ class WikiManager {
     $postData = self::collectNewPostData($updateData, $user);
     
     // Create the upload handler. This returns the Title object for the uploaded file.
-    $fileTitle = self::performFileUpload($postData);
+    $fileTitle = self::performFileUpload($postData, $overwrite);
     // Now insert the actual page itself.
     $filePage = self::performFilePageCreation($postData, $fileTitle);
     
@@ -530,14 +537,33 @@ class WikiManager {
 
   /**
    * Performs the actual file upload when inserting a new post.
+   * 
+   * We require "expectOverwrite" to be set, either to true or false.
+   * If it's true, we expect this upload to replace an old file.
+   * If it's false, we expect this upload to never replace an old file.
    */
-  private static function performFileUpload($postData) {
+  private static function performFileUpload($postData, $expectOverwrite) {
+    if (is_null($expectOverwrite)) {
+      throw new \Exception('$expectOverwrite must be set to true or false.');
+    }
+    $services = MediaWikiServices::getInstance();
     $context = RequestContext::getMain();
     $request = $context->getRequest();
     $upload = $request->getUpload('source_filename');
 
     $uploadHandler = new \UploadFromFile();
     $uploadHandler->initialize($postData['filename'], $upload);
+
+    $title = $uploadHandler->getTitle();
+    $repoGroup = $services->getRepoGroup();
+    $file = $repoGroup->findFile($title);
+
+    if ($file !== false && $expectOverwrite === false) {
+      throw new \Exception('A file with this name already exists.');
+    }
+    if ($file === false && $expectOverwrite === true) {
+      throw new \Exception('A file with this name must exist, as we are overwriting an existing file.');
+    }
 
     // Basic file verification.
     $uploadHandler->verifyUpload();

@@ -293,7 +293,7 @@ class SpecialTombooru extends SpecialPage {
     if ($this->verifyFormPost('post-new')) {
       try {
         $updateData = DataWriteManager::collectPostUpdateData();
-        $uploadedFileData = WikiManager::insertFilePage($updateData);
+        $uploadedFileData = WikiManager::insertFilePage($updateData, 'newUpload');
         $updateSuccess = DataWriteManager::updatePostData($uploadedFileData, $updateData);
       }
       catch (\Throwable $e) {
