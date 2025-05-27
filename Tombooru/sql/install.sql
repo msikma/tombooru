@@ -72,11 +72,13 @@ create table /*_*/tombooru_post_source (
   id int unsigned auto_increment primary key,   -- unique ID for each source
   post_id int unsigned not null,                -- fk to tombooru_post.id
   url varchar(500) not null,                    -- the URL source of the post
+  archive_url varchar(500) not null,            -- archive URL pointing to the same page
   created_at timestamp not null default current_timestamp,
 
   constraint fk_post_source_post foreign key (post_id) references /*_*/tombooru_post(id) on delete cascade on update cascade,
   index (post_id),
-  index (url)
+  index (url),
+  index (archive_url)
 );
 
 create table /*_*/tombooru_post_interaction (

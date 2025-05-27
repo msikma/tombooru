@@ -570,7 +570,7 @@ class DB {
       );
       $dbw->newInsertQueryBuilder()
         ->insertInto('tombooru_post_source')
-        ->rows($rows)
+        ->rows(array_values($rows))
         ->caller($scope)
         ->execute();
     }
