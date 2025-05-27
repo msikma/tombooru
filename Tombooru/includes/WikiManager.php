@@ -21,14 +21,12 @@ class WikiManager {
    * 
    * If the page does not exist, this returns null.
    */
-  public static function getPageData($pageID, $pageNamespace = null) {
-    $pageNamespace = empty($pageNamespace) ? self::$pageNamespaceTombooru : $pageNamespace;
-
-    if (!isset($pageID) || !isset($pageNamespace)) {
+  public static function getPageData($pageID) {
+    if (!isset($pageID)) {
       return null;
     }
 
-    $title = Title::newFromID($pageID, $pageNamespace);
+    $title = Title::newFromID($pageID);
     if (!$title || !$title->exists()) {
       return [];
     }
@@ -47,7 +45,6 @@ class WikiManager {
 
     return [
       'pageID' => intval($pageID),
-      'pageNamespace' => intval($pageNamespace),
       'pageTitle' => $pageTitle,
       'name' => $name,
       'title' => $title,
@@ -63,7 +60,7 @@ class WikiManager {
    */
   public static function getPageHierarchy($parentPageName, $parentPageNamespace) {
     $parentPage = Title::newFromText($parentPageName, $parentPageNamespace);
-    $parentPageData = self::getPageData($parentPage->getID(), $parentPageNamespace) ?? [];
+    $parentPageData = self::getPageData($parentPage->getID()) ?? [];
 
     $pageHierarchy = [
       $parentPageName => [
@@ -88,8 +85,7 @@ class WikiManager {
     if ($parentPage->hasSubpages()) {
       foreach ($subpages as $subpage) {
         $pageID = $subpage->getID();
-        $pageNamespace = $subpage->getNamespace();
-        $pageData = self::getPageData($pageID, $pageNamespace);
+        $pageData = self::getPageData($pageID);
         $parentSubpages[] = $pageData;
       }
     }
@@ -274,7 +270,7 @@ class WikiManager {
    * This 
    */
   public static function getFileDescriptionPage($pageID) {
-    if (!isset($pageID) || !isset($pageNamespace)) {
+    if (!isset($pageID)) {
       return null;
     }
 
@@ -367,9 +363,8 @@ class WikiManager {
     $wikiPage->doUserEditContent($content, $user, $summary);
 
     $pageID = $wikiPage->getId();
-    $pageNamespace = $title->getNamespace();
 
-    return [$pageID, $pageNamespace];
+    return $pageID;
   }
 
   /**
@@ -396,6 +391,9 @@ class WikiManager {
       case 'description':
         $pageDataName = 'description';
         break;
+      case 'notes':
+        $pageDataName = 'notes';
+        break;
       default:
         throw new \Exception('invalid content type');
     }
@@ -421,7 +419,7 @@ class WikiManager {
     // Use the maintenance user.
     $user = self::getSystemUser();
 
-    // Fetch the pages to create from 
+    // Fetch the pages to create.
     $pages = self::findSystemPageStubs();
     $namespace = self::$pageNamespaceTombooru;
 
@@ -490,9 +488,8 @@ class WikiManager {
     $filePage = self::performFilePageCreation($postData, $fileTitle);
     
     $pageID = $filePage->getId();
-    $pageNamespace = $filePage->getNamespace();
    
-    return ['pageID' => $pageID, 'pageNamespace' => $pageNamespace];
+    return ['pageID' => $pageID];
   }
 
   /**

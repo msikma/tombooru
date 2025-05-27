@@ -12,7 +12,6 @@
     $rows = [
       ['ID', 'id'],
       ['Page ID', 'pageID'],
-      ['Page namespace', 'pageNamespace'],
       ['Filename', 'file.name'],
       ['Size', 'file.size'],
       ['Width', 'file.media.original.width'],
@@ -23,7 +22,6 @@
       ['Status', 'data.status'],
       $genAIPolicy > 0 ? ['Is AI generated', 'data.isAIGenerated', 'boolean'] : null,
       ['Description page ID', 'description.pageID'],
-      ['Description page namespace', 'description.pageNamespace'],
       ['Favorites', 'ranking.favorites'],
       ['Score', 'ranking.score'],
       ['Upvotes', 'ranking.upvotes'],

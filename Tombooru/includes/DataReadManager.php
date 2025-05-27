@@ -81,7 +81,6 @@ class DataReadManager {
     return [
       'id' => intval($postRanking['id']),
       'pageID' => intval($postRanking['page_id']),
-      'pageNamespace' => intval($postRanking['page_namespace']),
       'ranking' => [
         'favorites' => intval($postRanking['favorites']),
         'score' => intval($postRanking['score']),
@@ -357,7 +356,6 @@ class DataReadManager {
     $postData = [
       'id' => intval($post['id']),
       'pageID' => intval($post['page_id']),
-      'pageNamespace' => intval($post['page_namespace']),
       'file' => $file,
       'data' => [
         'rating' => $post['rating'],
@@ -394,7 +392,7 @@ class DataReadManager {
     $file = WikiManager::getFileData($post['page_id']);
 
     // Get the description page content, if in existence.
-    $descriptionPageData = WikiManager::getPageData($post['description_page_id'], $post['description_page_namespace']);
+    $descriptionPageData = WikiManager::getPageData($post['description_page_id']);
 
     // Get the poster and approver.
     $posterData = WikiManager::getUserBasicData($post['poster_user_id']);
@@ -408,7 +406,6 @@ class DataReadManager {
     $postData = [
       'id' => intval($post['id']),
       'pageID' => intval($post['page_id']),
-      'pageNamespace' => intval($post['page_namespace']),
       'file' => $file,
       'data' => [
         'rating' => $post['rating'],
@@ -486,7 +483,7 @@ class DataReadManager {
         'createdAt' => Template::sqlTimestampToISO($tag['created_at']),
       ];
       if ($includeDescription) {
-        $description = WikiManager::getPageData($tag['description_page_id'], $tag['description_page_namespace']);
+        $description = WikiManager::getPageData($tag['description_page_id']);
         $postTag['description'] = $description;
       }
       $postTags[] = $postTag;

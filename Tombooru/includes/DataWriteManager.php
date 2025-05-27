@@ -12,13 +12,13 @@ class DataWriteManager {
   /**
    * Returns a post ID from a given page ID; creates a new post stub if it does not exist.
    */
-  private static function ensurePost($pageID, $pageNamespace, $postUpdateData) {
+  private static function ensurePost($pageID, $postUpdateData) {
     try {
       $postID = DB::getPostID($pageID);
     }
     catch (\Throwable $e) {
       // Looks like we don't have a post for this page ID. Let's create one.
-      $postID = DB::insertPostStub($pageID, $pageNamespace, $postUpdateData['filename']);
+      $postID = DB::insertPostStub($pageID, $postUpdateData['filename']);
     }
     return $postID;
   }
@@ -51,22 +51,23 @@ class DataWriteManager {
     }
     $postUpdateData = DataHelper::removeUpdateErrorStubs($postUpdateData);
     $pageID = $pageData['pageID'];
-    $pageNamespace = @$pageData['pageNamespace'];
 
     // Get existing post data. If not found, we'll insert a new post.
-    $postID = self::ensurePost($pageID, $pageNamespace, $postUpdateData);
+    $postID = self::ensurePost($pageID, $postUpdateData);
 
     // First, update all data *except* for the description.
     // This is because we don't yet know if updating the description results
     // in a new page being created on the wiki.
     DB::updatePostData($pageID, $postUpdateData);
 
-    // Post descriptions are stored as subpages of a special imageboard system page.
-    // These pages are created as needed (as soon as the description is no longer empty),
+    // Post descriptions and notes are stored as pages in the imageboard namespace.
+    // These pages are created as needed (as soon as they are no longer empty),
     // and stored on e.g. "Tombooru_data:Post_description/1" (where 1 is the post ID, not the page ID).
-    if (!empty($postUpdateData['description'])) {
-      [$id, $namespace] = WikiManager::updateEntityPageData('post', $postID, 'description', $postUpdateData['description']);
-      DB::updatePostDescriptionPage($postID, $id, $namespace);
+    foreach (['description'] as $subpage) {
+      if (!empty($postUpdateData[$subpage])) {
+        $id = WikiManager::updateEntityPageData('post', $postID, $subpage, $postUpdateData[$subpage]);
+        DB::updatePostTextPage($postID, $id);
+      }
     }
     
     return true;
@@ -88,8 +89,8 @@ class DataWriteManager {
 
     // Post descriptions are stored e.g. "Tombooru_data/Tag_description/1" pages.
     if (!empty($tagUpdateData['description'])) {
-      [$id, $namespace] = WikiManager::updateEntityPageData('tag', $tagID, 'description', $tagUpdateData['description']);
-      DB::updateTagDescriptionPage($tagID, $id, $namespace);
+      $id = WikiManager::updateEntityPageData('tag', $tagID, 'description', $tagUpdateData['description']);
+      DB::updateTagDescriptionPage($tagID, $id);
     }
     
     return true;

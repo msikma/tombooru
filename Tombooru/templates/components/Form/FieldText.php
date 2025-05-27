@@ -4,7 +4,7 @@
   $dataValue = $value($key, '');
   $dataErrors = $errors($key);
 
-  if ($mwName) {
+  if (@$mwName === true) {
     // If this is a MediaWiki name, convert underscores into spaces.
     $dataValue = str_replace('_', ' ', $dataValue);
   }

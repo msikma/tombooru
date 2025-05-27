@@ -47,12 +47,10 @@ class DB {
       ->select([
         'p.id',
         'p.page_id',
-        'p.page_namespace',
         'p.filename',
         'p.created_at',
         'pd.id as post_data_id',
         'pd.description_page_id',
-        'pd.description_page_namespace',
         'pd.rating',
         'pd.favorites',
         'pd.score',
@@ -86,7 +84,7 @@ class DB {
    * 
    * This creates tombooru_post and tombooru_post_data rows.
    */
-  public static function insertPostStub($pageID, $pageNamespace, $filename) {
+  public static function insertPostStub($pageID, $filename) {
     $db = self::instPrimaryDB();
     $scope = __METHOD__;
 
@@ -94,12 +92,11 @@ class DB {
 
     $db->doAtomicSection(
       $scope,
-      function ($dbw) use ($pageID, $pageNamespace, $filename, $scope, &$postID) {
+      function ($dbw) use ($pageID, $filename, $scope, &$postID) {
         $dbw->newInsertQueryBuilder()
           ->insertInto('tombooru_post')
           ->row([
             'page_id' => $pageID,
-            'page_namespace' => $pageNamespace,
             'filename' => $filename,
           ])
           ->caller($scope)
@@ -179,7 +176,6 @@ class DB {
       ->select([
         'p.id',
         'p.page_id',
-        'p.page_namespace',
         'pd.favorites',
         'pd.score',
         'pd.upvotes',
@@ -273,7 +269,7 @@ class DB {
         // What we'll do is commit this transaction for now. The description page
         // should then be updated (using the WikiManager), which could potentially result in
         // a new page ID and namespace, which we'll then save to this post's data as well
-        // using self::updatePostDescriptionPage().
+        // using self::updatePostTextPage().
       }
     );
 
@@ -592,13 +588,12 @@ class DB {
   /**
    * Sets the tag page ID and namespace for a given tag.
    */
-  public static function updateTagDescriptionPage($tagID, $descriptionPageID, $descriptionPageNamespace) {
+  public static function updateTagDescriptionPage($tagID, $descriptionPageID) {
     $dbw = self::instPrimaryDB();
     $dbw->newUpdateQueryBuilder()
       ->update('tombooru_tag')
       ->set([
         'description_page_id' => $descriptionPageID,
-        'description_page_namespace' => $descriptionPageNamespace,
       ])
       ->where(['id' => $tagID])
       ->caller(__METHOD__)
@@ -610,13 +605,12 @@ class DB {
    * 
    * This takes a post ID, not a page ID.
    */
-  public static function updatePostDescriptionPage($postID, $descriptionPageID, $descriptionPageNamespace) {
+  public static function updatePostTextPage($postID, $descriptionPageID) {
     $dbw = self::instPrimaryDB();
     $dbw->newUpdateQueryBuilder()
       ->update('tombooru_post_data')
       ->set([
         'description_page_id' => $descriptionPageID,
-        'description_page_namespace' => $descriptionPageNamespace,
       ])
       ->where(['id' => $postID])
       ->caller(__METHOD__)
@@ -668,7 +662,6 @@ class DB {
         't.name',
         't.type',
         't.description_page_id',
-        't.description_page_namespace',
         't.count',
         't.created_at',
       ])
@@ -700,7 +693,6 @@ class DB {
         't.name',
         't.type',
         't.description_page_id',
-        't.description_page_namespace',
         't.created_at',
         't.count',
       ])
@@ -982,7 +974,6 @@ class DB {
       ->select([
         'p.id',
         'p.page_id',
-        'p.page_namespace',
         'p.filename',
         'p.created_at',
         'pd.id as post_data_id',
@@ -1105,7 +1096,6 @@ class DB {
         't.name',
         't.type',
         't.description_page_id',
-        't.description_page_namespace',
         't.count',
         't.created_at',
       ])

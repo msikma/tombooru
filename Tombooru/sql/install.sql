@@ -1,20 +1,16 @@
 create table /*_*/tombooru_post (
   id int unsigned auto_increment primary key,
   page_id int unsigned not null,                -- fk to mw page.page_id (this must be an uploaded file)
-  page_namespace int not null,
   filename varchar(300) not null,               -- canonical name of the post - equivalent to page.page_title (has underscores)
   created_at timestamp not null default current_timestamp,
 
   unique key (page_id),
-  index (filename),
-  index (page_namespace),
-  index page_namespace_id (page_namespace, page_id)
+  index (filename)
 );
 
 create table /*_*/tombooru_post_data (
   id int unsigned auto_increment primary key,   -- fk to tombooru_post.id
   description_page_id int unsigned null,        -- page that stores the description
-  description_page_namespace int null,
   rating enum('safe', 'questionable', 'explicit') null,
   favorites int unsigned not null default 0,
   score int signed not null default 0,          -- upvotes minus downvotes
@@ -41,8 +37,6 @@ create table /*_*/tombooru_post_data (
   index (score),
   index (is_ai_generated),
   index (description_page_id),
-  index (description_page_namespace),
-  index page_namespace_id (description_page_namespace, description_page_id),
   constraint fk_post_data_post foreign key (id) references /*_*/tombooru_post(id) on delete cascade
 );
 
@@ -51,14 +45,11 @@ create table /*_*/tombooru_tag (
   name varchar(300) not null unique,            -- case insensitive, case preserving
   type varchar(300) not null default '',        -- free input; the extension recognizes certain special terms here
   description_page_id int unsigned null,        -- page that stores the description
-  description_page_namespace int null,
   count int unsigned default 0,
   created_at timestamp not null default current_timestamp,
 
   index (type),
   index (description_page_id),
-  index (description_page_namespace),
-  index page_namespace_id (description_page_namespace, description_page_id),
   index (count),
   index (created_at)
 );

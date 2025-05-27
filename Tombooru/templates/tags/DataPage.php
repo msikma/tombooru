@@ -13,7 +13,6 @@
       ['Type', 'type'],
       ['Count', 'count'],
       ['Description page ID', 'description.pageID'],
-      ['Description page namespace', 'description.pageNamespace'],
       ['Created at', 'createdAt'],
     ];
   ?>
