@@ -317,7 +317,9 @@ class DB {
     // are both plain lists of tag names without IDs. All the other arrays are name->ID associations.
 
     // To start with, ensure all desired tag names are lowercase for case insensitive comparison purposes.
-    $tagNamesDesired = array_map('mb_strtolower', $data['tags']);
+    $tagNamesDesired = array_values(array_map('mb_strtolower', $data['tags']));
+    // We'll keep a copy of the original tags to create them with the proper capitalization if needed.
+    $tagNamesCapitalization = array_combine($tagNamesDesired, $data['tags']);
 
     // First, fetch a list of all currently existing tags that match the desired tags.
     // This helps us understand which tags need to be newly created before we can link them.
@@ -383,14 +385,15 @@ class DB {
     // Insert new tags if needed. Once inserted, add them to $tagsToLink.
     if (!empty($tagNamesToNewlyCreate)) {
       $rows = array_map(
-        function($name) {
+        function($name) use ($tagNamesCapitalization) {
           return [
-            'name' => $name,
+            'name' => $tagNamesCapitalization[$name],
             'count' => 0,
           ];
         },
         $tagNamesToNewlyCreate,
       );
+
       $dbw->newInsertQueryBuilder()
         ->insertInto('tombooru_tag')
         ->rows($rows)
