@@ -284,6 +284,38 @@ Tombooru.ComponentUserFavorite = class {
     this.el.classList.toggle('is-faved', value);
   }
 }
+Tombooru.ComponentPostEditSources = class {
+  constructor(el) {
+    this.el = el;
+    this.rows = 0;
+    this.addNewRow = el.querySelector('a.add-another-link');
+    this.sourceInputField = el.querySelector('.source-url .source-input-field');
+    this.archiveInputField = el.querySelector('.archive-url .source-input-field');
+    this.countRows();
+    this.decorate();
+  }
+  countRows() {
+    this.rows = [...this.el.querySelectorAll('.source-url .source-input-field input')].length;
+  }
+  addRow() {
+    // Create a new input element
+    // Append it to the sourceInputField div
+    const sourceDiv = document.createElement('div');
+    sourceDiv.innerHTML = `<input name="source_${this.rows}" value="" type="text">`;
+    this.sourceInputField.appendChild(sourceDiv);
+    const archiveDiv = document.createElement('div');
+    archiveDiv.innerHTML = `<div class="form-affixed"><span class="prefix">Archived:</span><input name="source_archive_${this.rows}" value="" type="text"></div>`;
+    this.archiveInputField.appendChild(archiveDiv);
+    this.countRows();
+  }
+  decorate() {
+    console.log(this.inputRows)
+    this.addNewRow.addEventListener('click', ev => {
+      ev.preventDefault();
+      this.addRow();
+    });
+  }
+}
 Tombooru.ComponentPostEditTagsPreview = class {
   constructor(el) {
     this.el = el;

@@ -16,7 +16,7 @@
         <h4 class="body-font"><?= htmlentities($title); ?></h4>
       </div>
       <div class="group-input">
-        <div class="text <?= !empty($suffix) ? 'form-suffix' : ''; ?>"><input type="text" name="<?= htmlentities($name); ?>" value="<?= htmlentities($dataValue); ?>" /><?= !empty($suffix) ? '<span class="suffix"></span>' : ''; ?></div>
+        <div class="text <?= !empty($suffix) ? 'form-affixed' : ''; ?>"><input type="text" name="<?= htmlentities($name); ?>" value="<?= htmlentities($dataValue); ?>" /><?= !empty($suffix) ? '<span class="suffix"></span>' : ''; ?></div>
         <div class="input-caption help">
           <?= @$inputHelp; ?>
           <?= Template::getComponent('Form/ErrorList', ['errors' => $dataErrors]); ?>

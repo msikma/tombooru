@@ -636,30 +636,87 @@ class DB {
    * Part of the self::updatePostData() transaction.
    */
   private static function updatePostSources($postID, $data, $dbw, $scope = __METHOD__) {
-    $existingSources = [];
+    // Collect old (currently inserted) sources, and new sources the user just submitted.
+    $oldSources = [];
+    $newSources = [];
+
+    // Fetch all old sources.
     $res = $dbw->newSelectQueryBuilder()
-      ->select('url')
+      ->select(['url', 'archive_url'])
       ->from('tombooru_post_source')
       ->where(['post_id' => $postID])
       ->caller($scope)
       ->fetchResultSet();
     
+    // We dedupe on primary sources. Archive sources are purely added only if the main URL is there.
     foreach ($res as $row) {
-      $existingSources[] = $row->url;
+      $oldSources[$row->url] = [
+        'url' => $row->url,
+        'archiveURL' => $row->archive_url,
+      ];
+    }
+    foreach ($data['sources'] as $item) {
+      $newSources[$item['url']] = $item;
     }
 
-    // Get sources to insert and delete. Sources in both lists are ignored.
-    $existingSet = array_flip($existingSources);
-    $newSet = array_flip($data['sources']);
-    $toInsert = array_flip(array_diff_key($newSet, $existingSet));
-    $toDelete = array_flip(array_diff_key($existingSet, $newSet));
+    // Determine which items to update, insert and delete.
+    $toUpdate = [];
+    $toInsert = [];
+    $toDelete = [];
+    foreach ($newSources as $newSource) {
+      $oldSource = @$oldSources[$newSource['url']];
+      if (!is_null($oldSource) && $oldSource['archiveURL'] !== $newSource['archiveURL']) {
+        $toUpdate[] = $newSource;
+        continue;
+      }
+      if (is_null($oldSource)) {
+        $toInsert[] = $newSource;
+        continue;
+      }
+    }
+    foreach ($oldSources as $oldSource) {
+      $newSource = @$newSources[$oldSource['url']];
+      if (is_null($newSource)) {
+        $toDelete[] = $oldSource['url'];
+        continue;
+      }
+    }
+
+    if (!empty($toUpdate)) {
+      $rows = array_map(
+        function($urlItem) use ($postID, $newSources) {
+          $newSource = $newSources[$urlItem['url']];
+          return [
+            'post_id' => $postID,
+            'url' => $newSource['url'],
+            'archive_url' => $newSource['archiveURL'],
+          ];
+        },
+        $toUpdate,
+      );
+      foreach ($rows as $row) {
+        $dbw->newUpdateQueryBuilder()
+          ->update('tombooru_post_source')
+          ->set([
+            'archive_url' => $row['archive_url']
+          ])
+          ->where([
+            'post_id' => $row['post_id'],
+            'url' => $row['url'],
+          ])
+          ->caller($scope)
+          ->execute();
+      }
+    }
 
     if (!empty($toInsert)) {
       $rows = array_map(
-        function($url) use ($postID) {
+        function($urlItem) use ($postID, $newSources) {
+          $newSource = $newSources[$urlItem['url']];
           return [
             'post_id' => $postID,
-            'url' => $url,
+            'url' => $newSource['url'],
+            'archive_url' => $newSource['archiveURL'],
           ];
         },
         $toInsert,
@@ -670,6 +727,7 @@ class DB {
         ->caller($scope)
         ->execute();
     }
+
     if (!empty($toDelete)) {
       $dbw->newDeleteQueryBuilder()
         ->deleteFrom('tombooru_post_source')
@@ -823,6 +881,7 @@ class DB {
       ->select([
         'ps.id',
         'ps.url',
+        'ps.archive_url',
         'ps.created_at',
       ])
       ->from('tombooru_post_source', 'ps')

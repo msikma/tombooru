@@ -186,7 +186,7 @@ class DataWriteManager {
     $data['description'] = @$post['description']['content'];
     $data['notes'] = @$post['notes']['content'];
     $data['tags'] = self::sanitizeTags(DataHelper::convertTagsToPlaintext(@$post['tags']));
-    $data['sources'] = self::sanitizeSources(DataHelper::convertSourcesToPlaintext(@$post['sources']));
+    $data['sources'] = self::sanitizeSourceList(DataHelper::convertSourcesToList(@$post['sources']));
     $data['rating'] = @$post['data']['rating'];
     $data['license'] = @$post['data']['license'];
     $data['is_ai_generated'] = @$post['data']['isAIGenerated'];
@@ -237,13 +237,39 @@ class DataWriteManager {
     $data['description'] = self::sanitizeDescription(trim($params['description']));
     $data['notes'] = self::sanitizeDescription(trim($params['notes']));
     $data['tags'] = self::sanitizeTags(trim($params['tags']));
-    $data['sources'] = self::sanitizeSources(trim($params['sources']));
+    $data['sources'] = self::sanitizeSourceList(self::collectSourceParams($params));
     $data['rating'] = self::sanitizeRating(@$params['rating']);
     $data['license'] = self::sanitizeLicense(trim($params['license']));
     $data['is_ai_generated'] = self::sanitizeBoolean(@$params['is_ai_generated'] === '1');
     $data['original_publication_date'] = self::sanitizePublicationDate(trim($params['original_publication_date']));
     
     return $data;
+  }
+
+  /**
+   * Collects source and source archive data from the POST parameters.
+   */
+  private static function collectSourceParams($params) {
+    $sources = [];
+    foreach ($params as $key => $value) {
+      if (!str_starts_with($key, 'source_')) {
+        continue;
+      }
+      $isArchive = str_starts_with($key, 'source_archive_');
+      if (!$isArchive && empty($value)) {
+        continue;
+      }
+      if (preg_match('/^source(_archive)?_(\d+)$/', $key, $matches)) {
+        $index = $matches[2];
+        $sources[$index][$isArchive ? 'archiveURL' : 'url'] = $value;
+      }
+    }
+    foreach ($sources as $key => $value) {
+      if (!isset($value['url'])) {
+        unset($sources[$key]);
+      }
+    };
+    return array_column($sources, null, 'url');
   }
 
   /**
@@ -385,32 +411,47 @@ class DataWriteManager {
   }
 
   /**
-   * Sanitizes the post sources value.
+   * Sanitizes the post sources.
    * 
-   * This splits the sources into strings and verifies they are valid URLs.
-   * 
-   * If an invalid URL is passed, an exception is thrown.
+   * This verifies that each URL is actually valid.
    */
-  private static function sanitizeSources($urls) {
+  private static function sanitizeSourceList($sourceList) {
     $value = [];
     $errors = [];
 
-    $urls = DataHelper::splitByWhitespace($urls);
-    $unique = array_intersect_key($urls, array_unique(array_map('mb_strtolower', $urls)));
-    foreach ($unique as $url) {
-      try {
-        // If this doesn't throw, it's a valid URL.
-        $parsed = Template::parseURL($url);
-        if (strlen($url) > self::$sourceMaxLength) {
-          throw new \Exception('too_long');
-        }
-        $value[$url] = $url;
+    // Ensure we save only unique URLs.
+    $sourceURLs = array_column($sourceList, null, 'url');
+
+    // Parse and verify each URL and archive URL.
+    foreach ($sourceURLs as $key => $sourceURL) {
+      if (!empty($sourceURL['archiveURL']) && empty($sourceURL['url'])) {
+        $errors[$key]['url'] = 'For every archive link there must be an original link.';
+        continue;
       }
-      catch (\Throwable $e) {
-        $errors[$url] = $e->getMessage();
+
+      foreach (['url', 'archiveURL'] as $item) {
+        $url = $sourceURL[$item];
+        // All values other than the main URL can be null or an empty string.
+        if ($item !== 'url' && empty($url)) {
+          $value[$key][$item] = null;
+          continue;
+        }
+        try {
+          // If this doesn't throw, it's a valid URL.
+          $parsed = Template::parseURL($url);
+          if (strlen($url) > self::$sourceMaxLength) {
+            throw new \Exception('URL is too long.');
+          }
+          $value[$key][$item] = trim($url);
+        }
+        catch (\Throwable $e) {
+          $value[$key][$item] = trim($url);
+          $errors[$key][$item] = $e->getMessage().' - '.trim($url);
+        }
       }
     }
-    $value = array_map('trim', $value);
+
+    $value = array_values($value);
 
     return [
       'value' => $value,

@@ -44,34 +44,6 @@
   'entityData' => $entityData,
 ]); ?>
 
-<?= Template::getComponent('Form/FieldTextSources', [
-  'title' => 'Sources',
-  'key' => 'sources',
-  'name' => 'sources',
-  'separator' => "\n",
-  'component' => 'PostEditSources',
-  'inputHelp' => '
-    <p>Link to where this image was originally found or posted. One per line.</p>
-  ',
-  'help' => '
-    <p><strong>An image MUST have a source link,</strong> unless it was first posted here or the source can\'t be determined.</p>
-  ',
-  'entityData' => $entityData,
-]); ?>
-
-<?= Template::getComponent('Form/FieldTextTags', [
-  'title' => 'Tags',
-  'key' => 'tags',
-  'name' => 'tags',
-  'separator' => ' ',
-  'component' => 'PostEditTagsPreview',
-  'help' => '
-    <p>New to tagging? See our <a href="'.URL::getURL('/page/How_to_tag').'">how to tag</a> page!</p>
-    <p>Tags are separated by whitespace and cannot contain spaces (use underscores instead).</p>
-  ',
-  'entityData' => $entityData,
-]); ?>
-
 <?= Template::getComponent('Form/FieldDateTime', [
   'title' => 'Original post date',
   'key' => 'original_publication_date',
@@ -122,10 +94,49 @@
       'name' => 'is_ai_generated',
       'label' => 'Is AI generated',
       'inputHelp' => '
-        <p>Check this box if your image is fully or partially AI generated.</p>
+        <p>Check this box if this image is fully or partially AI generated.</p>
         '.($aiPolicy === 1 ? '<p>On this imageboard, AI content is not displayed by default unless explicitly searched for.</p>' : '').'
       ',
       'entityData' => $entityData,
     ],
   ); ?>
 <?php endif; ?>
+
+<?= Template::getComponent('Form/Header', [
+  'title' => 'Sources'
+]); ?>
+
+<?= Template::getComponent('Form/FieldTextSources', [
+  'title' => 'Source links',
+  'key' => 'sources',
+  'name' => 'sources',
+  'separator' => "\n",
+  'component' => 'PostEditSources',
+  'inputHelp' => '
+    <p>A link to where this image was originally found or posted.</p>
+    <p>An image MUST have at least one source link, unless its source can\'t be determined.</p>
+  ',
+  'help' => '
+    <p>Optionally, add an <strong>archived version</strong> of the source link.</p>
+    <p>Use a service like the <a href="https://web.archive.org/" class="external">Wayback Machine</a> or <a href="https://archive.today/" class="external">Archive.today</a>.</p>
+    <p>Confused? Look at the <a href="'.URL::getURL('/page/Adding_sources').'">adding sources</a> page.</p>
+  ',
+  'entityData' => $entityData,
+]); ?>
+
+<?= Template::getComponent('Form/Header', [
+  'title' => 'Tags'
+]); ?>
+
+<?= Template::getComponent('Form/FieldTextTags', [
+  'title' => 'General tags',
+  'key' => 'tags',
+  'name' => 'tags',
+  'separator' => ' ',
+  'component' => 'PostEditTagsPreview',
+  'help' => '
+    <p>New to tagging? See our <a href="'.URL::getURL('/page/How_to_tag').'">how to tag</a> page!</p>
+    <p>Tags are separated by whitespace and cannot contain spaces (use underscores instead).</p>
+  ',
+  'entityData' => $entityData,
+]); ?>

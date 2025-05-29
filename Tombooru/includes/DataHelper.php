@@ -22,19 +22,20 @@ class DataHelper {
   }
 
   /**
-   * Converts all sources to a plaintext list.
-   * 
-   * This is used to allow the user to edit the sources list.
+   * Converts all sources to a list of URLs and their archived equivalents.
    */
-  public static function convertSourcesToPlaintext($sources) {
+  public static function convertSourcesToList($sources) {
     if (empty($sources)) {
-      return '';
+      return [];
     }
-    $textSources = [];
+    $sourceList = [];
     foreach ($sources as $source) {
-      $textSources[] = $source['url'];
+      $sourceList[] = [
+        'url' => $source['url'],
+        'archiveURL' => @$source['archiveURL'],
+      ];
     }
-    return implode("\n", $textSources);
+    return $sourceList;
   }
 
   /**

@@ -129,7 +129,7 @@ class SpecialTombooru extends SpecialPage {
   private function runPostsEditPage() {
     $pageID = $this->route['id'];
     $post = DataReadManager::getPost($pageID);
-
+    
     $originalData = DataWriteManager::collectPostOriginalData($post);
     $updateData = [];
     $updateError = null;

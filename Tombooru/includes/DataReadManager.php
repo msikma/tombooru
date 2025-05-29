@@ -447,6 +447,7 @@ class DataReadManager {
       $postSources[] = [
         'id' => intval($source['id']),
         'url' => $source['url'],
+        'archiveURL' => @$source['archive_url'],
         'createdAt' => Template::sqlTimestampToISO($source['created_at']),
       ];
     }
