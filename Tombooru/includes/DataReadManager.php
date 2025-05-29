@@ -465,6 +465,7 @@ class DataReadManager {
         'name' => $category['name'],
         'icon' => $category['icon'],
         'color' => $category['color'],
+        'header' => intval($category['header']) === 1 ? true : false,
         'properties' => $properties,
         'count' => intval($category['count']),
         'ordering' => intval($category['ordering']),

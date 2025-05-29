@@ -7,14 +7,19 @@
         $categoryIsGeneric = DataHelper::isSpecialCategory($category, 'generic');
         // If this is the "Artist" category, we'll show a link to /artist/ instead of /tag/.
         $categoryIsArtist = DataHelper::isSpecialCategory($category, 'artist');
+
+        // Determine the color of the items.
+        $categoryColor = !empty($category['color']) ? $category['color'] : 'generic';
+        // Whether this tag category wants to have its header displayed or not.
+        $categoryHeader = @$category['header'] ?? false;
         
         // Display either the category's name, or just "Tags" if this is the generic category.
         // Normally we actually don't display the title if it's the generic category, though.
         $categoryName = $categoryIsGeneric ? 'Tags' : $category['name'];
         // Show a header if this is not the generic tag, or if we're showing a categories only list.
-        $showCategoryHeader = !$categoryIsGeneric || $isCategoryList;
+        $showCategoryHeader = (!$categoryIsGeneric || $isCategoryList) && $categoryHeader;
       ?>
-      <div class="tag-category" data-tag-category="<?= htmlspecialchars($categoryName) ?>">
+      <div class="tag-category" data-tag-category="<?= htmlspecialchars($categoryName) ?>" data-tag-color="<?= htmlspecialchars($categoryColor) ?>" data-tag-header="<?= $showCategoryHeader ? '1' : '0'; ?>">
         <?php if ($showCategoryHeader): ?>
           <div class="tag-category-title">
             <h3 class="<?= $isCategoryList ? 'with-count' : ''; ?>" data-tag-category="<?= htmlspecialchars($categoryName) ?>">

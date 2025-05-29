@@ -63,6 +63,7 @@ create table /*_*/tombooru_tag_category (
   name varchar(300) not null unique,            -- case insensitive, case preserving
   icon varchar(300) null,
   color varchar(300) null,
+  header int not null default 1,                -- whether the tag category header is displayed
   description_page_id int unsigned null,        -- page that stores the description
   notes_page_id int unsigned null,              -- page that stores the notes
   properties varchar(300) not null default '',  -- special properties recognized by the app

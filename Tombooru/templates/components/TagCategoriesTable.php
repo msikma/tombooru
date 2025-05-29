@@ -7,6 +7,7 @@
           <th data-slug="name" data-direction="asc" data-active="false">Name<span class="sorter"></span></th>
           <th data-slug="icon" data-direction="asc" data-active="false">Icon<span class="sorter"></span></th>
           <th data-slug="color" data-direction="asc" data-active="false">Color<span class="sorter"></span></th>
+          <th data-slug="header" data-direction="asc" data-active="false">Header<span class="sorter"></span></th>
           <th data-slug="properties" data-direction="asc" data-active="false">Properties<span class="sorter"></span></th>
           <th data-slug="count" data-direction="asc" data-active="false">Count<span class="sorter"></span></th>
           <th data-slug="ordering" data-direction="asc" data-active="false">Ordering<span class="sorter"></span></th>
@@ -24,6 +25,7 @@
             $name = $tagCategory['name'];
             $icon = $tagCategory['icon'];
             $color = $tagCategory['color'];
+            $header = $tagCategory['header'];
             $properties = $tagCategory['properties'];
             $count = $tagCategory['count'];
             $ordering = $tagCategory['ordering'];
@@ -39,6 +41,7 @@
             <td><span class="inner"><?= htmlentities($name); ?></span></td>
             <td><span class="inner"><?= htmlentities($icon); ?></span></td>
             <td><span class="inner"><?= htmlentities($color); ?></span></td>
+            <td><span class="inner"><?= $header ? 'true' : 'false'; ?></span></td>
             <td class="even-padding"><span class="inner">
               <div class="actions narrow">
                 <div class="action-sets">

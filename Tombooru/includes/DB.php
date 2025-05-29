@@ -1197,6 +1197,7 @@ class DB {
         'tc.name',
         'tc.icon',
         'tc.color',
+        'tc.header',
         'tc.description_page_id',
         'tc.notes_page_id',
         'tc.properties',
