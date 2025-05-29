@@ -1,4 +1,4 @@
-<?= Template::getComponent('TagsSidebarPanel', ['tagTypes' => $tagTypes, 'search' => @$results['search']]); ?>
+<?= Template::getComponent('TagsSidebarPanel', ['tagCategories' => $tagCategories, 'search' => @$results['search']]); ?>
 
 <div class="tombooru-page page-tags">
   <?= Template::getComponent('TagsTable', ['tags' => $results['tags']]); ?>

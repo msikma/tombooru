@@ -4,7 +4,7 @@
   $pagination = $results['pagination'];
   $total = $pagination['totalResultCount'];
 ?>
-<?= Template::getComponent('SearchSidebarPanel', ['posts' => $posts, 'tagTypes' => $tags, 'search' => $search]); ?>
+<?= Template::getComponent('SearchSidebarPanel', ['posts' => $posts, 'tagCategories' => $tags, 'search' => $search]); ?>
 
 <div class="tombooru-page page-browse">
   <div class="search-result-info">

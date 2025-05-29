@@ -45,13 +45,13 @@ create table /*_*/tombooru_post_data (
 create table /*_*/tombooru_tag (
   id int unsigned auto_increment primary key,
   name varchar(300) not null unique,            -- case insensitive, case preserving
-  type varchar(300) not null default '',        -- free input; the extension recognizes certain special terms here
+  category varchar(300) not null default '',    -- free input; the extension recognizes certain special terms here
   description_page_id int unsigned null,        -- page that stores the description
   notes_page_id int unsigned null,              -- page that stores the notes
   count int unsigned default 0,
   created_at timestamp not null default current_timestamp,
 
-  index (type),
+  index (category),
   index (description_page_id),
   index (notes_page_id),
   index (count),

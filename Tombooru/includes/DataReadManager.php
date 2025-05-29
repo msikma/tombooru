@@ -120,13 +120,13 @@ class DataReadManager {
     if ($getTags) {
       $tags = DB::getPostTags($postIDs);
       $postTags = self::collectPostTagsData($tags, false);
-      $postTagsByType = DataHelper::getTagTypeGroups($postTags);
+      $postTagsByCategory = DataHelper::getTagCategoryGroups($postTags);
     }
 
     return array_filter([
       'query' => $query,
       'posts' => $postData,
-      'tags' => $getTags ? $postTagsByType : null,
+      'tags' => $getTags ? $postTagsByCategory : null,
       'pagination' => $pagination,
     ]);
   }
@@ -288,11 +288,11 @@ class DataReadManager {
   }
 
   /**
-   * Returns all tag types, how many uses they have, and the order that they should be displayed.
+   * Returns all tag categories, how many uses they have, and the order that they should be displayed.
    */
-  public static function getTypesOfTag() {
+  public static function getCategoriesOfTag() {
     // TODO: in the future this will come from the database.
-    $types = [
+    $categories = [
       [
         'name' => 'Copyright',
         'icon' => 'copyright',
@@ -319,9 +319,9 @@ class DataReadManager {
         'color' => 'gray',
       ]
     ];
-    return array_column($types, null, 'name');
-    // $tagTypes = DB::getDistinctTagTypes();
-    // return $tagTypes;
+    return array_column($categories, null, 'name');
+    // $tagCategories = DB::getDistinctTagCategories();
+    // return $tagCategories;
   }
 
   /**
@@ -401,7 +401,7 @@ class DataReadManager {
 
     // Retrieve additional data.
     $postTags = self::collectPostTagsData($tags, false);
-    $postTagTypes = DataHelper::getTagTypeGroups($postTags);
+    $postTagCategories = DataHelper::getTagCategoryGroups($postTags);
     $postSources = self::collectPostSourceData($sources);
 
     $postData = [
@@ -428,7 +428,7 @@ class DataReadManager {
         'upvotes' => intval($post['upvotes']),
         'downvotes' => intval($post['downvotes']),
       ],
-      'tags' => $postTagTypes,
+      'tags' => $postTagCategories,
       'sources' => $postSources,
       'createdAt' => Template::sqlTimestampToISO($post['created_at']),
       'updatedAt' => Template::sqlTimestampToISO($post['updated_at']),
@@ -480,7 +480,7 @@ class DataReadManager {
       $postTag = [
         'id' => intval($tag['id']),
         'name' => $tag['name'],
-        'type' => $tag['type'],
+        'category' => $tag['category'],
         'count' => intval($tag['count']),
         'createdAt' => Template::sqlTimestampToISO($tag['created_at']),
       ];

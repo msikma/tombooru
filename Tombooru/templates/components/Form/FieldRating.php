@@ -5,6 +5,7 @@
   $dataErrors = $errors($key);
 
   $ratings = DataReadManager::getTypesOfRating();
+  // TODO
   //$postRating = $post['data']['rating'] ?? 'safe';
   $postRating = 'safe';
 ?>

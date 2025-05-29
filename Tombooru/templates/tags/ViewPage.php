@@ -1,4 +1,4 @@
-<?= Template::getComponent('TagsSidebarPanel', ['tagTypes' => $tagTypes, 'tag' => $tag]); ?>
+<?= Template::getComponent('TagsSidebarPanel', ['tagCategories' => $tagCategories, 'tag' => $tag]); ?>
 
 <div class="tombooru-page page-tags">
   <h1>Tag: <?= htmlentities(str_replace('_', ' ', $tag['name'])); ?></h1>

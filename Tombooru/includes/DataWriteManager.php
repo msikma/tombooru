@@ -220,7 +220,7 @@ class DataWriteManager {
     $data['name'] = @$tag['name'];
     $data['description'] = @$tag['description']['content'];
     $data['notes'] = @$tag['notes']['content'];
-    $data['tagType'] = @$tag['type'];
+    $data['tagCategory'] = @$tag['category'];
     
     return DataHelper::addUpdateErrorStubs($data);
   }
@@ -233,7 +233,7 @@ class DataWriteManager {
     $data['name'] = '';
     $data['description'] = '';
     $data['notes'] = '';
-    $data['tagType'] = '';
+    $data['tagCategory'] = '';
 
     return DataHelper::addUpdateErrorStubs($data);
   }
@@ -254,7 +254,7 @@ class DataWriteManager {
     $data['name'] = self::sanitizeTagName(trim($params['name']));
     $data['description'] = self::sanitizeDescription(trim($params['description']));
     $data['notes'] = self::sanitizeDescription(trim($params['notes']));
-    $data['tagType'] = self::sanitizeTagType(trim($params['tag-type']));
+    $data['tagCategory'] = self::sanitizeTagCategory(trim($params['tag-category']));
 
     return $data;
   }
@@ -454,26 +454,26 @@ class DataWriteManager {
   }
 
   /**
-   * Sanitizes the tag type value.
+   * Sanitizes the tag category value.
    */
-  private static function sanitizeTagType($tagType) {
+  private static function sanitizeTagCategory($tagCategory) {
     $value = null;
     $errors = [];
 
     try {
-      if (is_null($tagType)) {
-        throw new \Exception('Tag type cannot be null.');
+      if (is_null($tagCategory)) {
+        throw new \Exception('Tag category cannot be null.');
       }
-      if ($tagType === '') {
+      if ($tagCategory === '') {
         $value = '';
       }
       else {
-        $tagTypes = DataReadManager::getTypesOfTag();
-        if (empty(@$tagTypes[$tagType])) {
-          throw new \Exception('Tag type must be an existing type.');
+        $tagCategories = DataReadManager::getCategoriesOfTag();
+        if (empty(@$tagCategories[$tagCategory])) {
+          throw new \Exception('Tag category must be an existing value.');
         }
       }
-      $value = $tagType;
+      $value = $tagCategory;
     }
     catch (\Throwable $e) {
       $errors[] = $e->getMessage();

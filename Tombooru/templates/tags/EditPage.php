@@ -6,7 +6,7 @@
 
   $plural = intval($tag['count']) === 1 ? '' : 's';
 ?>
-<?= Template::getComponent('TagsSidebarPanel', ['tagTypes' => $tagTypes]); ?>
+<?= Template::getComponent('TagsSidebarPanel', ['tagCategories' => $tagCategories]); ?>
 
 <div class="tombooru-page page-tags subpage-edit">
   <h1>Editing Tag ID: <?= $tag['id']; ?></h1>
@@ -67,14 +67,14 @@
         <div class="group-inner">
           <div class="group-content">
             <div class="group-header">
-              <h4 class="body-font icon">Tag type</h4>
+              <h4 class="body-font icon">Tag category</h4>
             </div>
             <div class="group-input">
-              <div class="input-tag-type">
-                <select name="tag-type">
-                  <option value="" <?= @$tag['type'] === '' ? 'selected' : ''; ?>>Regular (untyped)</option>
-                  <?php foreach (DataReadManager::getTypesOfTag() as $type): ?>
-                    <option value="<?= $type['name']; ?>" <?= @$tag['type'] === $type['name'] ? 'selected' : ''; ?>><?= $type['name']; ?></option>
+              <div class="input-tag-category">
+                <select name="tag-category">
+                  <option value="" <?= @$tag['category'] === '' ? 'selected' : ''; ?>>Regular (uncategorized)</option>
+                  <?php foreach (DataReadManager::getCategoriesOfTag() as $category): ?>
+                    <option value="<?= $category['name']; ?>" <?= @$tag['category'] === $category['name'] ? 'selected' : ''; ?>><?= $category['name']; ?></option>
                   <?php endforeach; ?>
                 </select>
               </div>

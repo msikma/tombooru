@@ -205,11 +205,11 @@ class DB {
     $db->doAtomicSection(
       $scope,
       function ($dbw) use ($tagID, $data, $scope) {
-        // Update the tag type. This is the only data we need to update at the moment.
+        // Update the tag category. This is the only data we need to update at the moment.
         $query = $dbw->newUpdateQueryBuilder()
           ->update('tombooru_tag')
           ->set(['name' => $data['name']])
-          ->set(['type' => $data['tagType']])
+          ->set(['category' => $data['tagCategory']])
           ->where(['id' => $tagID])
           ->caller($scope)
           ->execute();
@@ -663,7 +663,7 @@ class DB {
       ->select([
         't.id',
         't.name',
-        't.type',
+        't.category',
         't.description_page_id',
         't.notes_page_id',
         't.count',
@@ -695,7 +695,7 @@ class DB {
       ->select([
         't.id',
         't.name',
-        't.type',
+        't.category',
         't.description_page_id',
         't.notes_page_id',
         't.created_at',
@@ -704,7 +704,7 @@ class DB {
       ->from('tombooru_post_tag', 'pt')
       ->join('tombooru_tag', 't', 't.id = pt.tag_id')
       ->where(['pt.post_id' => $postIDs])
-      ->groupBy(['t.id', 't.name', 't.type'])
+      ->groupBy(['t.id', 't.name', 't.category'])
       ->caller(__METHOD__);
 
     $res = $query->fetchResultSet();
@@ -1099,7 +1099,7 @@ class DB {
       ->select([
         't.id',
         't.name',
-        't.type',
+        't.category',
         't.description_page_id',
         't.notes_page_id',
         't.count',
@@ -1149,24 +1149,24 @@ class DB {
   }
 
   /**
-   * Returns all tag types.
+   * Returns all tag categories.
    */
-  public static function getDistinctTagTypes() {
+  public static function getDistinctTagCategories() {
     $db = self::instReplicaDB();
 
     $query = $db->newSelectQueryBuilder()
-      ->select('distinct type')
+      ->select('distinct category')
       ->from('tombooru_tag')
-      ->orderBy('type')
+      ->orderBy('category')
       ->caller(__METHOD__);
 
     $res = $query->fetchResultSet();
 
-    $types = [];
+    $categories = [];
     foreach ($res as $row) {
-      $types[] = $row->type;
+      $categories[] = $row->category;
     }
-    return $types;
+    return $categories;
   }
 
   /**

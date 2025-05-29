@@ -204,11 +204,11 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runTagsViewPage() {
     $tag = DataReadManager::getTag($this->route['id']);
-    $tagTypes = DataReadManager::getTypesOfTag();
+    $tagCategories = DataReadManager::getCategoriesOfTag();
     $tagExamples = DataReadManager::getTagExampleResults($tag);
     return TemplateManager::outputTemplate('tags/ViewPage', [
       'tag' => $tag,
-      'tagTypes' => array_values($tagTypes),
+      'tagCategories' => array_values($tagCategories),
       'tagExamples' => $tagExamples,
     ]);
   }
@@ -219,7 +219,7 @@ class SpecialTombooru extends SpecialPage {
   private function runTagsEditPage() {
     $tagName = $this->route['id'];
     $tag = DataReadManager::getTag($tagName);
-    $tagTypes = DataReadManager::getTypesOfTag();
+    $tagCategories = DataReadManager::getCategoriesOfTag();
 
     $originalData = DataWriteManager::collectTagOriginalData($tag);
     $updateData = [];
@@ -244,7 +244,7 @@ class SpecialTombooru extends SpecialPage {
     
     return self::outputTemplate('tags/EditPage', [
       'tag' => $tag,
-      'tagTypes' => array_values($tagTypes),
+      'tagCategories' => array_values($tagCategories),
       'originalData' => $originalData,
       'updateData' => $updateData,
       'updateError' => $updateError,
@@ -257,8 +257,8 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runTagsDataPage() {
     $tag = DataReadManager::getTag($this->route['id']);
-    $tagTypes = DataReadManager::getTypesOfTag();
-    return TemplateManager::outputTemplate('tags/DataPage', ['tag' => $tag, 'tagTypes' => array_values($tagTypes)]);
+    $tagCategories = DataReadManager::getCategoriesOfTag();
+    return TemplateManager::outputTemplate('tags/DataPage', ['tag' => $tag, 'tagCategories' => array_values($tagCategories)]);
   }
 
   /**
@@ -269,10 +269,10 @@ class SpecialTombooru extends SpecialPage {
     $page = $this->request['page'];
     $search = @$this->request['params']['search'] ?? '';
     $results = DataReadManager::getTagSearchResults($search, [], $page, $perPage);
-    $tagTypes = DataReadManager::getTypesOfTag();
+    $tagCategories = DataReadManager::getCategoriesOfTag();
     return TemplateManager::outputTemplate('tags/BrowsePage', [
       'results' => $results,
-      'tagTypes' => array_values($tagTypes),
+      'tagCategories' => array_values($tagCategories),
     ]);
   }
 

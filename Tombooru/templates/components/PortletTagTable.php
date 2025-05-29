@@ -1,42 +1,43 @@
-<?php if (!empty($tagTypes)): ?>
+<?php if (!empty($tagCategories)): ?>
   <?php ob_start(); ?>
   <div class="tag-list">
-    <?php foreach ($tagTypes as $type): ?>
+    <?php foreach ($tagCategories as $category): ?>
       <?php
-        // Whether this is the "generic" (untyped) tag type.
-        $typeIsGeneric = $type['isGenericTag'];
-        // If this is the "Artist" type, we'll show a link to /artist/ instead of /tag/.
-        $typeIsArtist = $type['name'] === 'Artist';
+        // Whether this is the "generic" (uncategorized) tag category.
+        // TODO tag refactor
+        $categoryIsGeneric = $category['isGenericTag'];
+        // If this is the "Artist" category, we'll show a link to /artist/ instead of /tag/.
+        $categoryIsArtist = $category['name'] === 'Artist';
         
-        // Display either the type's name, or just "Tags" if this is the generic type.
-        // Normally we actually don't display the title if it's the generic type, though.
-        $typeName = $typeIsGeneric ? 'Tags' : $type['name'];
-        // Show a header if this is not the generic tag, or if we're showing a types only list.
-        $showTypeHeader = !$typeIsGeneric || $isTypesList;
+        // Display either the category's name, or just "Tags" if this is the generic category.
+        // Normally we actually don't display the title if it's the generic category, though.
+        $categoryName = $categoryIsGeneric ? 'Tags' : $category['name'];
+        // Show a header if this is not the generic tag, or if we're showing a categories only list.
+        $showCategoryHeader = !$categoryIsGeneric || $isCategoryList;
       ?>
-      <div class="tag-type" data-tag-type="<?= htmlspecialchars($typeName) ?>">
-        <?php if ($showTypeHeader): ?>
-          <div class="tag-type-title">
-            <h3 class="<?= $isTypesList ? 'with-count' : ''; ?>" data-tag-type="<?= htmlspecialchars($typeName) ?>">
-              <span><?= htmlspecialchars($typeName) ?></span>
+      <div class="tag-category" data-tag-category="<?= htmlspecialchars($categoryName) ?>">
+        <?php if ($showCategoryHeader): ?>
+          <div class="tag-category-title">
+            <h3 class="<?= $isCategoryList ? 'with-count' : ''; ?>" data-tag-category="<?= htmlspecialchars($categoryName) ?>">
+              <span><?= htmlspecialchars($categoryName) ?></span>
             </h3>
           </div>
         <?php endif; ?>
-        <?php if (!empty($type['tags'])): ?>
-          <div class="tag-type-list">
-            <?php foreach ($type['tags'] as $tag): ?>
+        <?php if (!empty($category['tags'])): ?>
+          <div class="tag-category-list">
+            <?php foreach ($category['tags'] as $tag): ?>
               <?php
                 $id = $tag['id'];
                 $name = $tag['name'];
                 $label = str_replace('_', ' ', $tag['name']);
                 $count = $tag['count'];
-                $urlInfo = URL::getTagInfoURL($tag, 'view', $typeIsArtist);
+                $urlInfo = URL::getTagInfoURL($tag, 'view', $categoryIsArtist);
                 $urlSearch = URL::getTagSearchURL($tag);
                 $urlPlusSearch = URL::getTagPlusSearchURL($tag);
               ?>
               <div class="tag"
                   data-tag-id="<?= htmlspecialchars($id); ?>"
-                  data-tag-type="<?= htmlspecialchars($name) ?>"
+                  data-tag-category="<?= htmlspecialchars($name) ?>"
                   data-count="<?= htmlspecialchars($count) ?>">
                 <a class="tag-link" href="<?= htmlspecialchars($urlSearch) ?>">
                   <span><?= htmlspecialchars($label) ?></span>&nbsp;<span class="amount"><?= htmlspecialchars($count) ?></span>
@@ -54,7 +55,7 @@
   </div>
   <?=
     Template::getComponent('Portlet', [
-      'name' => $isTypesList ? 'Tag types' : 'Tags',
+      'name' => $isCategoryList ? 'Tag categories' : 'Tags',
       'id' => 'media_tags',
       'content' => ob_get_clean(),
       'contentClass' => 'no-background',

@@ -1,4 +1,4 @@
-<?= Template::getComponent('TagsSidebarPanel', ['tagTypes' => $tagTypes]); ?>
+<?= Template::getComponent('TagsSidebarPanel', ['tagCategories' => $tagCategories]); ?>
 
 <div class="tombooru-page page-tags">
   <h1>Tag: <?= htmlentities(str_replace('_', ' ', $tag['name'])); ?></h1>
@@ -10,7 +10,7 @@
     $rows = [
       ['ID', 'id'],
       ['Name', 'name'],
-      ['Type', 'type'],
+      ['Category', 'category'],
       ['Count', 'count'],
       ['Description page ID', 'description.pageID'],
       ['Notes page ID', 'notes.pageID'],

@@ -1,10 +1,10 @@
 <?php
-  $tagTypes = DataReadManager::getTypesOfTag();
-  $tagTypeData = !empty($tagType) ? @$tagTypes[$tagType] : null;
-  $tagColor = empty(@$tagTypeData['color']) ? 'blue' : $tagTypeData['color'];
-  $tagIcon = empty(@$tagTypeData['icon']) ? null : $tagTypeData['icon'];
+  $tagCategories = DataReadManager::getCategoriesOfTag();
+  $tagCategoryData = !empty($tagCategory) ? @$tagCategories[$tagCategory] : null;
+  $tagColor = empty(@$tagCategoryData['color']) ? 'blue' : $tagCategoryData['color'];
+  $tagIcon = empty(@$tagCategoryData['icon']) ? null : $tagCategoryData['icon'];
 ?>
-<?php if (!empty($tagType)): ?>
+<?php if (!empty($tagCategoryData)): ?>
   <?php if ($addWrapper): ?>
     <div class="actions narrow">
       <div class="action-sets">
@@ -15,7 +15,7 @@
               class="item <?= !empty($tagIcon) ? 'icon' : ''; ?> <?= $tagColor; ?>"
               <?= !empty($tagIcon) ? Template::setIcon($tagIcon) : ''; ?>
             >
-              <?= htmlentities(@$tagType); ?>
+              <?= htmlentities(@$tagCategory); ?>
             </a>
           <?php if ($addWrapper): ?>
         </div>

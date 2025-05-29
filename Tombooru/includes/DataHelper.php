@@ -8,13 +8,13 @@ class DataHelper {
    * 
    * This is used to make the list of post tags on the edit page.
    */
-  public static function convertTagsToPlaintext($tags) {
-    if (empty($tags)) {
+  public static function convertTagsToPlaintext($tagCategories) {
+    if (empty($tagCategories)) {
       return '';
     }
     $textTags = [];
-    foreach ($tags as $type) {
-      foreach ($type['tags'] as $tag) {
+    foreach ($tagCategories as $category) {
+      foreach ($category['tags'] as $tag) {
         $textTags[] = $tag['name'];
       }
     }
@@ -111,17 +111,17 @@ class DataHelper {
   }
 
   /**
-   * Groups tags by their type and sorts them.
+   * Groups tags by their category and sorts them.
    * 
-   * Tag types are sorted by the order provided by DataReadManager::getTypesOfTag().
+   * Tag categories are sorted by the order provided by DataReadManager::getCategoriesOfTag().
    * 
    * Tags inside groups themselves are sorted alphabetically.
    */
-  public static function getTagTypeGroups($tags) {
-    $tagTypes = self::groupPostTagsByType($tags);
-    $orderedTagTypes = self::orderPostTagTypes($tagTypes);
-    $orderedTagTypes = self::omitOrderValues($orderedTagTypes);
-    return $orderedTagTypes;
+  public static function getTagCategoryGroups($tags) {
+    $tagCategories = self::groupPostTagsByCategory($tags);
+    $orderedTagCategories = self::orderPostTagCategories($tagCategories);
+    $orderedTagCategories = self::omitOrderValues($orderedTagCategories);
+    return $orderedTagCategories;
   }
 
   /**
@@ -167,27 +167,27 @@ class DataHelper {
   }
 
   /**
-   * Groups tags by type.
+   * Groups tags by category.
    * 
-   * This also adds an "order" value to the types which are used for sorting later.
+   * This also adds an "order" value to the categories which are used for sorting later.
    * This order value should be removed using self::omitOrderValues() before returning the data.
    */
-  private static function groupPostTagsByType($tags) {
-    $tagTypes = [];
-    $allTagTypes = DataReadManager::getTypesOfTag();
-    $order = array_flip(array_column(array_values($allTagTypes), 'name'));
+  private static function groupPostTagsByCategory($tags) {
+    $tagCategories = [];
+    $allTagCategories = DataReadManager::getCategoriesOfTag();
+    $order = array_flip(array_column(array_values($allTagCategories), 'name'));
     foreach ($tags as $tag) {
-      $type = trim(@$tag['type'] ?? '');
-      $name = !empty($type) ? $type : '';
-      if (!isset($tagTypes[$name])) {
-        $tagTypes[$name] = [
+      $category = trim(@$tag['category'] ?? '');
+      $name = !empty($category) ? $category : '';
+      if (!isset($tagCategories[$name])) {
+        $tagCategories[$name] = [
           'name' => $name,
-          'isGenericTag' => $type === '',
-          'order' => empty($type) ? 10000 : $order[$name],
+          'isGenericTag' => $category === '',
+          'order' => empty($category) ? 10000 : $order[$name],
           'tags' => [],
         ];
       }
-      $tagTypes[$name]['tags'][] = [
+      $tagCategories[$name]['tags'][] = [
         'id' => $tag['id'],
         'name' => $tag['name'],
         'count' => $tag['count'],
@@ -195,37 +195,37 @@ class DataHelper {
         'notes' => @$tag['notes'],
       ];
     }
-    return array_values($tagTypes);
+    return array_values($tagCategories);
   }
 
   /**
-   * Reorders the tag types and the tags inside.
+   * Reorders the tag categories and the tags inside.
    */
-  private static function orderPostTagTypes($tagTypes) {
-    usort($tagTypes, function ($a, $b) {
+  private static function orderPostTagCategories($tagCategories) {
+    usort($tagCategories, function ($a, $b) {
       $aIndex = $a['order'] ?? PHP_INT_MAX;
       $bIndex = $b['order'] ?? PHP_INT_MAX;
       return $aIndex <=> $bIndex;
     });
-    foreach ($tagTypes as &$tagType) {
-      usort($tagType['tags'], function ($a, $b) {
+    foreach ($tagCategories as &$tagCategory) {
+      usort($tagCategory['tags'], function ($a, $b) {
         return $a['name'] <=> $b['name'];
       });
     }
-    return $tagTypes;
+    return $tagCategories;
   }
 
   /**
-   * Removes "order" values from a set of tag types.
+   * Removes "order" values from a set of tag categories.
    * 
-   * When ordering tag types, an "order" value is added to it.
+   * When ordering tag categories, an "order" value is added to it.
    * We remove this to finalize processing the tags.
    */
-  private static function omitOrderValues($tagTypes) {
-    foreach ($tagTypes as &$tagType) {
-      unset($tagType['order']);
+  private static function omitOrderValues($tagCategories) {
+    foreach ($tagCategories as &$tagCategory) {
+      unset($tagCategory['order']);
     }
-    return $tagTypes;
+    return $tagCategories;
   }
 
   /**
