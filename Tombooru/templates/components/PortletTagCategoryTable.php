@@ -4,9 +4,10 @@
     <?php
       $categoryIsGeneric = DataHelper::isSpecialCategory($category, 'generic');
       $categoryName = $categoryIsGeneric ? 'Tags' : $category['name'];
+      $categoryColor = $categoryIsGeneric ? 'green' : $category['color'];
       $urlInfo = URL::getTagCategoryInfoURL($category, 'view');
     ?>
-    <div class="tag-category" data-tag-category="<?= $categoryName; ?>">
+    <div class="tag-category" data-tag-category="<?= htmlspecialchars($categoryName); ?>" data-tag-color="<?= htmlspecialchars($categoryColor); ?>">
       <div class="tag-category-title tag-category-list">
         <h3 class="tag" data-tag-category="<?= htmlspecialchars($categoryName); ?>">
           <a class="tag-link" href="<?= htmlspecialchars($urlInfo); ?>">

@@ -235,7 +235,7 @@ class DB {
               ->caller($scope)
               ->fetchField();
             
-            self::recountTagCategoryCount($oldCategoryID);
+            self::recountTagCategory($oldCategoryID);
           }
           
           if ($newCategory !== '') {
@@ -246,7 +246,7 @@ class DB {
               ->caller($scope)
               ->fetchField();
             
-            self::recountTagCategoryCount($newCategoryID);
+            self::recountTagCategory($newCategoryID);
           }
         }
       }
@@ -294,9 +294,14 @@ class DB {
         self::updatePostSources($id, $data, $dbw, $scope);
 
         // Update post tags.
-        [$tagsToIncrement, $tagsToDecrement] = self::updatePostTags($id, $data, $dbw, $scope);
+        [$tagsToIncrement, $tagsToDecrement, $tagCategoriesToRecount] = self::updatePostTags($id, $data, $dbw, $scope);
         self::updateTagCount($tagsToIncrement, 1, $dbw, $scope);
         self::updateTagCount($tagsToDecrement, -1, $dbw, $scope);
+
+        // TODO: properly increment/decrement the tag categories.
+        foreach ($tagCategoriesToRecount as $tagCategoryName) {
+          self::recountTagCategoryByName($tagCategoryName, $dbw, $scope);
+        }
         
         // At this point, we've updated everything *except* the new page description and notes content.
         // What we'll do is commit this transaction for now. The description/notes pages
@@ -307,6 +312,21 @@ class DB {
     );
 
     return true;
+  }
+
+  /**
+   * Generates a list of flat tags, and an object of intents, from the tag sets in a post update data object.
+   */
+  private static function collectFlatTags($tagSets) {
+    $flatTags = [];
+    $tagIntents = [];
+    foreach ($tagSets as $set) {
+      foreach ($set['tags'] as $tag) {
+        $flatTags[] = $tag;
+        $tagIntents[$tag] = $set['intent'];
+      }
+    }
+    return [$flatTags, $tagIntents];
   }
 
   /**
@@ -335,6 +355,8 @@ class DB {
       return [[], []];
     }
 
+    [$flatTags, $tagIntents] = self::collectFlatTags($data['tags']);
+
     // The following lists define the flow of this function:
     $tagNamesDesired = [];            // the tag names we ultimately want to end up with (submitted by the user).
     $tagNamesToNewlyCreate = [];      // new tag names to create.
@@ -347,9 +369,11 @@ class DB {
     // are both plain lists of tag names without IDs. All the other arrays are name->ID associations.
 
     // To start with, ensure all desired tag names are lowercase for case insensitive comparison purposes.
-    $tagNamesDesired = array_values(array_map('mb_strtolower', $data['tags']));
+    $tagNamesDesired = array_values(array_map('mb_strtolower', $flatTags));
     // We'll keep a copy of the original tags to create them with the proper capitalization if needed.
-    $tagNamesCapitalization = array_combine($tagNamesDesired, $data['tags']);
+    $tagNamesCapitalization = array_combine($tagNamesDesired, $flatTags);
+    // Here's a list of tag categories we'll need to update the counts of if we create new tags.
+    $tagCategoriesToRecount = [];
 
     // First, fetch a list of all currently existing tags that match the desired tags.
     // This helps us understand which tags need to be newly created before we can link them.
@@ -415,14 +439,21 @@ class DB {
     // Insert new tags if needed. Once inserted, add them to $tagsToLink.
     if (!empty($tagNamesToNewlyCreate)) {
       $rows = array_map(
-        function($name) use ($tagNamesCapitalization) {
+        function($name) use ($tagNamesCapitalization, $tagIntents) {
           return [
             'name' => $tagNamesCapitalization[$name],
+            'category' => @$tagIntents[$name] ?? '',
             'count' => 0,
           ];
         },
         $tagNamesToNewlyCreate,
       );
+
+      foreach ($rows as $row) {
+        if ($row['category'] !== '') {
+          $tagCategoriesToRecount[] = $row['category'];
+        }
+      }
 
       $dbw->newInsertQueryBuilder()
         ->insertInto('tombooru_tag')
@@ -478,7 +509,7 @@ class DB {
     $tagsToIncrement = array_values($tagsToLink);
     $tagsToDecrement = array_values($tagsToUnlink);
     
-    return [$tagsToIncrement, $tagsToDecrement];
+    return [$tagsToIncrement, $tagsToDecrement, $tagCategoriesToRecount];
   }
 
   /**
@@ -540,10 +571,26 @@ class DB {
     return $ids;
   }
 
+  public static function recountTagCategoryByName($tagCategoryName, $dbw, $scope = __METHOD__) {
+    $count = $dbw->newSelectQueryBuilder()
+      ->select('count(*)')
+      ->from('tombooru_tag')
+      ->where(['category' => $tagCategoryName])
+      ->caller($scope)
+      ->fetchField();
+
+    $dbw->newUpdateQueryBuilder()
+      ->update('tombooru_tag_category')
+      ->set(['count' => intval($count)])
+      ->where(['name' => $tagCategoryName])
+      ->caller($scope)
+      ->execute();
+  }
+
   /**
    * Updates a tag category with a count that is equal to the number of tags that are using it.
    */
-  public static function recountTagCategoryCount($tagCategoryID, $scope = __METHOD__) {
+  public static function recountTagCategory($tagCategoryID, $scope = __METHOD__) {
     $dbw = self::instPrimaryDB();
 
     $categoryData = $dbw->newSelectQueryBuilder()

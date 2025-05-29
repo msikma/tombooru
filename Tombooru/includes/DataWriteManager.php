@@ -161,7 +161,7 @@ class DataWriteManager {
     $tagCategoryIDs = DB::getAllTagCategoryIDs();
     $updatedTagCategories = [];
     foreach ($tagCategoryIDs as $tagCategoryID) {
-      $result = DB::recountTagCategoryCount($tagCategoryID);
+      $result = DB::recountTagCategory($tagCategoryID);
       if (!empty($result) && $result['oldCount'] !== $result['newCount']) {
         $updatedTagCategories[$result['name']] = $result;
       }
@@ -185,7 +185,7 @@ class DataWriteManager {
     $data['filename'] = @$post['file']['name'];
     $data['description'] = @$post['description']['content'];
     $data['notes'] = @$post['notes']['content'];
-    $data['tags'] = self::sanitizeTags(DataHelper::convertTagsToPlaintext(@$post['tags']));
+    $data['tags'] = self::sanitizeTags(self::collectTagsFromPost(@$post['tags']));
     $data['sources'] = self::sanitizeSourceList(DataHelper::convertSourcesToList(@$post['sources']));
     $data['rating'] = @$post['data']['rating'];
     $data['license'] = @$post['data']['license'];
@@ -236,7 +236,7 @@ class DataWriteManager {
     $data['filename'] = self::sanitizeDestinationFilename(@$params['destination_filename'], $source->getName());
     $data['description'] = self::sanitizeDescription(trim($params['description']));
     $data['notes'] = self::sanitizeDescription(trim($params['notes']));
-    $data['tags'] = self::sanitizeTags(trim($params['tags']));
+    $data['tags'] = self::sanitizeTags(self::collectTagParams($params));
     $data['sources'] = self::sanitizeSourceList(self::collectSourceParams($params));
     $data['rating'] = self::sanitizeRating(@$params['rating']);
     $data['license'] = self::sanitizeLicense(trim($params['license']));
@@ -244,6 +244,45 @@ class DataWriteManager {
     $data['original_publication_date'] = self::sanitizePublicationDate(trim($params['original_publication_date']));
     
     return $data;
+  }
+
+  /**
+   * Takes tags from an existing post and prepares them for self::sanitizeTags().
+   */
+  private static function collectTagsFromPost($postTags) {
+    foreach ($postTags as &$tagCategory) {
+      $tagCategory = [
+        'name' => @$tagCategory['name'] ?? '',
+        'tags' => array_column($tagCategory['tags'], 'name'),
+      ];
+    }
+    return $postTags;
+  }
+
+  /**
+   * Collects tag data from the POST parameters.
+   * 
+   * This also collects the "category intent" of each tag;
+   * if a tag does not exist, it will be created, and in that case
+   * the intent will become its tag category.
+   */
+  private static function collectTagParams($params) {
+    $tagSets = [];
+    foreach ($params as $key => $value) {
+      if ($key !== 'tags' && !str_starts_with($key, 'tags_')) {
+        continue;
+      }
+      $categoryIntent = '';
+      if (preg_match('/^tags_(\S+)$/', $key, $matches)) {
+        $categoryIntent = trim($matches[1]);
+      }
+      $tags = self::splitTagsString($value);
+      $tagSets[] = [
+        'name' => $categoryIntent,
+        'tags' => $tags,
+      ];
+    }
+    return $tagSets;
   }
 
   /**
@@ -477,31 +516,53 @@ class DataWriteManager {
   /**
    * Sanitizes the post tags value.
    * 
-   * This splits the tags into strings, makes sure they're trimmed, and removes duplicates.
+   * Tags are, at this point, already split up. Each set has a category intent.
    */
-  private static function sanitizeTags($tags) {
+  private static function sanitizeTags($tagSets) {
     $value = [];
     $errors = [];
 
-    $tags = DataHelper::splitByWhitespace($tags);
-    $unique = array_intersect_key($tags, array_unique(array_map('mb_strtolower', $tags)));
-    foreach ($unique as $tag) {
+    if (empty($tagSets)) {
+      return [
+        'value' => $value,
+        'errors' => $errors,
+      ];
+    }
+
+    foreach ($tagSets as $set) {
       try {
-        if (strlen($tag) > self::$tagMaxLength) {
-          throw new \Exception('too_long');
+        foreach ($set['tags'] as $tag) {
+          if (strlen($tag) > self::$tagMaxLength) {
+            throw new \Exception('This tag is too long: '.substr($tag, 0, 14).'...');
+          }
         }
-        $value[$tag] = $tag;
+        $value[] = [
+          'intent' => $set['name'],
+          'tags' => $set['tags'],
+        ];
       }
       catch (\Throwable $e) {
-        $errors[$tag] = $e->getMessage();
+        $value[] = [
+          'intent' => $set['name'],
+          'tags' => $set['tags'],
+        ];
+        $errors[] = $e->getMessage();
       }
     }
-    $value = array_map('trim', $value);
 
     return [
       'value' => $value,
       'errors' => $errors,
     ];
+  }
+
+  /**
+   * Splits a string up into tags, separated by whitespace.
+   */
+  private static function splitTagsString($tags) {
+    $tags = DataHelper::splitByWhitespace($tags);
+    $unique = array_intersect_key($tags, array_unique(array_map('mb_strtolower', $tags)));
+    return array_map(fn($row) => trim($row, ','), $unique);
   }
 
   /**

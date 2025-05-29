@@ -192,10 +192,11 @@ class DataHelper {
       $category = trim(@$tag['category'] ?? '');
       $name = !empty($category) ? $category : '';
       if (!isset($tagsByCategory[$name])) {
+        $categoryOrder = @$order[$name] ?? 10000;
         $tagsByCategory[$name] = [
           ...$tagCategoryData,
           'name' => $name,
-          'order' => empty($category) ? 10000 : $order[$name],
+          'order' => empty($category) ? 20000 : $categoryOrder,
           'tags' => [],
         ];
       }

@@ -110,7 +110,6 @@
   'title' => 'Source links',
   'key' => 'sources',
   'name' => 'sources',
-  'separator' => "\n",
   'component' => 'PostEditSources',
   'inputHelp' => '
     <p>A link to where this image was originally found or posted.</p>
@@ -129,14 +128,47 @@
 ]); ?>
 
 <?= Template::getComponent('Form/FieldTextTags', [
-  'title' => 'General tags',
+  'title' => 'Artists',
+  'category' => 'Artist',
+  'key' => 'tags_Artist',
+  'name' => 'tags_Artist',
+  'component' => 'PostEditTagsPreview',
+  'rows' => 2,
+  'help' => '
+    <p>Insert the name of the artist here.</p>
+    <p>Not sure who it is? Use <code>anonymous_artist</code> or <code>unknown_artist</code>.</p>
+  ',
+  'entityData' => $entityData,
+]); ?>
+
+<?= Template::getComponent('Form/FieldTextTags', [
+  'title' => 'Characters',
+  'category' => 'Character',
+  'key' => 'tags_Character',
+  'name' => 'tags_Character',
+  'component' => 'PostEditTagsPreview',
+  'rows' => 2,
+  'examples' => 'e.g.: Tomba Tabby',
+  'help' => '
+    <p>Add characters that appear in the image here.</p>
+  ',
+  'entityData' => $entityData,
+]); ?>
+
+<?= Template::getComponent('Form/FieldTextTags', [
+  'title' => 'Other tags',
+  'category' => '',
   'key' => 'tags',
   'name' => 'tags',
-  'separator' => ' ',
   'component' => 'PostEditTagsPreview',
+  'rows' => 2,
+  'examples' => 'e.g.: bracelet blackjack kokka_egg',
   'help' => '
     <p>New to tagging? See our <a href="'.URL::getURL('/page/How_to_tag').'">how to tag</a> page!</p>
     <p>Tags are separated by whitespace and cannot contain spaces (use underscores instead).</p>
+  ',
+  'inputHelp' => '
+    <p>All tags are <strong>space separated</strong>.</p><p>Use <strong>underscores</strong> for spaces inside tags, e.g. <code>green_pants</code>.</p>
   ',
   'entityData' => $entityData,
 ]); ?>
