@@ -177,8 +177,9 @@ class DataReadManager {
     if (empty($tagName)) {
       return [];
     }
+    $tagCategories = self::getTagCategories();
     $results = DB::getTagsSearchResult($tagName, $filters, 1, 10);
-    $tagData = self::collectPostTagsData($results, false);
+    $tagData = self::collectPostTagsData($results, false, $tagCategories);
     return $tagData;
   }
 

@@ -359,7 +359,7 @@ Tombooru.ComponentSidebarSearchBar = class {
     buffer.push('<div class="autocomplete">');
     buffer.push('<table class="entries">');
     for (const item of data.suggestions) {
-      buffer.push(`<tr class="tag-category" data-tag-category="${item.category}">`);
+      buffer.push(`<tr class="tag-category" data-tag-color="${item.category?.color ?? ''}">`);
       const name = this.highlightSearchTerm(item.name.replaceAll('_', ' '), searchTerm);
       if (item.attributes.includes('isMoved')) {
         const oldName = this.highlightSearchTerm(item.oldName.replaceAll('_', ' '), searchTerm);
