@@ -113,13 +113,13 @@ class DataHelper {
   /**
    * Groups tags by their category and sorts them.
    * 
-   * Tag categories are sorted by the order provided by DataReadManager::getCategoriesOfTag().
+   * Tag categories are sorted by the order provided by DataReadManager::getTagCategories().
    * 
    * Tags inside groups themselves are sorted alphabetically.
    */
-  public static function getTagCategoryGroups($tags) {
-    $tagCategories = self::groupPostTagsByCategory($tags);
-    $orderedTagCategories = self::orderPostTagCategories($tagCategories);
+  public static function getTagCategoryGroups($tags, $tagCategories) {
+    $tagsByCategory = self::groupPostTagsByCategory($tags, $tagCategories);
+    $orderedTagCategories = self::orderPostTagCategories($tagsByCategory);
     $orderedTagCategories = self::omitOrderValues($orderedTagCategories);
     return $orderedTagCategories;
   }
@@ -167,27 +167,38 @@ class DataHelper {
   }
 
   /**
+   * Returns the display order for a given list of tag categories.
+   */
+  private static function getTagCategoryOrdering($tagCategories) {
+    $ordering = [];
+    foreach ($tagCategories as $tagCategory) {
+      $ordering[$tagCategory['name']] = $tagCategory['ordering'];
+    }
+    return $ordering;
+  }
+
+  /**
    * Groups tags by category.
    * 
    * This also adds an "order" value to the categories which are used for sorting later.
    * This order value should be removed using self::omitOrderValues() before returning the data.
    */
-  private static function groupPostTagsByCategory($tags) {
-    $tagCategories = [];
-    $allTagCategories = DataReadManager::getCategoriesOfTag();
-    $order = array_flip(array_column(array_values($allTagCategories), 'name'));
+  private static function groupPostTagsByCategory($tags, $tagCategories) {
+    $tagsByCategory = [];
+    $order = self::getTagCategoryOrdering($tagCategories);
     foreach ($tags as $tag) {
+      $tagCategoryData = @$tagCategories[$tag['category']] ?? [];
       $category = trim(@$tag['category'] ?? '');
       $name = !empty($category) ? $category : '';
-      if (!isset($tagCategories[$name])) {
-        $tagCategories[$name] = [
+      if (!isset($tagsByCategory[$name])) {
+        $tagsByCategory[$name] = [
+          ...$tagCategoryData,
           'name' => $name,
-          'isGenericTag' => $category === '',
           'order' => empty($category) ? 10000 : $order[$name],
           'tags' => [],
         ];
       }
-      $tagCategories[$name]['tags'][] = [
+      $tagsByCategory[$name]['tags'][] = [
         'id' => $tag['id'],
         'name' => $tag['name'],
         'count' => $tag['count'],
@@ -195,7 +206,7 @@ class DataHelper {
         'notes' => @$tag['notes'],
       ];
     }
-    return array_values($tagCategories);
+    return array_values($tagsByCategory);
   }
 
   /**
@@ -289,5 +300,16 @@ class DataHelper {
       $unpackedData[$k] = $v['value'];
     }
     return $unpackedData;
+  }
+
+  /**
+   * Checks whether a given tag category is a special category type.
+   */
+  public static function isSpecialCategory($tagCategory, $type) {
+    if ($type === 'generic') {
+      // Special case: a tag that has the empty category is "generic".
+      return empty($tagCategory['id']);
+    }
+    return in_array($type, $tagCategory['properties'] ?? []);
   }
 }

@@ -72,8 +72,8 @@
             <div class="group-input">
               <div class="input-tag-category">
                 <select name="tag-category">
-                  <option value="" <?= @$tag['category'] === '' ? 'selected' : ''; ?>>Regular (uncategorized)</option>
-                  <?php foreach (DataReadManager::getCategoriesOfTag() as $category): ?>
+                  <option value="" <?= @$tag['category'] === '' ? 'selected' : ''; ?>>Uncategorized</option>
+                  <?php foreach (DataReadManager::getTagCategories() as $category): ?>
                     <option value="<?= $category['name']; ?>" <?= @$tag['category'] === $category['name'] ? 'selected' : ''; ?>><?= $category['name']; ?></option>
                   <?php endforeach; ?>
                 </select>

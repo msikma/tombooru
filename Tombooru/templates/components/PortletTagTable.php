@@ -4,10 +4,9 @@
     <?php foreach ($tagCategories as $category): ?>
       <?php
         // Whether this is the "generic" (uncategorized) tag category.
-        // TODO tag refactor
-        $categoryIsGeneric = $category['isGenericTag'];
+        $categoryIsGeneric = DataHelper::isSpecialCategory($category, 'generic');
         // If this is the "Artist" category, we'll show a link to /artist/ instead of /tag/.
-        $categoryIsArtist = $category['name'] === 'Artist';
+        $categoryIsArtist = DataHelper::isSpecialCategory($category, 'artist');
         
         // Display either the category's name, or just "Tags" if this is the generic category.
         // Normally we actually don't display the title if it's the generic category, though.

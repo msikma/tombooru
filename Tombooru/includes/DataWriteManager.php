@@ -139,6 +139,24 @@ class DataWriteManager {
   }
 
   /**
+   * Goes through every tag category in the database and gives it an accurate count.
+   */
+  public static function updateAllTagCategoryCounts() {
+    $tagCategoryIDs = DB::getAllTagCategoryIDs();
+    $updatedTagCategories = [];
+    foreach ($tagCategoryIDs as $tagCategoryID) {
+      $result = DB::recountTagCategoryCount($tagCategoryID);
+      if (!empty($result) && $result['oldCount'] !== $result['newCount']) {
+        $updatedTagCategories[$result['name']] = $result;
+      }
+    }
+    return [
+      'result' => 'success',
+      'updatedTagCategories' => $updatedTagCategories,
+    ];
+  }
+
+  /**
    * Converts the original post data into an array in the shape of an update.
    * 
    * This is used to display the original data on the edit page, until the user updates it.
@@ -468,7 +486,7 @@ class DataWriteManager {
         $value = '';
       }
       else {
-        $tagCategories = DataReadManager::getCategoriesOfTag();
+        $tagCategories = DataReadManager::getTagCategories();
         if (empty(@$tagCategories[$tagCategory])) {
           throw new \Exception('Tag category must be an existing value.');
         }

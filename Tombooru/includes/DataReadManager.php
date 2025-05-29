@@ -5,6 +5,7 @@ use \UploadBase;
 
 class DataReadManager {
   private static int $tagExampleAmount = 3;
+  private static ?array $tagCategories = null;
 
   /**
    * Returns whether the extension is properly installed.
@@ -66,7 +67,8 @@ class DataReadManager {
     }
 
     $postData = DB::getPostData($pageID);
-    $extendedPostData = self::collectPostExtendedData($postData);
+    $tagCategories = self::getTagCategories();
+    $extendedPostData = self::collectPostExtendedData($postData, $tagCategories);
     return $extendedPostData;
   }
 
@@ -118,9 +120,10 @@ class DataReadManager {
 
     // Given the list of post IDs that matched this search, get the tag data in bulk for those IDs.
     if ($getTags) {
+      $tagCategories = self::getTagCategories();
       $tags = DB::getPostTags($postIDs);
       $postTags = self::collectPostTagsData($tags, false);
-      $postTagsByCategory = DataHelper::getTagCategoryGroups($postTags);
+      $postTagsByCategory = DataHelper::getTagCategoryGroups($postTags, $tagCategories);
     }
 
     return array_filter([
@@ -197,12 +200,13 @@ class DataReadManager {
    * Unlike other queries, the tags are returned in a flat array.
    */
   public static function getTagSearchResults($tagSearch, $filters, $page, $perPage) {
+    $tagCategories = self::getTagCategories();
     [$page, $perPage] = DataHelper::limitPaginationValues($page ?? 1, $perPage);
 
     $tags = DB::getTagsSearchResult($tagSearch, $filters, $page, $perPage);
     $totalTagCount = DB::countTagsSearchResult($tagSearch);
 
-    $tags = self::collectPostTagsData($tags, false);
+    $tags = self::collectPostTagsData($tags, false, $tagCategories);
     
     // Get a basic pagination object.
     $pagination = DataHelper::getResultPagination($page, $perPage, $totalTagCount);
@@ -290,38 +294,18 @@ class DataReadManager {
   /**
    * Returns all tag categories, how many uses they have, and the order that they should be displayed.
    */
-  public static function getCategoriesOfTag() {
-    // TODO: in the future this will come from the database.
-    $categories = [
-      [
-        'name' => 'Copyright',
-        'icon' => 'copyright',
-        'color' => 'teal',
-      ],
-      [
-        'name' => 'Artist',
-        'icon' => 'paintbrush',
-        'color' => 'aqua',
-      ],
-      [
-        'name' => 'Character',
-        'icon' => 'tomba',
-        'color' => 'blue',
-      ],
-      [
-        'name' => 'Location',
-        'icon' => 'location',
-        'color' => 'violet',
-      ],
-      [
-        'name' => 'Meta',
-        'icon' => 'dependabot',
-        'color' => 'gray',
-      ]
-    ];
-    return array_column($categories, null, 'name');
-    // $tagCategories = DB::getDistinctTagCategories();
-    // return $tagCategories;
+  public static function getTagCategories() {
+    if (!empty(self::$tagCategories)) {
+      return self::$tagCategories;
+    }
+    $tagCategories = DB::getTagCategories();
+    $tagCategoryData = self::collectTagCategoriesData($tagCategories);
+    usort($tagCategoryData, function($a, $b) {
+      return $a['ordering'] <=> $b['ordering'];
+    });
+    $tagCategoryData = array_column($tagCategoryData, null, 'name');
+    self::$tagCategories = $tagCategoryData;
+    return $tagCategoryData;
   }
 
   /**
@@ -384,7 +368,7 @@ class DataReadManager {
    * This collects a bunch of additional data from the database and wrangles the data quite a bit.
    * This is for posts we intend to view a detail page of.
    */
-  private static function collectPostExtendedData($post) {
+  private static function collectPostExtendedData($post, $tagCategories) {
     $tags = DB::getPostTags([$post['id']]);
     $sources = DB::getPostSources($post['id']);
 
@@ -401,7 +385,7 @@ class DataReadManager {
 
     // Retrieve additional data.
     $postTags = self::collectPostTagsData($tags, false);
-    $postTagCategories = DataHelper::getTagCategoryGroups($postTags);
+    $postTagCategories = DataHelper::getTagCategoryGroups($postTags, $tagCategories);
     $postSources = self::collectPostSourceData($sources);
 
     $postData = [
@@ -470,11 +454,39 @@ class DataReadManager {
   }
 
   /**
+   * Returns tag categories data.
+   */
+  private static function collectTagCategoriesData($tagCategories, $includeText = false) {
+    $tagCategoryData = [];
+    foreach ($tagCategories as $category) {
+      $properties = !empty($category['properties']) ? array_map('trim', explode(',', $category['properties'])) : [];
+      $tagCategory = [
+        'id' => intval($category['id']),
+        'name' => $category['name'],
+        'icon' => $category['icon'],
+        'color' => $category['color'],
+        'properties' => $properties,
+        'count' => intval($category['count']),
+        'ordering' => intval($category['ordering']),
+        'createdAt' => Template::sqlTimestampToISO($category['created_at']),
+      ];
+      if ($includeText) {
+        $description = WikiManager::getPageData($category['description_page_id']);
+        $notes = WikiManager::getPageData($category['notes_page_id']);
+        $tagCategory['description'] = $description;
+        $tagCategory['notes'] = $notes;
+      }
+      $tagCategoryData[] = $tagCategory;
+    }
+    return $tagCategoryData;
+  }
+
+  /**
    * Returns tags data.
    * 
    * The description and notes are optionally included (they're only displayed on the tag's detail page).
    */
-  private static function collectPostTagsData($tags, $includeText = false) {
+  private static function collectPostTagsData($tags, $includeText = false, $tagCategories = null) {
     $postTags = [];
     foreach ($tags as $tag) {
       $postTag = [
@@ -484,6 +496,10 @@ class DataReadManager {
         'count' => intval($tag['count']),
         'createdAt' => Template::sqlTimestampToISO($tag['created_at']),
       ];
+      if (!empty($tagCategories)) {
+        $category = @$tagCategories[$tag['category']];
+        $postTag['category'] = $category;
+      }
       if ($includeText) {
         $description = WikiManager::getPageData($tag['description_page_id']);
         $notes = WikiManager::getPageData($tag['notes_page_id']);

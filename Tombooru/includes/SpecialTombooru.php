@@ -204,7 +204,7 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runTagsViewPage() {
     $tag = DataReadManager::getTag($this->route['id']);
-    $tagCategories = DataReadManager::getCategoriesOfTag();
+    $tagCategories = DataReadManager::getTagCategories();
     $tagExamples = DataReadManager::getTagExampleResults($tag);
     return TemplateManager::outputTemplate('tags/ViewPage', [
       'tag' => $tag,
@@ -219,7 +219,7 @@ class SpecialTombooru extends SpecialPage {
   private function runTagsEditPage() {
     $tagName = $this->route['id'];
     $tag = DataReadManager::getTag($tagName);
-    $tagCategories = DataReadManager::getCategoriesOfTag();
+    $tagCategories = DataReadManager::getTagCategories();
 
     $originalData = DataWriteManager::collectTagOriginalData($tag);
     $updateData = [];
@@ -257,7 +257,7 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runTagsDataPage() {
     $tag = DataReadManager::getTag($this->route['id']);
-    $tagCategories = DataReadManager::getCategoriesOfTag();
+    $tagCategories = DataReadManager::getTagCategories();
     return TemplateManager::outputTemplate('tags/DataPage', ['tag' => $tag, 'tagCategories' => array_values($tagCategories)]);
   }
 
@@ -269,9 +269,19 @@ class SpecialTombooru extends SpecialPage {
     $page = $this->request['page'];
     $search = @$this->request['params']['search'] ?? '';
     $results = DataReadManager::getTagSearchResults($search, [], $page, $perPage);
-    $tagCategories = DataReadManager::getCategoriesOfTag();
+    $tagCategories = DataReadManager::getTagCategories();
     return TemplateManager::outputTemplate('tags/BrowsePage', [
       'results' => $results,
+      'tagCategories' => array_values($tagCategories),
+    ]);
+  }
+
+  /**
+   * Displays the tag categories browse page.
+   */
+  private function runTagCategoriesBrowsePage() {
+    $tagCategories = DataReadManager::getTagCategories();
+    return TemplateManager::outputTemplate('tag-categories/BrowsePage', [
       'tagCategories' => array_values($tagCategories),
     ]);
   }
@@ -327,6 +337,11 @@ class SpecialTombooru extends SpecialPage {
     if (@$this->params['recount_all_tags'] === '') {
       $result = DataWriteManager::updateAllTagCounts();
       $scriptResult['script'] = 'recount_all_tags';
+      $scriptResult['result'] = $result;
+    }
+    if (@$this->params['recount_all_tag_categories'] === '') {
+      $result = DataWriteManager::updateAllTagCategoryCounts();
+      $scriptResult['script'] = 'recount_all_tag_categories';
       $scriptResult['result'] = $result;
     }
     return TemplateManager::outputTemplate('static/AdminPage', ['scriptResult' => $scriptResult]);
@@ -460,6 +475,8 @@ class SpecialTombooru extends SpecialPage {
           return $this->runTagsEditPage();
         case '/tags':
           return $this->runTagsBrowsePage();
+        case '/tag-categories':
+          return $this->runTagCategoriesBrowsePage();
         // Static pages:
         case '/page/Admin':
           return $this->runAdminPage();

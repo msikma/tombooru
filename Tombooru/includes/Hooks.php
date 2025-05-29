@@ -160,7 +160,14 @@ class Hooks {
       'text' => 'List all tags',
       'href' => URL::getURL('/tags'),
       'id' => 'ca-tombooru_tags',
-      'class' => ($primary === 'tags' && $sub !== 'popular') ? 'selected' : '',
+      'class' => ($primary === 'tags') ? 'selected' : '',
+      'active' => true,
+    ];
+    $links['views'][] = [
+      'text' => 'Tag categories',
+      'href' => URL::getURL('/tag-categories'),
+      'id' => 'ca-tombooru_tag_categories',
+      'class' => ($primary === 'tag-categories') ? 'selected' : '',
       'active' => true,
     ];
     // $links['views'][] = [
@@ -194,7 +201,7 @@ class Hooks {
       'href' => URL::getURL("/tags"),
       'id' => 'n-tombooru_tags',
       'active' => true,
-      'class' => $area === 'tags' ? 'selected' : '',
+      'class' => $area === 'tags' || $area === 'tag-categories' ? 'selected' : '',
     ];
     $links['namespaces']['artists'] = [
       'text' => 'Artists',
@@ -257,7 +264,7 @@ class Hooks {
         self::addPostsBrowseNavigation($route, $links);
       }
     }
-    if ($area === 'tags' || $area === 'artists') {
+    if ($area === 'tags' || $area === 'tag-categories' || $area === 'artists') {
       if ($type === 'single') {
         self::addTagsSingleNavigation($route, $links);
       }

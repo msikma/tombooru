@@ -19,19 +19,18 @@
           <?php
             $tagName = str_replace('_', ' ', $tag['name']);
             $tagCategory = $tag['category'];
-            $tagLabel = !empty($tagCategory) ? $tagCategory : '–';
-            // TODO tag refactor
-            $categoryIsArtist = $tagCategory === 'Artist';
-            $urlTagView = URL::getTagInfoURL($tag, 'view', $categoryIsArtist);
-            $urlTagEdit = URL::getTagInfoURL($tag, 'edit', $categoryIsArtist);
+            $tagLabel = !empty($tagCategory) ? $tagCategory['name'] : '–';
+            $isArtistCategory = DataHelper::isSpecialCategory($tagCategory, 'artist');
+            $urlTagView = URL::getTagInfoURL($tag, 'view', $isArtistCategory);
+            $urlTagEdit = URL::getTagInfoURL($tag, 'edit', $isArtistCategory);
           ?>
-          <tr data-tag-category="<?= htmlentities($tagCategory); ?>">
+          <tr data-tag-category="<?= htmlentities($tagCategory['name']); ?>">
             <td class="right highlighted"><span class="inner"><?= htmlentities($tag['id']); ?></span></td>
             <td><span class="inner"><a href="<?= htmlentities($urlTagView); ?>"><?= htmlentities($tagName); ?></a></span></td>
             <td class="even-padding">
               <span class="inner">
                 <?= Template::getComponent('TagCategory', [
-                  'tagCategory' => $tagCategory,
+                  'tagCategory' => @$tagCategory['name'],
                   'addWrapper' => true,
                 ]); ?>
               </span>

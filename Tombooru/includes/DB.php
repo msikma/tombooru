@@ -205,14 +205,46 @@ class DB {
     $db->doAtomicSection(
       $scope,
       function ($dbw) use ($tagID, $data, $scope) {
-        // Update the tag category. This is the only data we need to update at the moment.
-        $query = $dbw->newUpdateQueryBuilder()
+        $newCategory = $data['tagCategory'];
+        $oldCategory = $dbw->newSelectQueryBuilder()
+          ->select('t.category')
+          ->from('tombooru_tag', 't')
+          ->where(['t.id' => $tagID])
+          ->caller($scope)
+          ->fetchField();
+        
+        $dbw->newUpdateQueryBuilder()
           ->update('tombooru_tag')
           ->set(['name' => $data['name']])
-          ->set(['category' => $data['tagCategory']])
+          ->set(['category' => $newCategory])
           ->where(['id' => $tagID])
           ->caller($scope)
           ->execute();
+
+        if ($oldCategory !== $newCategory) {
+          // If the category changed, update the tag counts for both the old and new category.
+          if ($oldCategory !== '') {
+            $oldCategoryID = $dbw->newSelectQueryBuilder()
+              ->select('tc.id')
+              ->from('tombooru_tag_category', 'tc')
+              ->where(['tc.name' => $oldCategory])
+              ->caller($scope)
+              ->fetchField();
+            
+            self::recountTagCategoryCount($oldCategoryID);
+          }
+          
+          if ($newCategory !== '') {
+            $newCategoryID = $dbw->newSelectQueryBuilder()
+              ->select('tc.id')
+              ->from('tombooru_tag_category', 'tc')
+              ->where(['tc.name' => $newCategory])
+              ->caller($scope)
+              ->fetchField();
+            
+            self::recountTagCategoryCount($newCategoryID);
+          }
+        }
         
         if (!$dbw->affectedRows()) {
           throw new \Exception('update_error');
@@ -486,6 +518,70 @@ class DB {
       $ids[] = intval($row->id);
     }
     return $ids;
+  }
+
+  /**
+   * Returns all tag category IDs in the database.
+   * 
+   * Used for debugging purposes only.
+   */
+  public static function getAllTagCategoryIDs() {
+    $dbw = self::instPrimaryDB();
+    $res = $dbw->newSelectQueryBuilder()
+      ->select('id')
+      ->from('tombooru_tag_category')
+      ->caller(__METHOD__)
+      ->fetchResultSet();
+    
+    $ids = [];
+    foreach ($res as $row) {
+      $ids[] = intval($row->id);
+    }
+    return $ids;
+  }
+
+  /**
+   * Updates a tag category with a count that is equal to the number of tags that are using it.
+   */
+  public static function recountTagCategoryCount($tagCategoryID, $scope = __METHOD__) {
+    $dbw = self::instPrimaryDB();
+
+    $categoryData = $dbw->newSelectQueryBuilder()
+      ->select([
+        'tc.name',
+        'tc.count',
+      ])
+      ->from('tombooru_tag_category', 'tc')
+      ->where(['id' => $tagCategoryID])
+      ->caller($scope)
+      ->fetchRow();
+    
+    if (empty($categoryData)) {
+      return null;
+    }
+
+    $categoryName = $categoryData->name;
+
+    $newCount = $dbw->newSelectQueryBuilder()
+      ->select('count(*)')
+      ->from('tombooru_tag')
+      ->where(['category' => $categoryName])
+      ->caller($scope)
+      ->fetchField();
+
+    $dbw->newUpdateQueryBuilder()
+      ->update('tombooru_tag_category')
+      ->set(['count' => intval($newCount)])
+      ->where(['id' => $tagCategoryID])
+      ->caller($scope)
+      ->execute();
+    
+    return [
+      'id' => $tagCategoryID,
+      'name' => $categoryName,
+      'oldCount' => intval($categoryData->count),
+      'newCount' => intval($newCount),
+    ];
   }
 
   /**
@@ -1085,6 +1181,38 @@ class DB {
     $row = $res->fetchObject();
 
     return (int)$row->total;
+  }
+
+  /**
+   * Returns all tag categories.
+   * 
+   * It's assumed that there will never be more categories than is feasible to return in one query.
+   */
+  public static function getTagCategories() {
+    $db = self::instReplicaDB();
+
+    $query = $db->newSelectQueryBuilder()
+      ->select([
+        'tc.id',
+        'tc.name',
+        'tc.icon',
+        'tc.color',
+        'tc.description_page_id',
+        'tc.notes_page_id',
+        'tc.properties',
+        'tc.count',
+        'tc.ordering',
+        'tc.created_at',
+      ])
+      ->from('tombooru_tag_category', 'tc')
+      ->caller(__METHOD__);
+    
+    $res = $query->fetchResultSet();
+    $tagCategories = [];
+    foreach ($res as $row) {
+      $tagCategories[] = (array)$row;
+    }
+    return $tagCategories;
   }
 
   /**

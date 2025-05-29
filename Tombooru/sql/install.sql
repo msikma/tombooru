@@ -18,7 +18,7 @@ create table /*_*/tombooru_post_data (
   upvotes int unsigned not null default 0,
   downvotes int unsigned not null default 0,
   media_type varchar(300) null,                 -- typically "image" or "video"; others may be implemented in the future
-  license varchar(300) null,                    -- free input, to be constrained by the extension code
+  license varchar(300) null,                    -- free input, to be constrained by the app code
   original_publication_date datetime null,      -- when the media was originally published (not on Tombooru, but at the source)
   updated_at timestamp not null default current_timestamp,
   status enum('active', 'flagged', 'pending_approval', 'deleted') null,
@@ -45,13 +45,31 @@ create table /*_*/tombooru_post_data (
 create table /*_*/tombooru_tag (
   id int unsigned auto_increment primary key,
   name varchar(300) not null unique,            -- case insensitive, case preserving
-  category varchar(300) not null default '',    -- free input; the extension recognizes certain special terms here
+  category varchar(300) not null default '',    -- free input; the app recognizes certain special terms here
   description_page_id int unsigned null,        -- page that stores the description
   notes_page_id int unsigned null,              -- page that stores the notes
   count int unsigned default 0,
   created_at timestamp not null default current_timestamp,
 
   index (category),
+  index (description_page_id),
+  index (notes_page_id),
+  index (count),
+  index (created_at)
+);
+
+create table /*_*/tombooru_tag_category (
+  id int unsigned auto_increment primary key,
+  name varchar(300) not null unique,            -- case insensitive, case preserving
+  icon varchar(300) null,
+  color varchar(300) null,
+  description_page_id int unsigned null,        -- page that stores the description
+  notes_page_id int unsigned null,              -- page that stores the notes
+  properties varchar(300) not null default '',  -- special properties recognized by the app
+  count int unsigned default 0,
+  ordering int default 0,
+  created_at timestamp not null default current_timestamp,
+
   index (description_page_id),
   index (notes_page_id),
   index (count),

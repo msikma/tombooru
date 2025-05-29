@@ -31,7 +31,7 @@ class Router {
    * This is an abstraction on the main route information and is used to construct navbars.
    */
   private static function getRouteArea($primary, $sub) {
-    if (in_array($primary, ['posts', 'tags', 'artists'])) {
+    if (in_array($primary, ['posts', 'tags', 'tag-categories', 'artists'])) {
       if (in_array($sub, ['view', 'edit', 'data', 'report'])) {
         return [$primary, 'single'];
       }
@@ -67,7 +67,11 @@ class Router {
    */
   public static function isTablePage() {
     $route = Router::getRoute();
-    return ($route['area'] === 'tags' || $route['area'] === 'artists') && $route['type'] === 'browse';
+    return (
+      $route['area'] === 'tags' ||
+      $route['area'] === 'tag-categories' ||
+      $route['area'] === 'artists'
+    ) && $route['type'] === 'browse';
   }
 
   /**

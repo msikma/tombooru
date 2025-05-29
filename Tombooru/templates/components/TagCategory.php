@@ -1,5 +1,5 @@
 <?php
-  $tagCategories = DataReadManager::getCategoriesOfTag();
+  $tagCategories = DataReadManager::getTagCategories();
   $tagCategoryData = !empty($tagCategory) ? @$tagCategories[$tagCategory] : null;
   $tagColor = empty(@$tagCategoryData['color']) ? 'blue' : $tagCategoryData['color'];
   $tagIcon = empty(@$tagCategoryData['icon']) ? null : $tagCategoryData['icon'];

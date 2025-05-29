@@ -91,6 +91,14 @@ class URL {
   }
 
   /**
+   * Returns a URL to a tag category's information page.
+   */
+  public static function getTagCategoryInfoURL($tagCategory, $action) {
+    $name = $tagCategory['name'];
+    return self::getURL("/tag-categories/{$action}/{$name}");
+  }
+
+  /**
    * Returns a URL to a tag's information page.
    * 
    * This page will show information about the given tag.
