@@ -220,6 +220,10 @@ class DB {
           ->where(['id' => $tagID])
           ->caller($scope)
           ->execute();
+        
+        if (!$dbw->affectedRows()) {
+          throw new \Exception('update_error');
+        }
 
         if ($oldCategory !== $newCategory) {
           // If the category changed, update the tag counts for both the old and new category.
@@ -244,10 +248,6 @@ class DB {
             
             self::recountTagCategoryCount($newCategoryID);
           }
-        }
-        
-        if (!$dbw->affectedRows()) {
-          throw new \Exception('update_error');
         }
       }
     );

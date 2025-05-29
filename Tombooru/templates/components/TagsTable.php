@@ -24,7 +24,7 @@
             $urlTagView = URL::getTagInfoURL($tag, 'view', $isArtistCategory);
             $urlTagEdit = URL::getTagInfoURL($tag, 'edit', $isArtistCategory);
           ?>
-          <tr data-tag-category="<?= htmlentities($tagCategory['name']); ?>">
+          <tr data-tag-category="<?= htmlentities(!empty($tagCategory['name']) ? $tagCategory['name'] : ''); ?>">
             <td class="right highlighted"><span class="inner"><?= htmlentities($tag['id']); ?></span></td>
             <td><span class="inner"><a href="<?= htmlentities($urlTagView); ?>"><?= htmlentities($tagName); ?></a></span></td>
             <td class="even-padding">

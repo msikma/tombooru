@@ -82,6 +82,19 @@ class DataWriteManager {
     if (self::hasAnyErrors($tagUpdateData)) {
       throw new \Exception('Some submitted data has errors.');
     }
+    // Check if we're renaming the tag; if so, check if the tag exists.
+    $oldTag = DataReadManager::getTagByID($tagID);
+    if ($oldTag['name'] !== @$tagUpdateData['name']['value']) {
+      try {
+        $existingTag = DataReadManager::getTag($tagUpdateData['name']['value']);
+      }
+      catch (\Throwable $e) {
+        // If this threw an error, it means that tag does not exist.
+      }
+      if (!empty($existingTag)) {
+        throw new \Exception('Can\'t rename tag: name already exists.');
+      }
+    }
     $tagUpdateData = DataHelper::removeUpdateErrorStubs($tagUpdateData);
     
     // First, update all data *except* for the text.
