@@ -45,12 +45,12 @@ class DataWriteManager {
    * create or edit the pages for the text sections. Then if that succeeds, we'll update the post data
    * to include the new description and notes page IDs.
    */
-  public static function updatePostData($pageData, $postUpdateData) {
+  public static function updatePostData($postData, $postUpdateData) {
     if (self::hasAnyErrors($postUpdateData)) {
       throw new \Exception('Some submitted data has errors.');
     }
     $postUpdateData = DataHelper::removeUpdateErrorStubs($postUpdateData);
-    $pageID = $pageData['pageID'];
+    $pageID = $postData['pageID'];
 
     // Get existing post data. If not found, we'll insert a new post.
     $postID = self::ensurePost($pageID, $postUpdateData);
@@ -64,7 +64,8 @@ class DataWriteManager {
     // These pages are created as needed (as soon as the user posts some content),
     // and stored on e.g. "Tombooru_data:Post_description/1" (where 1 is the post ID, not the page ID).
     foreach (['description', 'notes'] as $subpage) {
-      if (!empty($postUpdateData[$subpage])) {
+      $hasExistingPage = !empty($postData[$subpage]);
+      if (!empty($postUpdateData[$subpage]) || ($hasExistingPage && $postUpdateData[$subpage] === '')) {
         $id = WikiManager::updateEntityPageData('post', $postID, $subpage, $postUpdateData[$subpage]);
         DB::updatePostTextPage($postID, $id, $subpage);
       }
@@ -78,13 +79,14 @@ class DataWriteManager {
    * 
    * Same as with posts, we edit the tag description/notes pages separately.
    */
-  public static function updateTagData($tagID, $tagUpdateData) {
+  public static function updateTagData($tagData, $tagUpdateData) {
     if (self::hasAnyErrors($tagUpdateData)) {
       throw new \Exception('Some submitted data has errors.');
     }
-    // Check if we're renaming the tag; if so, check if the tag exists.
-    $oldTag = DataReadManager::getTagByID($tagID);
-    if ($oldTag['name'] !== @$tagUpdateData['name']['value']) {
+    $tagID = $tagData['id'];
+
+    // Check if we're renaming the tag; if so, check if the new name is already taken.
+    if ($tagData['name'] !== @$tagUpdateData['name']['value']) {
       try {
         $existingTag = DataReadManager::getTag($tagUpdateData['name']['value']);
       }
@@ -102,7 +104,8 @@ class DataWriteManager {
 
     // Post descriptions are stored e.g. "Tombooru_data/Tag_description/1" pages.
     foreach (['description', 'notes'] as $subpage) {
-      if (!empty($tagUpdateData[$subpage])) {
+      $hasExistingPage = !empty($tagData[$subpage]);
+      if (!empty($tagUpdateData[$subpage]) || ($hasExistingPage && $tagUpdateData[$subpage] === '')) {
         $id = WikiManager::updateEntityPageData('tag', $tagID, $subpage, $tagUpdateData[$subpage]);
         DB::updateTagTextPage($tagID, $id, $subpage);
       }

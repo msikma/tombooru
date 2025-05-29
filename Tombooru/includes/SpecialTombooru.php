@@ -138,7 +138,7 @@ class SpecialTombooru extends SpecialPage {
     if ($this->verifyFormPost('post-edit')) {
       try {
         $updateData = DataWriteManager::collectPostUpdateData();
-        $updateSuccess = DataWriteManager::updatePostData(['pageID' => $pageID], $updateData);
+        $updateSuccess = DataWriteManager::updatePostData($post, $updateData);
       }
       catch (\Throwable $e) {
         // If we're here, it means writing the data somehow went wrong.
@@ -229,7 +229,7 @@ class SpecialTombooru extends SpecialPage {
     if ($this->verifyFormPost('tag-edit')) {
       try {
         $updateData = DataWriteManager::collectTagUpdateData();
-        $updateSuccess = DataWriteManager::updateTagData($tag['id'], $updateData);
+        $updateSuccess = DataWriteManager::updateTagData($tag, $updateData);
       }
       catch (\Throwable $e) {
         $updateError = $e->getMessage();
