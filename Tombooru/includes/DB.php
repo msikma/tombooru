@@ -1360,6 +1360,47 @@ class DB {
   }
 
   /**
+   * Returns tags by an array of IDs.
+   */
+  public static function getTagsByIDs($tagIDs) {
+    return self::getTagsByProperty($tagIDs, 'id');
+  }
+
+  /**
+   * Returns tags by an array of names.
+   */
+  public static function getTagsByNames($tagNames) {
+    return self::getTagsByProperty($tagNames, 'name');
+  }
+
+  /**
+   * Returns tags by an array of properties (typically either "id" or "name").
+   */
+  public static function getTagsByProperty($valueList, $property) {
+    $db = self::instReplicaDB();
+    $query = $db->newSelectQueryBuilder()
+      ->select([
+        't.id',
+        't.name',
+        't.category',
+        't.description_page_id',
+        't.notes_page_id',
+        't.count',
+        't.created_at',
+      ])
+      ->from('tombooru_tag', 't')
+      ->where($property, $valueList)
+      ->caller(__METHOD__);
+    
+    $res = $query->fetchResultSet();
+    $tags = [];
+    foreach ($res as $row) {
+      $tags[] = (array)$row;
+    }
+    return $tags;
+  }
+
+  /**
    * Counts the total number of search results for a given tags search.
    */
   public static function countTagsSearchResult($tagLike) {

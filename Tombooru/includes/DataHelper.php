@@ -179,6 +179,24 @@ class DataHelper {
   }
 
   /**
+   * Flattens a post tags structure.
+   */
+  public static function getFlatPostTags($postTags) {
+    $flatTags = [];
+    foreach ($postTags as $category) {
+      $tags = $category['tags'];
+      unset($category['tags']);
+      foreach ($tags as $tag) {
+        $flatTags[] = [
+          ...$tag,
+          'category' => $category,
+        ];
+      }
+    }
+    return $flatTags;
+  }
+
+  /**
    * Groups tags by category.
    * 
    * This also adds an "order" value to the categories which are used for sorting later.
