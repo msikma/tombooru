@@ -319,8 +319,10 @@ Tombooru.ComponentPostEditSources = class {
 Tombooru.ComponentPostEditTagsPreview = class {
   constructor(el) {
     this.el = el;
-    this.input = el.querySelector('.group-input textarea')
-    this.preview = el.querySelector('.input-preview')
+    this.input = el.querySelector('.group-input textarea');
+    this.preview = el.querySelector('.input-preview');
+    this.color = el.getAttribute('data-color') ?? 'green';
+
     this.decorate();
   }
   callback() {
@@ -329,10 +331,10 @@ Tombooru.ComponentPostEditTagsPreview = class {
       .filter(Boolean);
     const buffer = [];
     if (!tags.length) {
-      buffer.push(`<span class="item label">No tags entered.</span>`);
+      buffer.push(`<span class="item label ${this.color}">No tags entered.</span>`);
     }
     for (const tag of tags) {
-      buffer.push(`<span class="item">${tag.replaceAll('_', ' ')}</span>`);
+      buffer.push(`<span class="item ${this.color}">${tag.replaceAll('_', ' ')}</span>`);
     }
     this.preview.innerHTML = `<div class="actions narrow">${buffer.join('')}</div>`;
   }

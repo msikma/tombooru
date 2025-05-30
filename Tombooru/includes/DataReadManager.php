@@ -230,10 +230,6 @@ class DataReadManager {
         'slug' => 'all_rights_reserved',
       ],
       [
-        'name' => 'Not set',
-        'slug' => 'not_set',
-      ],
-      [
         'name' => 'CC BY 4.0',
         'slug' => 'cc_by_4.0',
       ],

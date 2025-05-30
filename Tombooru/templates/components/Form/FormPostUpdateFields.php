@@ -16,7 +16,7 @@
 ]); ?>
 
 <?= Template::getComponent('Form/FieldTextMultiline', [
-  'title' => 'Description',
+  'title' => 'Image description',
   'key' => 'description',
   'name' => 'description',
   'rows' => 6,
@@ -24,8 +24,9 @@
     <p>Text is formatted as <a href="https://www.mediawiki.org/wiki/Help:Formatting" class="external">wiki markup</a>.</p>
   ',
   'help' => '
-    <p>The description <strong>must be</strong> the original artist\'s description they used to post the image.</p>
-    <p>If they didn\'t add a description, feel free to leave this empty.</p>
+    <p>The description should be taken directly from the artist\'s <strong>original post</strong>. This preserves their intent and context.</p>
+    <p>If they did not include a description, <strong>just leave this blank.</strong></p>
+    <p>This field\'s contents will be displayed as a blockquote.</p>
   ',
   'entityData' => $entityData,
 ]); ?>
@@ -39,7 +40,8 @@
     <p>Also wiki markup.</p>
   ',
   'help' => '
-    <p>Additional notes. Add whatever other important information there is. Not displayed if left empty.</p>
+    <p>Use this space for any extra relevant information about the image, like context, translation notes, sourcing/attribution issues, or other relevant discussion.</p>
+    <p>If there\'s nothing to add, leave this blank.</p>
   ',
   'entityData' => $entityData,
 ]); ?>
@@ -49,10 +51,11 @@
   'key' => 'original_publication_date',
   'name' => 'original_publication_date',
   'inputHelp' => '
-    <p>When this image was first published (posted to the internet) by the artist.</p>
+    <p>Input is in your local timezone.</p>
   ',
   'help' => '
-    <p>If the original source URL lists a post date, use that.</p>
+    <p>Enter the date the image was <strong>first published online</strong> by the artist. Use the date listed on the source page, if available.</p>
+    <p>If the image was posted in multiple places, go with the <em>earliest date</em> you can confirm.</p>
   ',
   'entityData' => $entityData,
 ]); ?>
@@ -61,11 +64,9 @@
   'title' => 'License',
   'key' => 'license',
   'name' => 'license',
-  'inputHelp' => '
-    <p>If selecting a free license, you <strong>MUST</strong> add a link with evidence to the "sources" section.</p>
-  ',
   'help' => '
-    <p>The license must be <strong>"All Rights Reserved"</strong> unless the artist has expressly released their work under a different license.</p>
+    <p>Unless the artist has clearly released the work under a specific license, you should always assume it\'s <strong>All Rights Reserved.</strong></p>
+    <p>Only choose a free/open license (like Creative Commons) if the artist has <strong>explicitly stated so,</strong> and make sure to link to the license statement in the "Sources" section below.</p>
   ',
   'entityData' => $entityData,
 ]); ?>
@@ -93,8 +94,8 @@
       'key' => 'is_ai_generated',
       'name' => 'is_ai_generated',
       'label' => 'Is AI generated',
-      'inputHelp' => '
-        <p>Check this box if this image is fully or partially AI generated.</p>
+      'help' => '
+        <p>Check this if the image is partially or fully AI-generated (even if it\'s been edited afterwards).</p>
         '.($aiPolicy === 1 ? '<p>On this imageboard, AI content is not displayed by default unless explicitly searched for.</p>' : '').'
       ',
       'entityData' => $entityData,
@@ -134,9 +135,10 @@
   'name' => 'tags_Artist',
   'component' => 'PostEditTagsPreview',
   'rows' => 2,
+  'color' => 'aqua',
   'help' => '
     <p>Insert the name of the artist here.</p>
-    <p>Not sure who it is? Use <code>anonymous_artist</code> or <code>unknown_artist</code>.</p>
+    <p>Not sure who it is? Use <code><strong>unknown_artist</strong></code>.</p>
   ',
   'entityData' => $entityData,
 ]); ?>
@@ -148,6 +150,7 @@
   'name' => 'tags_Character',
   'component' => 'PostEditTagsPreview',
   'rows' => 2,
+  'color' => 'blue',
   'examples' => 'e.g.: Tomba Tabby',
   'help' => '
     <p>Add characters that appear in the image here.</p>
@@ -168,9 +171,10 @@
   'rows' => 2,
   'examples' => 'e.g.: bracelet blackjack kokka_egg',
   'help' => '
-    <p>Tag what you see in the image.</p>
-    <p>New to tagging? See our <a href="'.URL::getURL('/page/How_to_tag').'">how to tag</a> page!</p>
-    <p>Tags are separated by whitespace and cannot contain spaces (use underscores instead).</p>
+    <p>Tags should help people <strong>find and understand</strong> the content.</p>
+    <p>Tag what you see in the image, within reason. Is Tomba wearing his bracelet? Tag <code><strong>bracelet</strong></code>. Is he roasting food at a campfire? Tag <code><strong>campfire</strong></code> and <code><strong>food</strong></code>. Be imaginative.</p>
+    <p>It\'s better to use tags that have already been used before, rather than making a new but similar tag.</p>
+    <p>New to tagging? We have a really big <a href="'.URL::getURL('/page/How_to_tag').'">how to tag</a> guide that explains it.</p>
   ',
   'inputHelp' => '
     <p>All tags are <strong>space separated</strong>.</p><p>Use <strong>underscores</strong> for spaces inside tags, e.g. <code>green_pants</code>.</p>
