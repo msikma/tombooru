@@ -4,6 +4,12 @@
   $file = $post['file'];
   $image = $file['media']['original'];
   $filename = Template::withSpaces($file['name']);
+
+  $hasSource = !empty($post['sources']);
+  // We normally show the sources in the post main body, not here.
+  $showSources = !is_null(@$showSources) ? $showSources : false;
+  // However, if there's *no* source at all, we do show a notification here, away from the main body.
+  $showNoSourceWarning = !is_null(@$showNoSourceWarning) ? $showNoSourceWarning : true;
 ?>
 <div class="vector-menu-content-static">
   <ul class="data-list">
@@ -12,22 +18,36 @@
       <span class="value"><?= htmlspecialchars($post['pageID']) ?></span>
     </li>
 
-    <li class="url-items">
-      <span class="key">Source</span>
-      <span class="value">
-        <?php foreach ($post['sources'] as $source): ?>
-          <?php $urlLabels = Template::formatURLLabels($source['url']); ?>
-          <?php $faviconFallback = Settings::config()->get('ScriptPath').'/extensions/TombaClub/assets/icons/file.svg'; ?>
-          <a class="external" rel="nofollow noreferrer noopener ugc" target="_blank" href="<?= htmlspecialchars($source['url']) ?>">
-            <span class="favicon"><img width="16" height="16" src="<?= htmlspecialchars($urlLabels['favicon']) ?>" onerror="this.onerror=null; this.src='<?= $faviconFallback; ?>';" /></span>
-            <span class="text">
-              <span class="preview"><?= htmlspecialchars($urlLabels['longLabel']) ?></span>
-              <span class="hover"><?= htmlspecialchars($urlLabels['longLabel']) ?></span>
-            </span>
-          </a>
-        <?php endforeach; ?>
-      </span>
-    </li>
+    <?php if ($hasSource && $showSources): ?>
+      <li class="url-items">
+        <span class="key">Source</span>
+        <span class="value">
+          <?php foreach ($post['sources'] as $source): ?>
+            <?php
+              $url = $source['url'];
+              $info = Template::getURLDomainInfo($url);
+              $labels = Template::formatURLLabels($url);
+              $domain = str_replace('.', '_', @$info['domain'] ?? '');
+              $path = str_replace('.', '_', @$info['path'] ?? '');
+            ?>
+            <a class="external" rel="nofollow noreferrer noopener ugc" target="_blank" href="<?= htmlspecialchars($url) ?>" data-source-id="<?= intval($source['id']); ?>" data-added="<?= htmlspecialchars($source['createdAt']); ?>">
+              <span class="site-favicon domain-<?= $domain; ?> <?= !empty($path) ? 'path-'.$path : ''; ?>"></span>
+              <span class="text">
+                <span class="preview"><?= htmlspecialchars($labels['short']) ?></span>
+                <span class="hover"><?= htmlspecialchars($labels['long']) ?></span>
+              </span>
+            </a>
+          <?php endforeach; ?>
+        </span>
+      </li>
+    <?php endif; ?>
+
+    <?php if (!$hasSource && $showNoSourceWarning): ?>
+      <li class="url-items">
+        <span class="key">Source</span>
+        <span class="value">Unknown</span>
+      </li>
+    <?php endif; ?>
 
     <li class="with-overflow">
       <span class="key">Posted</span>

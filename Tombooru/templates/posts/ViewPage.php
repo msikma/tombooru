@@ -16,6 +16,16 @@
       ]
     ); ?>
     <?= Template::getComponent(
+      'EntitySourceList',
+      [
+        'title' => 'Source',
+        'name' => 'source',
+        'showIfEmpty' => false,
+        'placeholder' => 'No sources are known for this post.',
+        'data' => $post,
+      ]
+    ); ?>
+    <?= Template::getComponent(
       'EntityWikiText',
       [
         'title' => 'Notes',

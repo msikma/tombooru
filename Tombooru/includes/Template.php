@@ -7,6 +7,28 @@ use \MWTimestamp;
 use \RequestContext;
 
 class Template {
+  // Small database of common domain short codes.
+  // Some sites use alternate domains to shorten their links.
+  public static array $domainShortCodes = [
+    'instagram.com' => ['domains' => ['instagr.am', 'ig.me']],
+    'twitter.com' => ['domains' => ['t.co', 'x.com']],
+    'facebook.com' => ['domains' => ['fb.me', 'fb.com']],
+    'youtube.com' => ['domains' => ['youtu.be']],
+    'reddit.com' => ['domains' => ['redd.it']],
+    'linkedin.com' => ['domains' => ['lnkd.in']],
+    'pinterest.com' => ['domains' => ['pin.it']],
+    'twitch.com' => ['domains' => ['twitch.tv']],
+    'discord.com' => ['domains' => ['discord.gg']],
+    'drive.google.com' => [],
+    'sheets.google.com' => [],
+    'docs.google.com' => [],
+    'google.com' => ['domains' => ['goo.gl', 'g.co'], 'paths' => ['maps']],
+    'github.com' => ['domains' => ['git.io', 'github.io']],
+    'spotify.com' => ['domains' => ['spoti.fi']],
+  ];
+  // Direct lookup version of the above table.
+  public static ?array $domainShortCodeTable = null;
+
   /**
    * Includes a component and returns its output.
    */
@@ -60,19 +82,131 @@ class Template {
   }
 
   /**
+   * Returns a favicon for a given URL.
+   */
+  public static function getFaviconURL($url) {
+    // Link to our fallback icon. This will be included if we somehow can't determine a valid URL.
+    $fallback = Settings::config()->get('ScriptPath').'/extensions/TombaClub/assets/icons/file.svg';
+
+    $favicon = [
+      'url' => null,
+      'fallback' => $fallback,
+    ];
+
+    try {
+      $parsed = self::parseURL($url);
+
+      $host = !empty($parsed['host']) ? $parsed['host'] : '';
+
+      // If this is a Tumblr subdomain, replace the URL with the main domain.
+      if (str_contains($host, '.tumblr.com')) {
+        $parsed = parse_url('https://tumblr.com');
+      }
+
+      $urlParts = [
+        !empty($parsed['scheme']) ? $parsed['scheme'].'://' : 'http://',
+        @$parsed['host'],
+        '/favicon.ico',
+      ];
+      $favicon['url'] = implode('', array_filter($urlParts));
+    }
+    catch (\Throwable $e) {
+      $favicon['url'] = null;
+    }
+
+    return $favicon;
+  }
+
+  /**
+   * Returns an array of domain short codes.
+   * 
+   * These can be used to rewrite shortened domains back to their full version.
+   */
+  private static function getDomainShortCodes() {
+    if (!empty(self::$domainShortCodeTable)) {
+      return self::$domainShortCodeTable;
+    }
+    $domains = [];
+    foreach (self::$domainShortCodes as $key => $value) {
+      foreach (($value['domains'] ?? []) as $domain) {
+        $domains[$domain] = $key;
+      }
+    }
+    self::$domainShortCodeTable = $domains;
+    return $domains;
+  }
+
+  /**
+   * 
+   */
+  public static function findPrimaryDomain($domain, $path, $host) {
+    $table = self::getDomainShortCodes();
+    if (isset($table[$domain])) {
+      // Get the primary domain for this URL.
+      $domain = $table[$domain];
+    }
+    $info = @self::$domainShortCodes[$host];
+    if (isset($info)) {
+      $domain = $host;
+    }
+    else {
+      $info = @self::$domainShortCodes[$domain];
+    }
+    if (!isset($info)) {
+      // If we don't see this domain in the list,
+      // there's no additional data.
+      return ['domain' => $domain];
+    }
+    if (empty($info['paths'])) {
+      return ['domain' => $domain];
+    }
+    $firstPathSegment = reset($path);
+    foreach ($info['paths'] as $path) {
+      // If there's a path segment that we know about,
+      // return the domain plus that path segment attached to it.
+      if ($path === $firstPathSegment) {
+        return ['domain' => $domain, 'path' => $path];
+      }
+    }
+
+    return ['domain' => $domain];
+  }
+
+  /**
+   * Returns the primary domain for a given URL.
+   * 
+   * Applies some filtering if applicable.
+   */
+  public static function getURLDomainInfo($url, $filtering = true) {
+    $parsed = self::parseURL($url);
+    if (empty($parsed['host'])) {
+      return 'example.com';
+    }
+    $host = $parsed['host'];
+    $hostSegments = explode('.', $host);
+    $domain = array_slice($hostSegments, -2);
+    $domain = implode('.', $domain);
+    $path = !empty($parsed['path']) ? explode('/', trim($parsed['path'], '/')) : [];
+
+    $domainInfo = $domain;
+    $pathInfo = null;
+
+    if ($filtering) {
+      $shortCodes = self::findPrimaryDomain($domain, $path, $host);
+      $domainInfo = $shortCodes['domain'];
+      $pathInfo = @$shortCodes['path'];
+    }
+
+    return ['domain' => $domainInfo, 'path' => $pathInfo];
+  }
+
+  /**
    * Returns various labels for displaying a URL.
-   * 
-   * This returns an array with the following items:
-   * 
-   *   - shortLabel: a brief label to serve as the principal display.
-   *   - longLabel: a longer label that can show up on hover.
-   *   - favicon: a URL linking to the domain's favicon file.
    */
   public static function formatURLLabels($url) {
     $fallback = [
-      'shortLabel' => 'link',
-      'longLabel' => 'link',
-      'favicon' => null,
+      'short' => 'link',
+      'long' => 'link',
     ];
     if (empty($url)) {
       return $fallback;
@@ -87,15 +221,9 @@ class Template {
         @$parsed['path'],
         !empty($parsed['query']) ? '?'.$parsed['query'] : null,
       ]);
-      $favicon = [
-        !empty($parsed['scheme']) ? $parsed['scheme'].'://' : 'http://',
-        @$parsed['host'],
-        '/favicon.ico',
-      ];
       return [
-        'shortLabel' => implode('', array_filter($partsShort)),
-        'longLabel' => implode('', array_filter($partsLong)),
-        'favicon' => implode('', array_filter($favicon)),
+        'short' => implode('', array_filter($partsShort)),
+        'long' => implode('', array_filter($partsLong)),
       ];
     }
     catch (\Throwable $e) {
