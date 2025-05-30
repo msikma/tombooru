@@ -29,6 +29,7 @@
     <p>This field\'s contents will be displayed as a blockquote.</p>
   ',
   'entityData' => $entityData,
+  'post' => @$post,
 ]); ?>
 
 <?= Template::getComponent('Form/FieldTextMultiline', [
@@ -44,6 +45,7 @@
     <p>If there\'s nothing to add, leave this blank.</p>
   ',
   'entityData' => $entityData,
+  'post' => @$post,
 ]); ?>
 
 <?= Template::getComponent('Form/FieldDateTime', [

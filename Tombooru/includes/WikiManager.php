@@ -31,24 +31,33 @@ class WikiManager {
       return [];
     }
 
+    $restrictionStore = MediaWikiServices::getInstance()->getRestrictionStore();
     $revisionStore = MediaWikiServices::getInstance()->getRevisionStore();
+
+    // Get revision information and other metadata.
     $revision = $revisionStore->getRevisionByTitle($title);
     $timestamp = $revision->getTimestamp();
     $user = $revision->getUser();
+    $isProtected = $restrictionStore->isProtected($title, 'edit');
+
+    // Basic page information.
     $name = $title->getDBKey();
-    $title = $title->getText();
+    $fullTitle = $title->getPrefixedText();
+    $titleValue = $title->getText();
     $wikitext = $revision->getContent(SlotRecord::MAIN)->getText();
 
     // In case this is a subpage, get a cleaned up version of the name.
-    $pageTitle = explode('/', $title);
+    $pageTitle = explode('/', $titleValue);
     $pageTitle = end($pageTitle);
 
     return [
       'pageID' => intval($pageID),
       'pageTitle' => $pageTitle,
       'name' => $name,
-      'title' => $title,
+      'title' => $titleValue,
+      'prefixedTitle' => $fullTitle,
       'content' => $wikitext,
+      'isProtected' => $isProtected,
       'revisionAuthor' => self::getUserBasicData($user->getID()),
     ];
   }
