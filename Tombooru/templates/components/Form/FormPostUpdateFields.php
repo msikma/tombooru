@@ -160,10 +160,15 @@
   'category' => '',
   'key' => 'tags',
   'name' => 'tags',
+  // List all tag categories here that are already represented by other fields.
+  'exceptCategories' => ['Character', 'Artist'],
+  // List all single tags here that are represented by other fields.
+  //'exceptTags' => ['digital_media'],
   'component' => 'PostEditTagsPreview',
   'rows' => 2,
   'examples' => 'e.g.: bracelet blackjack kokka_egg',
   'help' => '
+    <p>Tag what you see in the image.</p>
     <p>New to tagging? See our <a href="'.URL::getURL('/page/How_to_tag').'">how to tag</a> page!</p>
     <p>Tags are separated by whitespace and cannot contain spaces (use underscores instead).</p>
   ',

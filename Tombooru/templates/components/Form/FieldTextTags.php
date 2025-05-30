@@ -6,12 +6,30 @@
   // We'll pull them out from there and separate them based on the tag intent value.
   $dataValue = $value('tags', []);
   $dataErrors = $errors('tags');
-
+  
   try {
-    $setValue = array_filter($dataValue, fn($set) => $set['intent'] === $category);
-    $setValue = reset($setValue);
+    // If the $exceptCategories value is set, it means this is the generic tag input field.
+    // This field will display tags of all categories, *except* for the categories listed in $exceptCategories.
+    //
+    // Basically, a form will have a number of specialized fields that permit editing tags
+    // of a certain category, e.g. a field specifically for editing "artist" tags.
+    //
+    // The generic field acts as a rest field for all tags that aren't represented by such other fields.
+    // So: if $exceptCategories is set, we will include tags of every category, except the ones listed therein.
+    $setValue = array_filter($dataValue, @function($set) use ($category, $exceptCategories) {
+      $intentCondition = $set['intent'] === $category;
+      $exceptCategoryCondition = !empty($exceptCategories) ? !in_array($set['intent'], $exceptCategories) : false;
+      return $intentCondition || $exceptCategoryCondition;
+    });
+    // However many sets we selected: flatten them down to one.
+    $setValue = array_merge(...array_column($setValue, 'tags'));
+    // If $exceptTags is set, exclude those too.
+    $setValue = array_filter($setValue, @function($tag) use ($exceptTags) {
+      $exceptTagCondition = !empty($exceptTags) ? !in_array($tag, $exceptTags) : true;
+      return $exceptTagCondition;
+    });
 
-    $dataValue = implode(" ", array_map('htmlentities', !empty($setValue['tags']) ? $setValue['tags'] : []));
+    $dataValue = implode(" ", array_map('htmlentities', !empty($setValue) ? $setValue : []));
   }
   catch (\Throwable $e) {
     $dataValue = '';
