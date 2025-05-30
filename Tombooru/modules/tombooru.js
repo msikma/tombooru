@@ -322,6 +322,7 @@ Tombooru.ComponentPostEditTagsPreview = class {
     this.input = el.querySelector('.group-input textarea');
     this.preview = el.querySelector('.input-preview');
     this.color = el.getAttribute('data-color') ?? 'green';
+    this.placeholder = el.getAttribute('data-preview-placeholder') ?? 'No tags entered.';
 
     this.decorate();
   }
@@ -331,7 +332,7 @@ Tombooru.ComponentPostEditTagsPreview = class {
       .filter(Boolean);
     const buffer = [];
     if (!tags.length) {
-      buffer.push(`<span class="item label ${this.color}">No tags entered.</span>`);
+      buffer.push(`<span class="item label ${this.color}">${this.placeholder}</span>`);
     }
     for (const tag of tags) {
       buffer.push(`<span class="item ${this.color}">${tag.replaceAll('_', ' ')}</span>`);

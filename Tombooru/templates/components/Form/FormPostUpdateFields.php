@@ -136,6 +136,7 @@
   'key' => 'tags_Artist',
   'name' => 'tags_Artist',
   'component' => 'PostEditTagsPreview',
+  'previewPlaceholder' => 'No artists entered.',
   'rows' => 2,
   'color' => 'aqua',
   'help' => '
@@ -151,6 +152,7 @@
   'key' => 'tags_Character',
   'name' => 'tags_Character',
   'component' => 'PostEditTagsPreview',
+  'previewPlaceholder' => 'No characters entered.',
   'rows' => 2,
   'color' => 'blue',
   'examples' => 'e.g.: Tomba Tabby',
@@ -170,6 +172,7 @@
   // List all single tags here that are represented by other fields.
   //'exceptTags' => ['digital_media'],
   'component' => 'PostEditTagsPreview',
+  'previewPlaceholder' => 'No tags entered.',
   'rows' => 2,
   'examples' => 'e.g.: bracelet blackjack kokka_egg',
   'help' => '
@@ -179,7 +182,7 @@
     <p>New to tagging? We have a really big <a href="'.URL::getURL('/page/How_to_tag').'">how to tag</a> guide that explains it.</p>
   ',
   'inputHelp' => '
-    <p>All tags are <strong>space separated</strong>.</p><p>Use <strong>underscores</strong> for spaces inside tags, e.g. <code>green_pants</code>.</p>
+    <p>All tags are <strong>space separated</strong>.</p><p>Use <strong>underscores</strong> for spaces inside tags, e.g. <code><strong>green_pants</strong></code>.</p>
   ',
   'entityData' => $entityData,
 ]); ?>

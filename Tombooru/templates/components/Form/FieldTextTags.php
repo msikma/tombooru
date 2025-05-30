@@ -37,7 +37,7 @@
 ?>
 <div class="group">
   <div class="group-inner">
-    <div class="group-content <?= empty($dataErrors) ? '' : 'has-error' ?>" <?= !empty($component) ? 'data-tombooru-component="'.htmlentities($component).'"' : ''; ?> data-color="<?= @$color ?? 'green'; ?>">
+    <div class="group-content <?= empty($dataErrors) ? '' : 'has-error' ?>" <?= !empty($component) ? 'data-tombooru-component="'.htmlentities($component).'"' : ''; ?> data-color="<?= @$color ?? 'green'; ?>" data-preview-placeholder="<?= $previewPlaceholder; ?>">
       <div class="group-header">
         <h4 class="body-font"><?= htmlentities($title); ?></h4>
       </div>
