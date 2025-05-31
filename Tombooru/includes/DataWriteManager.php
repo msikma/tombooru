@@ -417,6 +417,9 @@ class DataWriteManager {
         if ($dt === false) {
           $dt = \DateTime::createFromFormat(\DateTime::ATOM, $originalPublicationDate);
         }
+        if ($dt instanceof \DateTime && $dt->format('Y') < 1900) {
+          throw new \Exception('Invalid publication date entered.');
+        }
         $errorsInFormat = \DateTime::getLastErrors();
         if ($dt === false && @$errorsInFormat['error_count']) {
           foreach ($errorsInFormat['errors'] as $error) {

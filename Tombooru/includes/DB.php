@@ -279,8 +279,8 @@ class DB {
         // Update the plain data. This is the easiest to update, just overwrite.
         $query = $dbw->newUpdateQueryBuilder()
           ->update('tombooru_post_data')
-          ->set(['license' => $data['license']])
-          ->set(['original_publication_date' => $data['original_publication_date']])
+          ->set(['license' => !empty($data['license']) ? $data['license'] : null])
+          ->set(['original_publication_date' => !empty($data['original_publication_date']) ? $data['original_publication_date'] : null])
           ->set(['is_ai_generated' => $data['is_ai_generated']])
           ->where(['id' => $id])
           ->caller($scope)
