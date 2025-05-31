@@ -425,7 +425,7 @@ class SpecialTombooru extends SpecialPage {
   private function ensureAccess() {
     //
     $user = WikiManager::getUserData();
-    $userWhitelist = ['Msikma', 'Dada78641', 'SiergiejW', 'Folkin'];
+    $userWhitelist = ['Msikma', 'Dada78641', 'SiergiejW', 'Folkin', 'Vervalkon'];
     if (!in_array($user['name'], $userWhitelist)) {
       $this->getOutput()->redirect(URL::getWikiMainPageURL());
     }
