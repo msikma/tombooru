@@ -63,30 +63,15 @@
         'entityData' => $entityData,
       ]); ?>
 
-      <div class="group">
-        <div class="group-inner">
-          <div class="group-content">
-            <div class="group-header">
-              <h4 class="body-font icon">Tag category</h4>
-            </div>
-            <div class="group-input">
-              <div class="input-tag-category">
-                <select name="tag-category">
-                  <option value="" <?= @$tag['category'] === '' ? 'selected' : ''; ?>>Uncategorized</option>
-                  <?php foreach (DataReadManager::getTagCategories() as $category): ?>
-                    <option value="<?= $category['name']; ?>" <?= @$tag['category'] === $category['name'] ? 'selected' : ''; ?>><?= $category['name']; ?></option>
-                  <?php endforeach; ?>
-                </select>
-              </div>
-            </div>
-            <div class="group-help help">
-              <div class="help-inner">
-                <p>Confused? See our <a href="<?= URL::getURL('/page/How_to_tag'); ?>">how to tag</a> page!</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <?= Template::getComponent('Form/FieldCategory', [
+        'title' => 'Tag category',
+        'key' => 'tagCategory',
+        'name' => 'tag-category',
+        'help' => '
+          <p>Confused? See our <a href="'.URL::getURL('/page/How_to_tag').'">how to tag</a> page!</p>
+        ',
+        'entityData' => $entityData,
+      ]); ?>
 
       <div class="group submit">
         <div class="group-inner">
