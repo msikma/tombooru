@@ -14,6 +14,7 @@
       ['Count', 'count'],
       ['Description page ID', 'description.pageID'],
       ['Notes page ID', 'notes.pageID'],
+      ['Aliased to', 'aliasedTo'],
       ['Created at', 'createdAt'],
     ];
   ?>

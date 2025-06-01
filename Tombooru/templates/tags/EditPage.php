@@ -73,6 +73,17 @@
         'entityData' => $entityData,
       ]); ?>
 
+      <?= Template::getComponent('Form/FieldText', [
+        'title' => 'Aliased to',
+        'key' => 'aliasedTo',
+        'name' => 'aliased-to',
+        'help' => '
+          <p>Alias this tag to another; each use of this tag is really a use of that other tag.</p>
+          <p>This is used to automatically correct common misspellings or other tagging errors.</p>
+        ',
+        'entityData' => $entityData,
+      ]); ?>
+
       <div class="group submit">
         <div class="group-inner">
           <div class="group-content">
