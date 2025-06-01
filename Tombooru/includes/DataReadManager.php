@@ -114,7 +114,7 @@ class DataReadManager {
     
     // Get a basic pagination object.
     $pagination = DataHelper::getResultPagination($page, $perPage, $totalPostCount);
-
+    
     // Retrieve basic post data for these items. We only return a subset of data useful for the browse page.
     [$postData, $postIDs] = self::collectSearchResultPostData($posts);
 
@@ -122,7 +122,7 @@ class DataReadManager {
     if ($getTags) {
       $tagCategories = self::getTagCategories();
       $tags = DB::getPostTags($postIDs);
-      $postTags = self::collectPostTagsData($tags, false);
+      $postTags = self::collectPostTagsData($tags, false, $tagCategories);
       $postTagsByCategory = DataHelper::getTagCategoryGroups($postTags, $tagCategories);
     }
 
@@ -146,26 +146,45 @@ class DataReadManager {
   /**
    * Returns a single tag by name, including all related data.
    */
-  public static function getTag($tagName) {
+  public static function getTag($tagName, $includeText = false, $recurse = true) {
     if (empty($tagName)) {
       throw new \Exception('no_tag_name');
     }
 
     $tagData = DB::getTagData($tagName);
-    $extendedTagData = self::collectPostTagsData([$tagData], true);
-    return end($extendedTagData);
+    $extendedTagData = self::collectPostTagsData([$tagData], $includeText, null);
+    $extendedTagData = end($extendedTagData);
+    return self::collectTagAliases($extendedTagData, $includeText, $recurse);
+  }
+
+  /**
+   * Collects the data for aliased tags.
+   */
+  private static function collectTagAliases($extendedTagData, $includeText, $recurse = true) {
+    if (!$recurse) {
+      return $extendedTagData;
+    }
+
+    // If this tag is aliased to a different tag, grab that tag's data as well.
+    if (!empty($extendedTagData['aliasedTo']) && $recurse) {
+      $aliasedTag = self::getTagByID($extendedTagData['aliasedTo'], $includeText, false);
+      $extendedTagData['aliasedTo'] = $aliasedTag;
+    }
+
+    return $extendedTagData;
   }
 
   /**
    * Returns a single tag by name, including all related data.
    */
-  public static function getTagByID($tagID) {
+  public static function getTagByID($tagID, $includeText = false, $recurse = true) {
     if (empty($tagID)) {
       throw new \Exception('No tag ID provided.');
     }
     $tagData = DB::getTagDataByID($tagID);
-    $extendedTagData = self::collectPostTagsData([$tagData], true);
-    return end($extendedTagData);
+    $extendedTagData = self::collectPostTagsData([$tagData], $includeText, null);
+    $extendedTagData = end($extendedTagData);
+    return self::collectTagAliases($extendedTagData, $includeText, $recurse);
   }
 
   /**
@@ -381,7 +400,7 @@ class DataReadManager {
     $approverData = WikiManager::getUserBasicData($post['approver_user_id']);
 
     // Retrieve additional data.
-    $postTags = self::collectPostTagsData($tags, false);
+    $postTags = self::collectPostTagsData($tags, false, $tagCategories);
     $postTagCategories = DataHelper::getTagCategoryGroups($postTags, $tagCategories);
     $postSources = self::collectPostSourceData($sources);
 
@@ -493,8 +512,10 @@ class DataReadManager {
         'name' => $tag['name'],
         'category' => $tag['category'],
         'count' => intval($tag['count']),
+        'aliasedTo' => !empty($tag['aliased_to']) ? intval($tag['aliased_to']) : null,
         'createdAt' => Template::sqlTimestampToISO($tag['created_at']),
       ];
+      $postTag = self::collectTagAliases($postTag, $includeText);
       if (!empty($tagCategories)) {
         $category = @$tagCategories[$tag['category']];
         $postTag['category'] = $category;

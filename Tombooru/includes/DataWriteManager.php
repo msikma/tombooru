@@ -320,6 +320,7 @@ class DataWriteManager {
     $data['description'] = @$tag['description']['content'];
     $data['notes'] = @$tag['notes']['content'];
     $data['tagCategory'] = @$tag['category'];
+    $data['aliasedTo'] = @$tag['aliasedTo'];
     
     return DataHelper::addUpdateErrorStubs($data);
   }
@@ -333,6 +334,7 @@ class DataWriteManager {
     $data['description'] = '';
     $data['notes'] = '';
     $data['tagCategory'] = '';
+    $data['aliasedTo'] = '';
 
     return DataHelper::addUpdateErrorStubs($data);
   }
@@ -354,6 +356,7 @@ class DataWriteManager {
     $data['description'] = self::sanitizeDescription(trim($params['description']));
     $data['notes'] = self::sanitizeDescription(trim($params['notes']));
     $data['tagCategory'] = self::sanitizeTagCategory(trim($params['tag-category']));
+    $data['aliasedTo'] = self::sanitizeAliasedTo(trim($params['aliased-to']));
 
     return $data;
   }
@@ -583,6 +586,37 @@ class DataWriteManager {
       $value = $license;
     }
     catch (\Throwable $e) {
+      $errors[] = $e->getMessage();
+    }
+
+    return [
+      'value' => $value,
+      'errors' => $errors,
+    ];
+  }
+
+  /**
+   * Sanitizes a tag's "aliased to" value.
+   */
+  private static function sanitizeAliasedTo($aliasedTo) {
+    $value = null;
+    $errors = [];
+
+    if (empty($aliasedTo)) {
+      return [
+        'value' => $value,
+        'errors' => $errors,
+      ];
+    }
+    
+    try {
+      if (!is_numeric($aliasedTo)) {
+        throw new \Exception('Value must be empty or numeric.');
+      }
+      $value = intval($aliasedTo);
+    }
+    catch (\Throwable $e) {
+      $value = $aliasedTo;
       $errors[] = $e->getMessage();
     }
 

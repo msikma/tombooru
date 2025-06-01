@@ -11,7 +11,7 @@
       <div class="tag-category-title tag-category-list">
         <h3 class="tag" data-tag-category="<?= htmlspecialchars($categoryName); ?>">
           <a class="tag-link" href="<?= htmlspecialchars($urlInfo); ?>">
-            <span><?= htmlentities($categoryName); ?></span>&nbsp;<span class="amount"><?= htmlspecialchars($category['count']); ?></span>
+            <span class="name"><?= htmlentities($categoryName); ?></span>&nbsp;<span class="amount"><?= htmlspecialchars($category['count']); ?></span>
           </a>
           <span class="tag-actions">
             <a href="<?= htmlspecialchars($urlInfo); ?>" class="action info" title="See tag info"><span></span></a>

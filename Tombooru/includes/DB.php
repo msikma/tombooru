@@ -212,11 +212,14 @@ class DB {
           ->where(['t.id' => $tagID])
           ->caller($scope)
           ->fetchField();
+
+        // TODO: check if we're permitted to alias to this tag.
         
         $dbw->newUpdateQueryBuilder()
           ->update('tombooru_tag')
           ->set(['name' => $data['name']])
           ->set(['category' => $newCategory])
+          ->set(['aliased_to' => !empty($data['aliasedTo']) ? $data['aliasedTo'] : null])
           ->where(['id' => $tagID])
           ->caller($scope)
           ->execute();
@@ -868,6 +871,7 @@ class DB {
         't.description_page_id',
         't.notes_page_id',
         't.count',
+        't.aliased_to',
         't.created_at',
       ])
       ->from('tombooru_tag', 't')
@@ -901,6 +905,7 @@ class DB {
         't.notes_page_id',
         't.created_at',
         't.count',
+        't.aliased_to',
       ])
       ->from('tombooru_post_tag', 'pt')
       ->join('tombooru_tag', 't', 't.id = pt.tag_id')

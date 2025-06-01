@@ -206,8 +206,9 @@ class DataHelper {
     $tagsByCategory = [];
     $order = self::getTagCategoryOrdering($tagCategories);
     foreach ($tags as $tag) {
-      $tagCategoryData = @$tagCategories[$tag['category']] ?? [];
-      $category = trim(@$tag['category'] ?? '');
+      $tagCategory = !empty($tag['category']) ? $tag['category']['name'] : '';
+      $tagCategoryData = @$tagCategories[$tagCategory] ?? [];
+      $category = trim(@$tagCategory ?? '');
       $name = !empty($category) ? $category : '';
       if (!isset($tagsByCategory[$name])) {
         $categoryOrder = @$order[$name] ?? 10000;
@@ -224,6 +225,7 @@ class DataHelper {
         'count' => $tag['count'],
         'description' => @$tag['description'],
         'notes' => @$tag['notes'],
+        'aliasedTo' => @$tag['aliasedTo'],
       ];
     }
     return array_values($tagsByCategory);

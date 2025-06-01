@@ -49,13 +49,16 @@ create table /*_*/tombooru_tag (
   description_page_id int unsigned null,        -- page that stores the description
   notes_page_id int unsigned null,              -- page that stores the notes
   count int unsigned default 0,
+  aliased_to int unsigned default null,
   created_at timestamp not null default current_timestamp,
 
   index (category),
   index (description_page_id),
   index (notes_page_id),
   index (count),
-  index (created_at)
+  index (aliased_to),
+  index (created_at),
+  constraint fk_aliased_to_id foreign key (aliased_to) references /*_*/tombooru_tag(id) on delete set null
 );
 
 create table /*_*/tombooru_tag_category (

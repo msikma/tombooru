@@ -1,3 +1,6 @@
+<?php
+  $tagCategoryData = DataReadManager::getTagCategories();
+?>
 <?php if (!empty($tagCategories)): ?>
   <?php ob_start(); ?>
   <div class="tag-list">
@@ -31,20 +34,35 @@
           <div class="tag-category-list">
             <?php foreach ($category['tags'] as $tag): ?>
               <?php
+                // Tag base info.
                 $id = $tag['id'];
                 $name = $tag['name'];
                 $label = str_replace('_', ' ', $tag['name']);
-                $count = $tag['count'];
-                $urlInfo = URL::getTagInfoURL($tag, 'view', $categoryIsArtist);
-                $urlSearch = URL::getTagSearchURL($tag);
-                $urlPlusSearch = URL::getTagPlusSearchURL($tag);
+
+                // This tag's alias; if this tag is aliased, it means it really represents a different tag.
+                $alias = $tag['aliasedTo'];
+                // Find the category info so we can display the target tag in the correct color.
+                $aliasCategory = @$tagCategoryData[$alias['category']];
+                // Use the aliased tag for linking.
+                $linkTargetTag = empty($alias) ? $tag : $alias;
+                $linkTargetTagHasArtistCategory = !empty($alias) ? DataHelper::isSpecialCategory($aliasCategory, 'artist') : $categoryIsArtist;
+                $linkTargetCount = $linkTargetTag['count'];
+
+                // URLs for the action buttons.
+                $urlInfo = URL::getTagInfoURL($linkTargetTag, 'view', $linkTargetTagHasArtistCategory);
+                $urlSearch = URL::getTagSearchURL($linkTargetTag);
+                $urlPlusSearch = URL::getTagPlusSearchURL($linkTargetTag);
               ?>
               <div class="tag"
                   data-tag-id="<?= htmlspecialchars($id); ?>"
                   data-tag-category="<?= htmlspecialchars($name) ?>"
-                  data-count="<?= htmlspecialchars($count) ?>">
+                  data-count="<?= htmlspecialchars($linkTargetCount) ?>">
                 <a class="tag-link" href="<?= htmlspecialchars($urlSearch) ?>">
-                  <span><?= htmlspecialchars($label) ?></span>&nbsp;<span class="amount"><?= htmlspecialchars($count) ?></span>
+                  <?php if (empty($alias)): ?>
+                    <span class="name"><?= htmlspecialchars($label) ?></span>&nbsp;<span class="amount"><?= htmlspecialchars($linkTargetCount) ?></span>
+                  <?php else: ?>
+                    <span class="moved"><?= htmlspecialchars($label) ?></span> <span class="arrow"> </span><span class="name target" data-tag-color="<?= !empty($aliasCategory) ? $aliasCategory['color'] : ''; ?>"><?= htmlspecialchars($alias['name']); ?></span>&nbsp;<span class="amount"><?= htmlspecialchars($linkTargetCount) ?></span>
+                  <?php endif; ?>
                 </a>
                 <span class="tag-actions">
                   <a href="<?= htmlspecialchars($urlPlusSearch); ?>" class="action plus" title="Add this tag to the current search"><span></span></a>
