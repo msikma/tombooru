@@ -12,13 +12,10 @@
             <?php
               $url = $source['url'];
               $archiveURL = $source['archiveURL'];
-              $info = Template::getURLDomainInfo($url);
               $labels = Template::formatURLLabels($url);
-              $domain = str_replace('.', '_', @$info['domain'] ?? '');
-              $path = str_replace('.', '_', @$info['path'] ?? '');
             ?>
             <li data-source-id="<?= intval($source['id']); ?>" data-added="<?= htmlspecialchars($source['createdAt']); ?>">
-              <span class="site-favicon domain-<?= $domain; ?> <?= !empty($path) ? 'path-'.$path : ''; ?>">
+              <span class="site-favicon">
                 <a href="<?= htmlspecialchars($url); ?>" class="external" rel="nofollow noreferrer noopener ugc" target="_blank">
                   <?= htmlspecialchars($labels['long']); ?>
                 </a>

@@ -25,12 +25,9 @@
           <?php foreach ($post['sources'] as $source): ?>
             <?php
               $url = $source['url'];
-              $info = Template::getURLDomainInfo($url);
               $labels = Template::formatURLLabels($url);
-              $domain = str_replace('.', '_', @$info['domain'] ?? '');
-              $path = str_replace('.', '_', @$info['path'] ?? '');
             ?>
-            <span class="site-favicon domain-<?= $domain; ?> <?= !empty($path) ? 'path-'.$path : ''; ?>">
+            <span class="site-favicon">
               <a class="external" rel="nofollow noreferrer noopener ugc" target="_blank" href="<?= htmlspecialchars($url) ?>" data-source-id="<?= intval($source['id']); ?>" data-added="<?= htmlspecialchars($source['createdAt']); ?>">
                 <span class="text">
                   <span class="preview"><?= htmlspecialchars($labels['short']) ?></span>
