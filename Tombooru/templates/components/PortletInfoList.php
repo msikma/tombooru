@@ -30,13 +30,14 @@
               $domain = str_replace('.', '_', @$info['domain'] ?? '');
               $path = str_replace('.', '_', @$info['path'] ?? '');
             ?>
-            <a class="external" rel="nofollow noreferrer noopener ugc" target="_blank" href="<?= htmlspecialchars($url) ?>" data-source-id="<?= intval($source['id']); ?>" data-added="<?= htmlspecialchars($source['createdAt']); ?>">
-              <span class="site-favicon domain-<?= $domain; ?> <?= !empty($path) ? 'path-'.$path : ''; ?>"></span>
-              <span class="text">
-                <span class="preview"><?= htmlspecialchars($labels['short']) ?></span>
-                <span class="hover"><?= htmlspecialchars($labels['long']) ?></span>
-              </span>
-            </a>
+            <span class="site-favicon domain-<?= $domain; ?> <?= !empty($path) ? 'path-'.$path : ''; ?>">
+              <a class="external" rel="nofollow noreferrer noopener ugc" target="_blank" href="<?= htmlspecialchars($url) ?>" data-source-id="<?= intval($source['id']); ?>" data-added="<?= htmlspecialchars($source['createdAt']); ?>">
+                <span class="text">
+                  <span class="preview"><?= htmlspecialchars($labels['short']) ?></span>
+                  <span class="hover"><?= htmlspecialchars($labels['long']) ?></span>
+                </span>
+              </a>
+            </span>
           <?php endforeach; ?>
         </span>
       </li>

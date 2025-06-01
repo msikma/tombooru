@@ -18,10 +18,11 @@
               $path = str_replace('.', '_', @$info['path'] ?? '');
             ?>
             <li data-source-id="<?= intval($source['id']); ?>" data-added="<?= htmlspecialchars($source['createdAt']); ?>">
-              <a href="<?= htmlspecialchars($url); ?>" class="external" rel="nofollow noreferrer noopener ugc" target="_blank">
-                <span class="site-favicon domain-<?= $domain; ?> <?= !empty($path) ? 'path-'.$path : ''; ?>"></span>
-                <span class="text"><?= htmlspecialchars($labels['long']); ?></span>
-              </a>
+              <span class="site-favicon domain-<?= $domain; ?> <?= !empty($path) ? 'path-'.$path : ''; ?>">
+                <a href="<?= htmlspecialchars($url); ?>" class="external" rel="nofollow noreferrer noopener ugc" target="_blank">
+                  <?= htmlspecialchars($labels['long']); ?>
+                </a>
+              </span>
             </li>
           <?php endforeach; ?>
         </ul>
