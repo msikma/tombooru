@@ -4,10 +4,12 @@
   $dataValue = $value($key, '');
   $dataErrors = $errors($key);
 
-  if (@$mwName === true) {
+  if (@$mwName === true && !is_null($dataValue)) {
     // If this is a MediaWiki name, convert underscores into spaces.
     $dataValue = str_replace('_', ' ', $dataValue);
   }
+
+  $dataValue = empty($dataValue) ? '' : $dataValue;
 ?>
 <div class="group">
   <div class="group-inner">

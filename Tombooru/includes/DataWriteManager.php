@@ -320,7 +320,7 @@ class DataWriteManager {
     $data['description'] = @$tag['description']['content'];
     $data['notes'] = @$tag['notes']['content'];
     $data['tagCategory'] = @$tag['category'];
-    $data['aliasedTo'] = @$tag['aliasedTo'];
+    $data['aliasedTo'] = @$tag['aliasedTo']['id'];
     
     return DataHelper::addUpdateErrorStubs($data);
   }

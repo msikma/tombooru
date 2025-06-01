@@ -1168,6 +1168,19 @@ class DB {
   }
 
   /**
+   * Collects data needed for the search query based on the query clauses.
+   */
+  private static function collectQueryClauseGroups($queryClauses) {
+    $includeTagIDs = self::getTagNameMatches($queryClauses['includeTags']);
+    $excludeTagIDs = self::getTagNameMatches($queryClauses['excludeTags']);
+
+    return [
+      $includeTagIDs,
+      $excludeTagIDs,
+    ];
+  }
+
+  /**
    * Runs a search and returns the results.
    * 
    * Takes a search query object, which should include a set of filters we'll search by.
@@ -1177,8 +1190,8 @@ class DB {
 
     // Convert the caller's query filters to a simpler format.
     $queryClauses = self::convertFiltersToQueryClauses($searchQuery);
-    $includeTags = $queryClauses['includeTags'];
-    $excludeTags = $queryClauses['excludeTags'];
+    $queryData = self::collectQueryClauseGroups($queryClauses);
+    [$includeTagGroups, $excludeTagGroups] = $queryData;
 
     $offset = DataHelper::getQueryOffset($page, $perPage);
 
@@ -1204,10 +1217,18 @@ class DB {
       ->leftJoin('tombooru_post_tag', 'pt', 'pt.post_id = p.id')
       ->leftJoin('tombooru_tag', 't', 't.id = pt.tag_id');
     
-    if (!empty($includeTags)) {
-      $query
-        ->where(['t.name' => $includeTags])
-        ->having('count(distinct t.name) = '.$db->addQuotes(count($includeTags)));
+    if (!empty($includeTagGroups)) {
+      $flatTagIDs = array_merge(...$includeTagGroups);
+      $query->where(['t.id' => $flatTagIDs]);
+      $query->having(
+        'count(distinct case '.
+        implode(' ', array_map(
+          fn($group, $i) => 'when t.id in ('.implode(',', array_map('intval', $group)).') then '.($i + 1),
+          $includeTagGroups,
+          array_keys($includeTagGroups)
+        )).
+        ' end) = '.count($includeTagGroups)
+      );
     }
 
     $query
@@ -1217,18 +1238,19 @@ class DB {
       ->orderBy('p.id', SelectQueryBuilder::SORT_DESC)
       ->caller(__METHOD__);
     
-    if (!empty($excludeTags)) {
+    foreach ($excludeTagGroups as $group) {
+      if (empty($group)) {
+        continue;
+      }
+
       $excludeSubquery = $db->newSelectQueryBuilder()
         ->select('1')
-        ->from('tombooru_post_tag', 'pt2')
-        ->join('tombooru_tag', 't2', 't2.id = pt2.tag_id')
-        ->where([
-          'pt2.post_id = p.id',
-          't2.name' => $excludeTags,
-        ])
+        ->from('tombooru_post_tag', 'pt_ex')
+        ->where(['pt_ex.post_id = p.id'])
+        ->andWhere(['pt_ex.tag_id' => $group])
         ->caller(__METHOD__);
-      
       $excludeSubquerySQL = $excludeSubquery->getSQL();
+
       $query->andWhere("not exists ({$excludeSubquerySQL})");
     }
 
@@ -1252,38 +1274,46 @@ class DB {
 
     // Convert the caller's query filters to a simpler format.
     $queryClauses = self::convertFiltersToQueryClauses($searchQuery);
-    $includeTags = $queryClauses['includeTags'];
-    $excludeTags = $queryClauses['excludeTags'];
+    $queryData = self::collectQueryClauseGroups($queryClauses);
+    [$includeTagGroups, $excludeTagGroups] = $queryData;
 
     $query = $db->newSelectQueryBuilder()
       ->select('count(distinct p.id) as total')
       ->from('tombooru_post', 'p')
-      ->join('tombooru_post_tag', 'pt', 'pt.post_id = p.id')
-      ->join('tombooru_tag', 't', 't.id = pt.tag_id');
+      ->leftJoin('tombooru_post_tag', 'pt', 'pt.post_id = p.id')
+      ->leftJoin('tombooru_tag', 't', 't.id = pt.tag_id');
     
-    
-    if (!empty($includeTags)) {
-      $query
-        ->where(['t.name' => $includeTags])
-        ->having('count(distinct t.name) = '.$db->addQuotes(count($includeTags)));
+    if (!empty($includeTagGroups)) {
+      $flatTagIDs = array_merge(...$includeTagGroups);
+      $query->where(['t.id' => $flatTagIDs]);
+      $query->having(
+        'count(distinct case '.
+        implode(' ', array_map(
+          fn($group, $i) => 'when t.id in ('.implode(',', array_map('intval', $group)).') then '.($i + 1),
+          $includeTagGroups,
+          array_keys($includeTagGroups)
+        )).
+        ' end) = '.count($includeTagGroups)
+      );
     }
 
     $query
       ->groupBy('p.id')
       ->caller(__METHOD__);
+    
+    foreach ($excludeTagGroups as $group) {
+      if (empty($group)) {
+        continue;
+      }
 
-    if (!empty($excludeTags)) {
       $excludeSubquery = $db->newSelectQueryBuilder()
         ->select('1')
-        ->from('tombooru_post_tag', 'pt2')
-        ->join('tombooru_tag', 't2', 't2.id = pt2.tag_id')
-        ->where([
-          'pt2.post_id = p.id',
-          't2.name' => $excludeTags,
-        ])
+        ->from('tombooru_post_tag', 'pt_ex')
+        ->where(['pt_ex.post_id = p.id'])
+        ->andWhere(['pt_ex.tag_id' => $group])
         ->caller(__METHOD__);
-      
       $excludeSubquerySQL = $excludeSubquery->getSQL();
+
       $query->andWhere("not exists ({$excludeSubquerySQL})");
     }
 
@@ -1376,6 +1406,62 @@ class DB {
    */
   public static function getTagsByNames($tagNames) {
     return self::getTagsByProperty($tagNames, 'name');
+  }
+
+  /**
+   * Returns tag IDs for names that can be used to match a search query.
+   * 
+   * This will match tags with the given name, and also tags aliased to the given name.
+   */
+  public static function getTagNameMatches($names) {
+    if (empty($names)) {
+      return [];
+    }
+    $db = self::instReplicaDB();
+    
+    $res = $db->newSelectQueryBuilder()
+      ->select([
+        't.id',
+        't.aliased_to',
+      ])
+      ->from('tombooru_tag', 't')
+      ->where(['name' => $names])
+      ->caller(__METHOD__)
+      ->fetchResultSet();
+    $baseTagIDs = [];
+    $aliasedTagIDs = [];
+    foreach ($res as $row) {
+      $baseTagIDs[] = is_null($row->aliased_to) ? $row->id : $row->aliased_to;
+    }
+
+    if (empty($baseTagIDs)) {
+      $aliasedTagIDs = [];
+    }
+    else {
+      $res = $db->newSelectQueryBuilder()
+        ->select([
+          't.id',
+          't.aliased_to',
+        ])
+        ->from('tombooru_tag', 't')
+        ->where(['aliased_to' => $baseTagIDs])
+        ->caller(__METHOD__)
+        ->fetchResultSet();
+      $aliasedTagIDs = [];
+      foreach ($res as $row) {
+        $aliasedTagIDs[$row->aliased_to] = $row->id;
+      }
+    }
+
+    $tagIDGroups = [];
+    foreach ($baseTagIDs as $id) {
+      $tagIDGroups[$id] = [$id];
+      if (!empty($aliasedTagIDs[$id])) {
+        $tagIDGroups[$id][] = $aliasedTagIDs[$id];
+      }
+    }
+
+    return array_values($tagIDGroups);
   }
 
   /**
