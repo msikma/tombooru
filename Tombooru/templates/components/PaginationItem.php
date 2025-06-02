@@ -1,7 +1,7 @@
 <?php
   $class = [
     'blue',
-    @$item['active'] ? 'active' : '',
+    @$item['active'] ? '' : 'active',
     @$pageClass ? $pageClass : '',
     @$isPageNumber ? 'len-'.strlen((string)($item['text'] ?? '')) : 'icon icon-only',
   ];
