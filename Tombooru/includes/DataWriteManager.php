@@ -233,7 +233,7 @@ class DataWriteManager {
     $source = $request['request']->getUpload('source_filename');
 
     $data = [];
-    $data['filename'] = self::sanitizeDestinationFilename(@$params['destination_filename'], $source->getName());
+    $data['filename'] = self::sanitizeDestinationFilename(@$params['destination_filename'], $source->getName(), $params['form-type']);
     $data['description'] = self::sanitizeDescription(trim($params['description']));
     $data['notes'] = self::sanitizeDescription(trim($params['notes']));
     $data['tags'] = self::sanitizeTags(self::collectTagParams($params));
@@ -377,12 +377,19 @@ class DataWriteManager {
   /**
    * Sanitizes the destination filename value.
    */
-  private static function sanitizeDestinationFilename($targetFilename, $sourceFilename) {
+  private static function sanitizeDestinationFilename($targetFilename, $sourceFilename, $formType) {
     $value = null;
     $errors = [];
 
     try {
       if (empty($sourceFilename) && empty($targetFilename)) {
+        if ($formType === 'post-edit') {
+          // The filename is optional on the edit page.
+          return [
+            'value' => $value,
+            'errors' => $errors,
+          ];
+        }
         throw new \Exception('A file was not provided.');
       }
       else if (empty($targetFilename)) {
