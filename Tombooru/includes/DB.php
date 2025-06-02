@@ -321,6 +321,9 @@ class DB {
    * Generates a list of flat tags, and an object of intents, from the tag sets in a post update data object.
    */
   private static function collectFlatTags($tagSets) {
+    if (empty($tagSets)) {
+      return [[], []];
+    }
     $flatTags = [];
     $tagIntents = [];
     foreach ($tagSets as $set) {
@@ -354,11 +357,11 @@ class DB {
    * These tags will need to have their use counts updated.
    */
   private static function updatePostTags($postID, $data, $dbw, $scope = __METHOD__) {
-    if (empty($data['tags'])) {
-      return [[], []];
-    }
+    [$flatTags, $tagIntents] = self::collectFlatTags(@$data['tags']);
 
-    [$flatTags, $tagIntents] = self::collectFlatTags($data['tags']);
+    if (empty($flatTags)) {
+      return [[], [], []];
+    }
 
     // The following lists define the flow of this function:
     $tagNamesDesired = [];            // the tag names we ultimately want to end up with (submitted by the user).

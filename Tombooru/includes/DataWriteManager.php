@@ -382,8 +382,15 @@ class DataWriteManager {
     $errors = [];
 
     try {
-      if (empty($sourceFilename) || empty($targetFilename)) {
-        $value = null;
+      if (empty($sourceFilename) && empty($targetFilename)) {
+        throw new \Exception('A file was not provided.');
+      }
+      else if (empty($targetFilename)) {
+        $extension = pathinfo($sourceFilename, PATHINFO_EXTENSION);
+        $filename = pathinfo($sourceFilename, PATHINFO_FILENAME);
+        $filename = mb_strtoupper(mb_substr($filename, 0, 1)).mb_substr($filename, 1);
+        $filename = mb_substr($filename, 0, 80);
+        $value = trim($filename).'.'.$extension;
       }
       else {
         $extension = pathinfo($sourceFilename, PATHINFO_EXTENSION);
