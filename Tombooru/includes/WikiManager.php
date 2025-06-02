@@ -520,7 +520,7 @@ class WikiManager {
    * This is only displayed on the File: namespace page, not on the imageboard.
    */
   private static function getFilePageDescriptionWikiText() {
-    return '[[Category:Tombooru Images]]';
+    return '[[Category:Tombooru content]]';
   }
 
   /**
