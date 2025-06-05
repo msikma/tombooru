@@ -148,10 +148,10 @@ class DataReadManager {
     $queriedTags = array_filter(array_map(fn($item) => $item['type'] === 'tag' ? mb_strtolower($item['value']) : null, $query['filters']));
     foreach ($tags as $tag) {
       if (in_array(mb_strtolower($tag['name']), $queriedTags)) {
-        $categories[] = $tag['category']['id'];
+        $categories[] = @$tag['category']['id'];
       }
     }
-    return $categories;
+    return array_filter($categories);
   }
 
   /**
