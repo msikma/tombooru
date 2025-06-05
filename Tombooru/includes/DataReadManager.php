@@ -126,12 +126,32 @@ class DataReadManager {
       $postTagsByCategory = DataHelper::getTagCategoryGroups($postTags, $tagCategories);
     }
 
+    // Also, get a list of what tag categories we have searched tags for.
+    // This is mainly for the "artists" tags, which are hidden by default when browsing;
+    // if an artist is explicitly searched for, we want it visible.
+    $queriedTagCategoryIDs = self::getQueriedTagCategoryIDs($query, $postTags);
+
     return array_filter([
       'query' => $query,
       'posts' => $postData,
       'tags' => $getTags ? $postTagsByCategory : null,
       'pagination' => $pagination,
+      'queriedTagCategoryIDs' => $queriedTagCategoryIDs,
     ]);
+  }
+
+  /**
+   * Returns a list of tag category IDs that are applicable to a search query.
+   */
+  private static function getQueriedTagCategoryIDs($query, $tags) {
+    $categories = [];
+    $queriedTags = array_filter(array_map(fn($item) => $item['type'] === 'tag' ? mb_strtolower($item['value']) : null, $query['filters']));
+    foreach ($tags as $tag) {
+      if (in_array(mb_strtolower($tag['name']), $queriedTags)) {
+        $categories[] = $tag['category']['id'];
+      }
+    }
+    return $categories;
   }
 
   /**

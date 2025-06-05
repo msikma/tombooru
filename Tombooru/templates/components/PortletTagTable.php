@@ -21,8 +21,14 @@
         $categoryName = $categoryIsGeneric ? 'Tags' : $category['name'];
         // Show a header if this is not the generic tag, or if we're showing a categories only list.
         $showCategoryHeader = (!$categoryIsGeneric || $isCategoryList) && $categoryHeader;
+
+        // Hide this category if it's set to "hide_on_browse" and this is the browse page.
+        $isBrowsePage = $request['route']['type'] === 'browse';
+        $shouldHide = in_array('hide_on_browse', @$category['properties'] ?: []);
+        $isQueried = in_array(@$category['id'], @$queriedTagCategoryIDs ?: []);
+        $hide = $isBrowsePage && ($shouldHide && !$isQueried);
       ?>
-      <div class="tag-category" data-tag-category="<?= htmlspecialchars($categoryName) ?>" data-tag-color="<?= htmlspecialchars($categoryColor) ?>" data-tag-header="<?= $showCategoryHeader ? '1' : '0'; ?>">
+      <div class="tag-category <?= $hide ? 'hidden' : ''; ?>" data-tag-category="<?= htmlspecialchars($categoryName) ?>" data-tag-color="<?= htmlspecialchars($categoryColor) ?>" data-tag-header="<?= $showCategoryHeader ? '1' : '0'; ?>">
         <?php if ($showCategoryHeader): ?>
           <div class="tag-category-title">
             <h3 class="<?= $isCategoryList ? 'with-count' : ''; ?>" data-tag-category="<?= htmlspecialchars($categoryName) ?>">

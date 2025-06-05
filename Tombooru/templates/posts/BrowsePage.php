@@ -3,9 +3,14 @@
   $tags = @$results['tags'];
   $pagination = $results['pagination'];
   $total = $pagination['totalResultCount'];
+  $queriedTagCategoryIDs = @$results['queriedTagCategoryIDs'] ?: [];
 ?>
-<?= Template::getComponent('SearchSidebarPanel', ['posts' => $posts, 'tagCategories' => $tags, 'search' => $search]); ?>
-
+<?= Template::getComponent('PostsSidebarPanel', [
+  'posts' => $posts,
+  'tagCategories' => $tags,
+  'search' => $search,
+  'queriedTagCategoryIDs' => $queriedTagCategoryIDs,
+]); ?>
 <div class="tombooru-page page-browse">
   <div class="search-result-info">
     <div class="actions">
