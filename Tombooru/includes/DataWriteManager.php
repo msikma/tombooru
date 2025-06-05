@@ -89,6 +89,9 @@ class DataWriteManager {
     if ($tagData['name'] !== @$tagUpdateData['name']['value']) {
       try {
         $existingTag = DataReadManager::getTag($tagUpdateData['name']['value']);
+        if ($existingTag['id'] === $tagID) {
+          $existingTag = null;
+        }
       }
       catch (\Throwable $e) {
         // If this threw an error, it means that tag does not exist.
