@@ -129,7 +129,7 @@ class DataReadManager {
     // Also, get a list of what tag categories we have searched tags for.
     // This is mainly for the "artists" tags, which are hidden by default when browsing;
     // if an artist is explicitly searched for, we want it visible.
-    $queriedTagCategoryIDs = self::getQueriedTagCategoryIDs($query, $postTags);
+    $queriedTagCategoryIDs = self::getQueriedTagCategoryIDs($query, @$postTags ?: []);
 
     return array_filter([
       'query' => $query,
