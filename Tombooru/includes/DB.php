@@ -329,7 +329,7 @@ class DB {
     foreach ($tagSets as $set) {
       foreach ($set['tags'] as $tag) {
         $flatTags[] = $tag;
-        $tagIntents[$tag] = $set['intent'];
+        $tagIntents[mb_strtolower($tag)] = $set['intent'];
       }
     }
     return [$flatTags, $tagIntents];
