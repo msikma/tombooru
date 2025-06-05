@@ -275,6 +275,23 @@ class DataHelper {
   }
 
   /**
+   * Returns image dimensions data for a given image.
+   */
+  public static function getImageDimensions($image) {
+    $width = $image['width'];
+    $height = $image['height'];
+    $ratio = $width / $height;
+    // This uses a very small error ratio.
+    $isSquare = abs($ratio - 1) < 0.05;
+    return [
+      'width' => intval($width),
+      'height' => intval($height),
+      'ratio' => $ratio,
+      'orientation' => ($isSquare ? 'square' : ($ratio < 1 ? 'portrait' : 'landscape')),
+    ];
+  }
+
+  /**
    * Returns a set of three functions used to get data from $updateData and $originalData.
    */
   public static function createTemplateDataHelpers($updateData, $originalData) {

@@ -4,13 +4,16 @@
       <?php
         $pageID = $post['pageID'];
         $thumb = @$post['file']['media']['thumb'];
+        $dimensions = DataHelper::getImageDimensions($thumb);
       ?>
-      <div class="post">
-        <a href="<?= URL::getURL("/posts/view/{$pageID}"); ?>" class="media">
-          <?php if (!empty($thumb)): ?>
-            <img src="<?= htmlspecialchars($thumb['url']); ?>" width="<?= htmlspecialchars($thumb['width']); ?>" height="<?= htmlspecialchars($thumb['height']); ?>" />
-          <?php endif; ?>
-        </a>
+      <div class="post orientation-<?= htmlspecialchars($dimensions['orientation']); ?>">
+        <div class="image">
+          <a href="<?= URL::getURL("/posts/view/{$pageID}"); ?>" class="media">
+            <?php if (!empty($thumb)): ?>
+              <img src="<?= htmlspecialchars($thumb['url']); ?>" width="<?= htmlspecialchars($dimensions['width']); ?>" height="<?= htmlspecialchars($dimensions['height']); ?>" />
+            <?php endif; ?>
+          </a>
+        </div>
       </div>
     <?php endforeach; ?>
   </div>
