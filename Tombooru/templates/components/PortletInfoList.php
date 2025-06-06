@@ -41,7 +41,7 @@
     <?php endif; ?>
 
     <?php if (!$hasSource && $showNoSourceWarning): ?>
-      <li class="url-items">
+      <li class="url-items inline">
         <span class="key">Source</span>
         <span class="value">Unknown</span>
       </li>
