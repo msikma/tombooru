@@ -5,11 +5,33 @@ use MediaWiki\MediaWikiServices;
 
 class Hooks {
   /**
+   * Navigation tabs for a set detail page.
+   * 
+   * The set detail page will always have a first-post query value.
+   * We'll use that to generate the post detail subnav.
+   */
+  private static function addPostSetSingleNavigation($route, &$links, $params) {
+    [$primary, $sub, $id] = self::getRouteSegments($route);
+    $firstPostPageID = @$params['first-post'];
+    var_dump($firstPostPageID);
+  }
+
+  /**
    * Navigation tabs for a post detail page.
    */
-  private static function addPostsSingleNavigation($route, &$links) {
+  private static function addPostsSingleNavigation($route, &$links, $params) {
     $user = WikiManager::getUserData();
     [$primary, $sub, $id] = self::getRouteSegments($route);
+
+    // Special case for a set detail page. When we're viewing a set detail page,
+    // we're actually displaying the post detail page subnav for the first post in the set.
+    if ($primary === 'sets') {
+      $primary = 'posts';
+      $firstPostPageID = @$params['first-post'];
+      $id = $firstPostPageID;
+      $sub = 'sets';
+    }
+
     $links['views'][] = [
       'text' => 'View',
       'href' => URL::getURL("/{$primary}/view/{$id}"),
@@ -22,6 +44,13 @@ class Hooks {
       'href' => URL::getURL("/{$primary}/edit/{$id}"),
       'id' => 'ca-tombooru_edit',
       'class' => $sub === 'edit' ? 'selected' : '',
+      'active' => true,
+    ];
+    $links['views'][] = [
+      'text' => 'Sets',
+      'href' => URL::getURL("/{$primary}/sets/{$id}"),
+      'id' => 'ca-tombooru_sets',
+      'class' => $sub === 'sets' ? 'selected' : '',
       'active' => true,
     ];
     $links['views'][] = [
@@ -194,7 +223,7 @@ class Hooks {
       'href' => URL::getURL("/posts"),
       'id' => 'n-tombooru_posts',
       'active' => true,
-      'class' => $area === 'posts' ? 'selected' : '',
+      'class' => $area === 'posts' || $area === 'sets' ? 'selected' : '',
     ];
     $links['namespaces']['tags'] = [
       'text' => 'Tags',
@@ -258,10 +287,15 @@ class Hooks {
 
     if ($area === 'posts') {
       if ($type === 'single') {
-        self::addPostsSingleNavigation($route, $links);
+        self::addPostsSingleNavigation($route, $links, $request['params']);
       }
       if ($type === 'browse') {
         self::addPostsBrowseNavigation($route, $links);
+      }
+    }
+    if ($area === 'sets') {
+      if ($type === 'single') {
+        self::addPostsSingleNavigation($route, $links, $request['params']);
       }
     }
     if ($area === 'tags' || $area === 'tag-categories' || $area === 'artists') {

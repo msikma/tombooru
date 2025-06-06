@@ -31,8 +31,8 @@ class Router {
    * This is an abstraction on the main route information and is used to construct navbars.
    */
   private static function getRouteArea($primary, $sub) {
-    if (in_array($primary, ['posts', 'tags', 'tag-categories', 'artists'])) {
-      if (in_array($sub, ['view', 'edit', 'data', 'report'])) {
+    if (in_array($primary, ['posts', 'tags', 'tag-categories', 'artists', 'sets'])) {
+      if (in_array($sub, ['view', 'edit', 'data', 'sets', 'report'])) {
         return [$primary, 'single'];
       }
       if (empty($sub)) {

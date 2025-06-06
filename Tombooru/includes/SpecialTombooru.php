@@ -166,6 +166,25 @@ class SpecialTombooru extends SpecialPage {
   /**
    * Displays the post data page.
    */
+  private function runPostsSetsPage() {
+    $pageID = $this->route['id'];
+    $post = DataReadManager::getPost($pageID, true);
+    return TemplateManager::outputTemplate('posts/SetsPage', ['post' => $post]);
+  }
+
+  /**
+   * Displays the post data page.
+   */
+  private function runSetsViewPage() {
+    $setID = $this->route['id'];
+    $set = DataReadManager::getPostSet($setID, true);
+    $post = reset($set['posts']);
+    return TemplateManager::outputTemplate('sets/ViewPage', ['set' => $set, 'post' => $post]);
+  }
+
+  /**
+   * Displays the post data page.
+   */
   private function runPostsDataPage() {
     $pageID = $this->route['id'];
     $post = DataReadManager::getPost($pageID);
@@ -460,12 +479,17 @@ class SpecialTombooru extends SpecialPage {
           return $this->runPostsViewPage();
         case '/posts/data':
           return $this->runPostsDataPage();
+        case '/posts/sets':
+          return $this->runPostsSetsPage();
         case '/posts/edit':
           return $this->runPostsEditPage();
         case '/posts/report':
           return $this->runPostsReportPage();
         case '/posts':
           return $this->runPostsBrowsePage();
+        // Post sets pages:
+        case '/sets/view':
+          return $this->runSetsViewPage();
         // Tag pages:
         case '/tags/view':
           return $this->runTagsViewPage();

@@ -1,5 +1,5 @@
 <?php if (!empty($posts)): ?>
-  <div class="result-set">
+  <div class="result-set <?= @$isSet ? 'set-posts' : ''; ?>">
     <?php foreach ($posts as $post): ?>
       <?php
         $pageID = $post['pageID'];

@@ -61,15 +61,40 @@ class DataReadManager {
    * 
    * This fetches the core post data as well as all associated data from other tables.
    */
-  public static function getPost($pageID) {
+  public static function getPost($pageID, $getExtendedSetData = false) {
     if (empty($pageID)) {
       throw new \Exception('no_page_id');
     }
 
     $postData = DB::getPostData($pageID);
     $tagCategories = self::getTagCategories();
-    $extendedPostData = self::collectPostExtendedData($postData, $tagCategories);
+    $extendedPostData = self::collectPostExtendedData($postData, $tagCategories, $getExtendedSetData);
     return $extendedPostData;
+  }
+
+  /**
+   * Returns an imageboard post by post ID, including all related data.
+   */
+  public static function getPostByID($postID, $getExtendedSetData = false) {
+    if (empty($postID)) {
+      throw new \Exception('no_post_id');
+    }
+    $pageID = DB::getPostPageID($postID);
+    return self::getPost($pageID, $getExtendedSetData);
+  }
+
+  /**
+   * Returns a post set.
+   * 
+   * This includes the metadata for the post set as well as the data for all associated posts.
+   */
+  public static function getPostSet($setID) {
+    if (empty($setID)) {
+      throw new \Exception('no_page_id');
+    }
+    $set = DB::getPostSetByID($setID);
+    $extendedSetData = self::collectSetExtendedData($set, true);
+    return $extendedSetData;
   }
 
   /**
@@ -399,14 +424,81 @@ class DataReadManager {
   }
 
   /**
+   * Merges tags from various posts together into one set.
+   * 
+   * TODO: there's probably a better way of doing this.
+   */
+  private static function mergePostTags($postTagSets) {
+    $mergedTagGroups = [];
+    foreach ($postTagSets as $tagGroups) {
+      foreach ($tagGroups as $groupName => $tagGroup) {
+        $mergedTagGroups[$groupName] = array_merge(@$mergedTagGroups[$groupName] ?: [], $tagGroup);
+        foreach ($tagGroup as $categoryName => $tagCategory) {
+          $existingData = @$mergedTagGroups[$groupName][$categoryName] ?: [];
+          $existingTags = $existingData['tags'];
+          $mergedTagGroups[$groupName][$categoryName] = $tagCategory;
+          $mergedTagGroups[$groupName][$categoryName]['tags'] = array_values(array_column(array_merge($tagCategory['tags'], $existingTags), null, 'id'));
+        }
+      }
+    }
+    return $mergedTagGroups;
+  }
+
+  /**
+   * Takes a set data object from the database and processes it.
+   */
+  private static function collectSetExtendedData($set, $getExtendedPostData = false) {
+    $creatorUserData = WikiManager::getUserBasicData($set['creator_user_id']);
+    $descriptionPageData = WikiManager::getPageData($set['description_page_id']);
+    $notesPageData = WikiManager::getPageData($set['notes_page_id']);
+
+    $setPosts = [];
+
+    if (!empty($set['posts'])) {
+      foreach ($set['posts'] as $post) {
+        if ($getExtendedPostData) {
+          $postData = self::getPostByID($post['post_id'], false);
+          $setPosts[$postData['id']] = $postData;
+        }
+        else {
+          $setPosts[] = intval($post['post_id']);
+        }
+      }
+    }
+    
+    $firstPost = reset($setPosts);
+
+    if ($getExtendedPostData) {
+      // Merge all the tags together and add them to the first post.
+      // That way we'll see all posts' tags on the overview page merged as one.
+      $setPostTags = self::mergePostTags(array_column($setPosts, 'tags'));
+      $setPosts[$firstPost['id']]['tags'] = $setPostTags;
+    }
+
+    $setData = [
+      'id' => intval($set['id']),
+      'name' => $set['name'],
+      'creator' => $creatorUserData,
+      'description' => $descriptionPageData,
+      'notes' => $notesPageData,
+      'posts' => $setPosts,
+      'firstPageID' => !empty($firstPost['pageID']) ? $firstPost['pageID'] : (!empty($set['first_page_id']) ? intval($set['first_page_id']) : null),
+      'createdAt' => Template::sqlTimestampToISO($set['created_at']),
+    ];
+    
+    return $setData;
+  }
+
+  /**
    * Takes a post data object from the database and upgrades it to a full post object.
    * 
    * This collects a bunch of additional data from the database and wrangles the data quite a bit.
    * This is for posts we intend to view a detail page of.
    */
-  private static function collectPostExtendedData($post, $tagCategories) {
+  private static function collectPostExtendedData($post, $tagCategories, $getExtendedSetData = false) {
     $tags = DB::getPostTags([$post['id']]);
     $sources = DB::getPostSources($post['id']);
+    $sets = DB::getPostSets($post['id']);
 
     // Get the actual file object this is pointing to.
     $file = WikiManager::getFileData($post['page_id']);
@@ -423,6 +515,7 @@ class DataReadManager {
     $postTags = self::collectPostTagsData($tags, false, $tagCategories);
     $postTagCategoryGroups = DataHelper::getTagCategoryGroups($postTags, $tagCategories);
     $postSources = self::collectPostSourceData($sources);
+    $postSets = self::collectPostSetData($sets, $getExtendedSetData);
 
     $postData = [
       'id' => intval($post['id']),
@@ -450,6 +543,7 @@ class DataReadManager {
       ],
       'tags' => $postTagCategoryGroups,
       'sources' => $postSources,
+      'sets' => $postSets,
       'createdAt' => Template::sqlTimestampToISO($post['created_at']),
       'updatedAt' => Template::sqlTimestampToISO($post['updated_at']),
     ];
@@ -472,6 +566,17 @@ class DataReadManager {
     }
 
     return $post;
+  }
+
+  /**
+   * Returns post set data.
+   */
+  private static function collectPostSetData($sets, $includeText = true) {
+    $postSets = [];
+    foreach ($sets as $set) {
+      $postSets[] = self::collectSetExtendedData($set, false);
+    }
+    return $postSets;
   }
 
   /**

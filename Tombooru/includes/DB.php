@@ -145,6 +145,26 @@ class DB {
   }
 
   /**
+   * Returns a page ID from a post ID.
+   */
+  public static function getPostPageID($postID) {
+    $db = self::instReplicaDB();
+
+    $query = $db->newSelectQueryBuilder()
+      ->select('p.page_id')
+      ->from('tombooru_post', 'p')
+      ->where(['p.id' => $postID])
+      ->caller(__METHOD__);
+    
+    $post = $query->fetchRow();
+    if (empty($post)) {
+      throw new \Exception('post not found');
+    }
+
+    return (int)$post->page_id;
+  }
+
+  /**
    * Returns a tag ID from a tag name string.
    */
   public static function getTagID($tagName) {
@@ -924,6 +944,103 @@ class DB {
     }
 
     return $tags;
+  }
+
+  /**
+   * Returns a single post set.
+   */
+  public static function getPostSetByID($setID) {
+    $db = self::instReplicaDB();
+
+    $query = $db->newSelectQueryBuilder()
+      ->select([
+        'ps.id',
+        'ps.name',
+        'ps.description_page_id',
+        'ps.notes_page_id',
+        'ps.creator_user_id',
+        'ps.created_at',
+      ])
+      ->from('tombooru_post_set', 'ps')
+      ->where(['ps.id' => $setID])
+      ->caller(__METHOD__);
+
+    $set = (array)$query->fetchRow();
+
+    $query = $db->newSelectQueryBuilder()
+      ->select([
+        'psp.post_id',
+        'psp.ordering',
+      ])
+      ->from('tombooru_post_set_post', 'psp')
+      ->where(['psp.post_set_id' => $setID])
+      ->orderBy('psp.ordering', SelectQueryBuilder::SORT_ASC)
+      ->caller(__METHOD__);
+    
+    $res = $query->fetchResultSet();
+    foreach ($res as $row) {
+      $set['posts'][] = (array)$row;
+    }
+    return $set;
+  }
+
+  /**
+   * Retrieves the first post ID (and page ID) of a given set.
+   */
+  public static function getPostSetFirstPostID($setID) {
+    $db = self::instReplicaDB();
+
+    $query = $db->newSelectQueryBuilder()
+      ->select([
+        'psp.post_id',
+        'p.page_id',
+      ])
+      ->from('tombooru_post_set_post', 'psp')
+      ->join('tombooru_post', 'p', 'p.id = psp.post_id')
+      ->where(['psp.post_set_id' => $setID])
+      ->orderBy('psp.post_id')
+      ->limit(1)
+      ->caller(__METHOD__);
+    
+    $row = $query->fetchRow();
+
+    return [
+      'post_id' => $row->post_id,
+      'page_id' => $row->page_id,
+    ];
+  }
+
+  /**
+   * Retrieves all sets for a single post.
+   */
+  public static function getPostSets($postID) {
+    $db = self::instReplicaDB();
+
+    // Fetch all 
+    $query = $db->newSelectQueryBuilder()
+      ->select([
+        'ps.id',
+        'ps.name',
+        'ps.description_page_id',
+        'ps.notes_page_id',
+        'ps.creator_user_id',
+        'ps.created_at',
+      ])
+      ->from('tombooru_post_set_post', 'psp')
+      ->leftJoin('tombooru_post_set', 'ps', 'ps.id = psp.post_set_id')
+      ->where(['psp.post_id' => $postID])
+      ->caller(__METHOD__);
+
+    $res = $query->fetchResultSet();
+    $sets = [];
+    foreach ($res as $row) {
+      $row = (array)$row;
+      $firstPost = self::getPostSetFirstPostID($row['id']);
+      $row['first_post_id'] = $firstPost['post_id'];
+      $row['first_page_id'] = $firstPost['page_id'];
+      $sets[] = $row;
+    }
+    return $sets;
   }
 
   /**

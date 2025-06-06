@@ -81,6 +81,33 @@ create table /*_*/tombooru_tag_category (
   index (created_at)
 );
 
+create table /*_*/tombooru_post_set (
+  id int unsigned auto_increment primary key,
+  name varchar(300) not null,                   -- name of the set/series
+  description_page_id int unsigned null,        -- page that stores the description
+  notes_page_id int unsigned null,              -- page that stores the notes
+  creator_user_id int unsigned null,            -- references user.user_id
+  created_at timestamp not null default current_timestamp,
+
+  index (name),
+  index (description_page_id),
+  index (notes_page_id),
+  index (creator_user_id),
+  constraint fk_post_set_creator_user foreign key (creator_user_id) references /*_*/user(user_id) on delete set null
+);
+
+
+create table /*_*/tombooru_post_set_post (
+  post_set_id int unsigned not null,            -- fk to tombooru_post_set.id
+  post_id int unsigned not null,                -- fk to tombooru_post.id
+
+  primary key (post_set_id, post_id),
+  constraint fk_post_set_post_set foreign key (post_set_id) references /*_*/tombooru_post_set(id) on delete cascade on update cascade,
+  constraint fk_post_set_post_post foreign key (post_id) references /*_*/tombooru_post(id) on delete cascade on update cascade,
+  index (post_id)
+);
+  
+
 create table /*_*/tombooru_post_tag (
   post_id int unsigned not null,
   tag_id int unsigned not null,

@@ -111,6 +111,13 @@ class URL {
   }
 
   /**
+   * Returns a URL to a single post set.
+   */
+  public static function getSetInfoURL($setID, $firstPageID) {
+    return self::getURL("/sets/view/{$setID}", ['first-post' => $firstPageID]);
+  }
+
+  /**
    * Returns a URL that searches for a given tag.
    */
   public static function getTagSearchURL($tag) {
