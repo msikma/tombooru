@@ -1339,6 +1339,7 @@ class DB {
       ->select([
         'tc.id',
         'tc.name',
+        'tc.slug',
         'tc.icon',
         'tc.color',
         'tc.header',

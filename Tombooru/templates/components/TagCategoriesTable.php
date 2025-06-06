@@ -5,6 +5,7 @@
         <tr class="header">
           <th data-type="number" class="id minimal" data-slug="id" data-direction="asc" data-active="true">#<span class="sorter"></span></th>
           <th data-slug="name" data-direction="asc" data-active="false">Name<span class="sorter"></span></th>
+          <th data-slug="slug" data-direction="asc" data-active="false">Slug<span class="sorter"></span></th>
           <th data-slug="icon" data-direction="asc" data-active="false">Icon<span class="sorter"></span></th>
           <th data-slug="color" data-direction="asc" data-active="false">Color<span class="sorter"></span></th>
           <th data-slug="header" data-direction="asc" data-active="false">Header<span class="sorter"></span></th>
@@ -23,6 +24,7 @@
           <?php
             $id = $tagCategory['id'];
             $name = $tagCategory['name'];
+            $slug = $tagCategory['slug'];
             $icon = $tagCategory['icon'];
             $color = $tagCategory['color'];
             $header = $tagCategory['header'];
@@ -33,12 +35,13 @@
             $urlViewTagCategory = URL::getTagCategoryInfoURL($tagCategory, 'view');
             $urlEditTagCategory = URL::getTagCategoryInfoURL($tagCategory, 'edit');
           ?>
-          <tr data-tag-category="<?= htmlentities($name); ?>">
+          <tr data-tag-category="<?= htmlentities($slug); ?>">
             <td class="right highlighted"><span class="inner"><?= htmlentities($id); ?></span></td>
             <!--
             <td><span class="inner"><a href="<?= htmlentities($urlViewTagCategory); ?>"><?= htmlentities($name); ?></a></span></td>
             -->
             <td><span class="inner"><?= htmlentities($name); ?></span></td>
+            <td><span class="inner"><?= htmlentities($slug); ?></span></td>
             <td><span class="inner"><?= htmlentities($icon); ?></span></td>
             <td><span class="inner"><?= htmlentities($color); ?></span></td>
             <td><span class="inner"><?= $header ? 'true' : 'false'; ?></span></td>

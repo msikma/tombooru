@@ -3,6 +3,8 @@
 namespace Tombooru;
 
 class DataHelper {
+  // The generic category is ordered here.
+  public static $genericCategoryOrder = 10000;
   /**
    * Converts all tags to a plaintext list.
    * 
@@ -122,7 +124,24 @@ class DataHelper {
     $tagsByCategory = self::groupPostTagsByCategory($tags, $tagCategories);
     $orderedTagCategories = self::orderPostTagCategories($tagsByCategory);
     $orderedTagCategories = self::omitOrderValues($orderedTagCategories);
-    return $orderedTagCategories;
+    $tagCategoryGroups = self::groupTagCategories($orderedTagCategories);
+    return $tagCategoryGroups;
+  }
+
+  /**
+   * Groups up tag categories by the prefix and suffix of the category slug.
+   * 
+   * Slugs are structured like "groupname:membername", and groups are displayed together.
+   */
+  private static function groupTagCategories($tagCategories) {
+    $groups = [];
+    foreach ($tagCategories as $tagCategory) {
+      $slug = !empty($tagCategory['slug']) ? explode(':', $tagCategory['slug'], 2) : [''];
+      $group = $slug[0];
+      $member = !empty($slug[1]) ? $slug[1] : $slug[0];
+      $groups[$group][$member] = $tagCategory;
+    }
+    return $groups;
   }
 
   /**
@@ -206,16 +225,16 @@ class DataHelper {
     $tagsByCategory = [];
     $order = self::getTagCategoryOrdering($tagCategories);
     foreach ($tags as $tag) {
-      $tagCategory = !empty($tag['category']) ? $tag['category']['name'] : '';
+      $tagCategory = !empty($tag['category']) ? $tag['category']['slug'] : '';
       $tagCategoryData = @$tagCategories[$tagCategory] ?? [];
       $category = trim(@$tagCategory ?? '');
-      $name = !empty($category) ? $category : '';
+      $name = !empty($tagCategoryData) ? $tagCategoryData['name'] : '';
       if (!isset($tagsByCategory[$name])) {
-        $categoryOrder = @$order[$name] ?? 10000;
+        $categoryOrder = @$order[$name] ?? self::$genericCategoryOrder;
         $tagsByCategory[$name] = [
           ...$tagCategoryData,
           'name' => $name,
-          'order' => empty($category) ? 20000 : $categoryOrder,
+          'order' => $categoryOrder,
           'tags' => [],
         ];
       }
@@ -350,5 +369,25 @@ class DataHelper {
       return empty($tagCategory['id']);
     }
     return in_array($type, $tagCategory['properties'] ?? []);
+  }
+
+  /**
+   * Returns whether a given category group should be hidden from view.
+   * 
+   * We normally hide a tag category group with the "hide_on_browse" property, unless the following is true:
+   * 
+   *   - a tag from this group has been searched for
+   *   - we're not on a browse page
+   */
+  public static function shouldHideCategoryGroup($category, $request, $queriedTagCategoryIDs = []) {
+    $categoryID = @$category['id'];
+    $categoryProperties = @$category['properties'] ?: [];
+    $isBrowsePage = $request['route']['type'] === 'browse';
+    if (!$isBrowsePage) {
+      return false;
+    }
+    $shouldHide = in_array('hide_on_browse', $categoryProperties);
+    $isQueried = in_array($categoryID, $queriedTagCategoryIDs);
+    return $isBrowsePage && ($shouldHide && !$isQueried);
   }
 }

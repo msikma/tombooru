@@ -7,7 +7,7 @@
 ?>
 <?= Template::getComponent('PostsSidebarPanel', [
   'posts' => $posts,
-  'tagCategories' => $tags,
+  'tagCategoryGroups' => $tags,
   'search' => $search,
   'queriedTagCategoryIDs' => $queriedTagCategoryIDs,
 ]); ?>

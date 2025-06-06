@@ -63,7 +63,8 @@ create table /*_*/tombooru_tag (
 
 create table /*_*/tombooru_tag_category (
   id int unsigned auto_increment primary key,
-  name varchar(300) not null unique,            -- case insensitive, case preserving
+  name varchar(300) not null unique,
+  slug varchar(300) not null unique,            -- case insensitive, case preserving
   icon varchar(300) null,
   color varchar(300) null,
   header int not null default 1,                -- whether the tag category header is displayed

@@ -17,7 +17,7 @@
           <select name="<?= htmlentities($name); ?>">
             <option value="" <?= $dataValue === '' ? 'selected' : ''; ?>>Uncategorized</option>
             <?php foreach ($categories as $category): ?>
-              <option value="<?= $category['name']; ?>" <?= $dataValue === $category['name'] ? 'selected' : ''; ?>><?= $category['name']; ?></option>
+              <option value="<?= $category['slug']; ?>" <?= $dataValue === $category['slug'] ? 'selected' : ''; ?>><?= $category['name']; ?> (<?= $category['slug']; ?>)</option>
             <?php endforeach; ?>
           </select>
         </div>

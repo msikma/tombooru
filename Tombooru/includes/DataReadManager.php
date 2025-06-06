@@ -339,7 +339,7 @@ class DataReadManager {
     usort($tagCategoryData, function($a, $b) {
       return $a['ordering'] <=> $b['ordering'];
     });
-    $tagCategoryData = array_column($tagCategoryData, null, 'name');
+    $tagCategoryData = array_column($tagCategoryData, null, 'slug');
     self::$tagCategories = $tagCategoryData;
     return $tagCategoryData;
   }
@@ -421,7 +421,7 @@ class DataReadManager {
 
     // Retrieve additional data.
     $postTags = self::collectPostTagsData($tags, false, $tagCategories);
-    $postTagCategories = DataHelper::getTagCategoryGroups($postTags, $tagCategories);
+    $postTagCategoryGroups = DataHelper::getTagCategoryGroups($postTags, $tagCategories);
     $postSources = self::collectPostSourceData($sources);
 
     $postData = [
@@ -448,7 +448,7 @@ class DataReadManager {
         'upvotes' => intval($post['upvotes']),
         'downvotes' => intval($post['downvotes']),
       ],
-      'tags' => $postTagCategories,
+      'tags' => $postTagCategoryGroups,
       'sources' => $postSources,
       'createdAt' => Template::sqlTimestampToISO($post['created_at']),
       'updatedAt' => Template::sqlTimestampToISO($post['updated_at']),
@@ -500,6 +500,7 @@ class DataReadManager {
       $tagCategory = [
         'id' => intval($category['id']),
         'name' => $category['name'],
+        'slug' => $category['slug'],
         'icon' => $category['icon'],
         'color' => $category['color'],
         'header' => intval($category['header']) === 1 ? true : false,
