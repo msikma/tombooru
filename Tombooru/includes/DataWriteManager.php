@@ -232,6 +232,9 @@ class DataWriteManager {
       return [];
     }
 
+    // Grab the list of tags to ensure all tag intents are existing categories.
+    $tagCategories = DataReadManager::getTagCategories();
+
     // This will be present only if the current request is a new post creation.
     $source = $request['request']->getUpload('source_filename');
 
@@ -239,7 +242,7 @@ class DataWriteManager {
     $data['filename'] = self::sanitizeDestinationFilename(@$params['destination_filename'], $source->getName(), $params['form-type']);
     $data['description'] = self::sanitizeDescription(trim($params['description']));
     $data['notes'] = self::sanitizeDescription(trim($params['notes']));
-    $data['tags'] = self::sanitizeTags(self::collectTagParams($params));
+    $data['tags'] = self::sanitizeTags(self::collectTagParams($params), $tagCategories);
     $data['sources'] = self::sanitizeSourceList(self::collectSourceParams($params));
     $data['rating'] = self::sanitizeRating(@$params['rating']);
     $data['license'] = self::sanitizeLicense(trim($params['license']));
@@ -253,13 +256,17 @@ class DataWriteManager {
    * Takes tags from an existing post and prepares them for self::sanitizeTags().
    */
   private static function collectTagsFromPost($postTags) {
-    foreach ($postTags as &$tagCategory) {
-      $tagCategory = [
-        'name' => @$tagCategory['name'] ?? '',
-        'tags' => array_column($tagCategory['tags'], 'name'),
-      ];
+    $collectedTagCategories = [];
+    foreach ($postTags as $groupName => $tagGroup) {
+      foreach ($tagGroup as $categoryName => $tagCategory) {
+        $slug = @$tagCategory['slug'] ?? '';
+        $collectedTagCategories[$slug] = [
+          'slug' => $slug,
+          'tags' => array_column($tagCategory['tags'], 'name'),
+        ];
+      }
     }
-    return $postTags;
+    return $collectedTagCategories;
   }
 
   /**
@@ -281,7 +288,7 @@ class DataWriteManager {
       }
       $tags = self::splitTagsString($value);
       $tagSets[] = [
-        'name' => $categoryIntent,
+        'slug' => $categoryIntent,
         'tags' => $tags,
       ];
     }
@@ -540,8 +547,10 @@ class DataWriteManager {
    * Sanitizes the post tags value.
    * 
    * Tags are, at this point, already split up. Each set has a category intent.
+   * 
+   * If $tagCategories is passed, we'll validate that all tag intents are an existing tag.
    */
-  private static function sanitizeTags($tagSets) {
+  private static function sanitizeTags($tagSets, $tagCategories = null) {
     $value = [];
     $errors = [];
 
@@ -559,14 +568,20 @@ class DataWriteManager {
             throw new \Exception('This tag is too long: '.substr($tag, 0, 14).'...');
           }
         }
+        if (!empty($tagCategories)) {
+          $intentData = @$tagCategories[$set['slug']];
+          if ($set['slug'] !== '' && empty($intentData)) {
+            throw new \Exception('Tag intent is invalid: '.$set['slug']);
+          }
+        }
         $value[] = [
-          'intent' => $set['name'],
+          'intent' => $set['slug'],
           'tags' => $set['tags'],
         ];
       }
       catch (\Throwable $e) {
         $value[] = [
-          'intent' => $set['name'],
+          'intent' => $set['slug'],
           'tags' => $set['tags'],
         ];
         $errors[] = $e->getMessage();

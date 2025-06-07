@@ -132,9 +132,9 @@
 
 <?= Template::getComponent('Form/FieldTextTags', [
   'title' => 'Artists',
-  'category' => 'Artist',
-  'key' => 'tags_Artist',
-  'name' => 'tags_Artist',
+  'category' => 'artist',
+  'key' => 'tags_artist',
+  'name' => 'tags_artist',
   'component' => 'PostEditTagsPreview',
   'previewPlaceholder' => 'No artists entered.',
   'rows' => 2,
@@ -148,9 +148,9 @@
 
 <?= Template::getComponent('Form/FieldTextTags', [
   'title' => 'Characters',
-  'category' => 'Character',
-  'key' => 'tags_Character',
-  'name' => 'tags_Character',
+  'category' => 'character:tomba',
+  'key' => 'tags_character:tomba',
+  'name' => 'tags_character:tomba',
   'component' => 'PostEditTagsPreview',
   'previewPlaceholder' => 'No characters entered.',
   'rows' => 2,
@@ -168,7 +168,7 @@
   'key' => 'tags',
   'name' => 'tags',
   // List all tag categories here that are already represented by other fields.
-  'exceptCategories' => ['Character', 'Artist'],
+  'exceptCategories' => ['character:tomba', 'artist'],
   // List all single tags here that are represented by other fields.
   //'exceptTags' => ['digital_media'],
   'component' => 'PostEditTagsPreview',

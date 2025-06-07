@@ -9,7 +9,7 @@
       [
         'title' => 'Description',
         'name' => 'description',
-        'showIfEmpty' => true,
+        'showIfEmpty' => false,
         'showHeader' => false,
         'placeholder' => 'No description.',
         'data' => $post,
