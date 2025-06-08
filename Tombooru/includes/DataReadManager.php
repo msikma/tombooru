@@ -203,6 +203,42 @@ class DataReadManager {
   }
 
   /**
+   * Collects tag data and returns what we need to create tag table data rows.
+   */
+  public static function collectTagResultRows($resultTags) {
+    $tagRows = [];
+
+    foreach ($resultTags as $tag) {
+      $category = @$tag['category'];
+      $categorySlug = @$category['slug'] ?: '';
+      $isArtistCategory = DataHelper::isSpecialCategory($category, 'artist');
+      $urlTagView = URL::getTagInfoURL($tag, 'view', $isArtistCategory);
+      $urlTagEdit = URL::getTagInfoURL($tag, 'edit', $isArtistCategory);
+      $categoryHTML = Template::getComponent('TagCategory', ['tagCategory' => $categorySlug, 'addWrapper' => true]);
+      $createdAtHTML = Template::getComponent('Timestamp', ['ts' => $tag['createdAt']]);
+      $actionsHTML = Template::getComponent('TagsTableActions', [
+        'actions' => [
+          'edit' => [
+            'label' => 'Edit',
+            'icon' => 'file-code',
+            'href' => $urlTagEdit,
+          ],
+        ],
+      ]);
+      $tagRows[] = [
+        'id' => $tag['id'],
+        'name' => '<a href="'.htmlentities($urlTagView).'">'.htmlentities(str_replace('_', ' ', $tag['name'])).'</a>',
+        'category' => trim($categoryHTML),
+        'count' => $tag['count'],
+        'createdAt' => trim($createdAtHTML),
+        'actions' => trim($actionsHTML),
+      ];
+    }
+
+    return $tagRows;
+  }
+
+  /**
    * Collects the data for aliased tags.
    */
   private static function collectTagAliases($extendedTagData, $includeText, $recurse = true) {
@@ -264,11 +300,11 @@ class DataReadManager {
    * 
    * Unlike other queries, the tags are returned in a flat array.
    */
-  public static function getTagSearchResults($tagSearch, $filters, $page, $perPage) {
+  public static function getTagSearchResults($tagSearch, $filters, $order, $page, $perPage) {
     $tagCategories = self::getTagCategories();
     [$page, $perPage] = DataHelper::limitPaginationValues($page ?? 1, $perPage);
 
-    $tags = DB::getTagsSearchResult($tagSearch, $filters, $page, $perPage);
+    $tags = DB::getTagsSearchResult($tagSearch, $filters, $order, $page, $perPage);
     $totalTagCount = DB::countTagsSearchResult($tagSearch);
 
     $tags = self::collectPostTagsData($tags, false, $tagCategories);

@@ -1481,7 +1481,7 @@ class DB {
   /**
    * Runs a search for tags.
    */
-  public static function getTagsSearchResult($tagLike, $filters, $page, $perPage) {
+  public static function getTagsSearchResult($tagLike, $filters, $order, $page, $perPage) {
     $db = self::instReplicaDB();
 
     $offset = DataHelper::getQueryOffset($page, $perPage);
@@ -1500,6 +1500,11 @@ class DB {
 
     if (!empty($tagLike)) {
       $query->where(['name '.self::convertWildcardToLikeClause($db, $tagLike)]);
+    }
+    if (!empty($order)) {
+      $col = $order['sort'];
+      $direction = $order['direction'] === 'asc' ? SelectQueryBuilder::SORT_ASC : SelectQueryBuilder::SORT_DESC;
+      $query->orderBy($col, $direction);
     }
 
     $query
@@ -1624,7 +1629,7 @@ class DB {
       ->from('tombooru_tag', 't');
     
     if (!empty($tagLike)) {
-      $query->where(['name '.$db->buildLike($tagLike, $db->anyString())]);
+      $query->where(['name '.self::convertWildcardToLikeClause($db, $tagLike)]);
     }
 
     $query
@@ -1731,8 +1736,11 @@ class DB {
   /**
    * Converts a wildcard in a string to a LIKE clause.
    */
-  public static function convertWildcardToLikeClause($db, $tagName) {
+  public static function convertWildcardToLikeClause($db, $tagName, $useAutomaticFuzzySearch = true) {
     $parts = preg_split('/([*])/', $tagName, 0, PREG_SPLIT_DELIM_CAPTURE);
+    if ($useAutomaticFuzzySearch && count($parts) === 1) {
+      $parts = ['*', $parts[0], '*'];
+    }
     $args = [];
     foreach ($parts as $part) {
       if (empty($part)) {

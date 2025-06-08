@@ -1,4 +1,7 @@
-<div class="tc-big-table no-visited is-article-header" data-default-sort="id">
+<?php
+  $apiBaseURL = URL::getURL('/api');
+?>
+<div class="tc-big-table no-visited is-article-header" data-default-direction="asc" data-default-sort="id"<?= !empty($apiEndpoint) ? ' data-api-endpoint="'.htmlentities($apiEndpoint).'"' : ''; ?> data-api-base-url="<?= htmlentities($apiBaseURL); ?>">
   <div class="inner">
     <table>
       <tbody>
@@ -7,7 +10,7 @@
           <th data-slug="name" data-direction="asc" data-active="false">Name<span class="sorter"></span></th>
           <th data-slug="category" data-direction="asc" data-active="false">Category<span class="sorter"></span></th>
           <th data-slug="count" data-direction="asc" data-active="false">Count<span class="sorter"></span></th>
-          <th data-slug="actions" data-direction="asc" data-active="false" data-is-sortable="false">Created at<span class="sorter"></span></th>
+          <th data-slug="created_at" data-direction="asc" data-active="false" data-is-sortable="false">Created at<span class="sorter"></span></th>
         </tr>
         <tr class="separator"><td colspan="999"></td></tr>
         <?php if (count($tags) === 0): ?>
@@ -37,17 +40,15 @@
             </td>
             <td><span class="inner"><?= htmlentities($tag['count']); ?></span></td>
             <td><span class="inner"><?= Template::getComponent('Timestamp', ['ts' => $tag['createdAt']]); ?></span></td>
-            <td class="tiny control-panel even-padding">
-              <span class="inner">
-                <div class="actions narrow">
-                  <div class="action-sets">
-                    <div class="action-set">
-                      <a href="<?= htmlentities($urlTagEdit); ?>" class="item icon blue" <?= Template::setIcon('file-code') ?>>Edit</a>
-                    </div>
-                  </div>
-                </div>
-              </span>
-            </td>
+            <td class="tiny control-panel even-padding"><span class="inner"><?= Template::getComponent('TagsTableActions', [
+              'actions' => [
+                'edit' => [
+                  'label' => 'Edit',
+                  'icon' => 'file-code',
+                  'href' => $urlTagEdit,
+                ],
+              ],
+            ]); ?></span></td>
           </tr>
         <?php endforeach; ?>
       </tbody>

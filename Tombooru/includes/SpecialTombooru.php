@@ -10,8 +10,8 @@ class SpecialTombooru extends SpecialPage {
   private array $route;
   private array $params;
 
-  private static int $postsBrowsePageSize = 24;
-  private static int $tagsBrowsePageSize = 50;
+  public static int $postsBrowsePageSize = 16;
+  public static int $tagsBrowsePageSize = 50;
 
   public function __construct() {
     parent::__construct('Tombooru');
@@ -287,7 +287,7 @@ class SpecialTombooru extends SpecialPage {
     $perPage = self::$tagsBrowsePageSize;
     $page = $this->request['page'];
     $search = @$this->request['params']['search'] ?? '';
-    $results = DataReadManager::getTagSearchResults($search, [], $page, $perPage);
+    $results = DataReadManager::getTagSearchResults($search, [], [], $page, $perPage);
     $tagCategories = DataReadManager::getTagCategories();
     return TemplateManager::outputTemplate('tags/BrowsePage', [
       'results' => $results,
