@@ -278,7 +278,7 @@ class DataReadManager {
       return [];
     }
     $tagCategories = self::getTagCategories();
-    $results = DB::getTagsSearchResult($tagName, $filters, 1, 10);
+    $results = DB::getTagsSearchResult($tagName, $filters, ['sort' => 'count', 'direction' => 'desc'], 1, 10);
     $tagData = self::collectPostTagsData($results, false, $tagCategories);
     return $tagData;
   }
