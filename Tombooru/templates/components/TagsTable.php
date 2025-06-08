@@ -30,7 +30,7 @@
             <td class="even-padding">
               <span class="inner">
                 <?= Template::getComponent('TagCategory', [
-                  'tagCategory' => @$tagCategory['name'],
+                  'tagCategory' => @$tagCategory['slug'],
                   'addWrapper' => true,
                 ]); ?>
               </span>

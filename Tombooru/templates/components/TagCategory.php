@@ -15,7 +15,7 @@
               class="item <?= !empty($tagIcon) ? 'icon' : ''; ?> <?= $tagColor; ?>"
               <?= !empty($tagIcon) ? Template::setIcon($tagIcon) : ''; ?>
             >
-              <?= htmlentities(@$tagCategory); ?>
+              <?= htmlentities(@$tagCategoryData['name']); ?>
             </a>
           <?php if ($addWrapper): ?>
         </div>
