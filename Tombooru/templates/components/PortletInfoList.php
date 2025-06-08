@@ -50,7 +50,7 @@
     <li class="with-wrap">
       <span class="key">Posted</span>
       <span class="value" title="<?= htmlspecialchars(Template::formatTimestamp($post['createdAt'])) ?>">
-        <?= htmlspecialchars(Template::formatRelativeTimestamp($post['createdAt'])) ?>
+        <?= htmlspecialchars(Template::formatTimestampDate($post['createdAt'])) ?>
       </span>
     </li>
 

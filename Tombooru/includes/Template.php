@@ -279,6 +279,14 @@ class Template {
     $language = WikiManager::getUserLanguage();
     return $language->formatNum($number);
   }
+
+  /**
+   * Formats a timestamp as date.
+   */
+  public static function formatTimestampDate($ts) {
+    $date = new DateTime($ts);
+    return $date->format('Y-m-d');
+  }
   
   /**
    * Formats a formatted timestamp for the current user.
