@@ -29,6 +29,13 @@ class URL {
   }
 
   /**
+   * Returns the URL to a wiki user's user page.
+   */
+  public static function getWikiUserURL($username, $query = []) {
+    return self::getWikiURL('User:'.str_replace(' ', '_', $username), $query);
+  }
+
+  /**
    * Returns a URL to a page in our /page/ hierarchy.
    * 
    * These are the help pages.

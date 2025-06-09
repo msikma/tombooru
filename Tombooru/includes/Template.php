@@ -271,6 +271,17 @@ class Template {
     $language = WikiManager::getUserLanguage();
     return $language->formatSize($bytes);
   }
+
+  /**
+   * Returns a number with a sign included.
+   */
+  public static function formatNumberWithSign($number, $signOnZero = '') {
+    if ($number === 0) {
+      return $signOnZero.$number;
+    }
+    $sign = $number > 0 ? '+' : '-';
+    return $sign.$number;
+  }
   
   /**
    * Formats a number for the current user.
@@ -344,6 +355,15 @@ class Template {
     $timestamp = MWTimestamp::getInstance($mwTs);
 
     return $language->getHumanTimestamp($timestamp, null, $user);
+  }
+
+  /**
+   * Converts a MediaWiki timestamp to ISO.
+   */
+  public static function mwTimestampToISO($mwTimestamp) {
+    $mwts = MWTimestamp::getInstance($mwTimestamp);
+    $dt = DateTime::createFromFormat('U', $mwts->getTimestamp());
+    return $dt->format('Y-m-d\TH:i:s.v\Z');
   }
 
   /**

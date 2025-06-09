@@ -1,6 +1,7 @@
 <?= Template::getComponent('MediaSidebarPanel', ['post' => $post]); ?>
 
 <?php
+  $metadataHistory = DataReadManager::getPostMetadataHistory($post['id']);
   $addedToTombooru = $post['createdAt'];
   $createdByArtist = $post['data']['originalPublicationDate'];
   $originalMedia = $post['file']['media']['original'];
@@ -25,8 +26,33 @@
     <?php else: ?>
       <em>(unknown artist)</em>.
     <?php endif; ?>
+  <h2>Download</h2>
+  <ul>
+    <li><a href="<?= htmlspecialchars($originalMedia['url']); ?>">Original <?= $post['file']['type']; ?> file</a> – <?= $originalMedia['width']; ?>×<?= $originalMedia['height']; ?>, <?= Template::formatFilesize($post['file']['size']); ?>, <?= $post['file']['mime']; ?></li>
+    <li><a href="?download_data">JSON data file</a> – note that the data structure may change in the future</li>
+  </ul>
   <h2>History</h2>
-  <p>TODO.</p>
+  <table class="list-table align-left">
+    <?php foreach ($metadataHistory as $rev): ?>
+      <?php
+        $url = URL::getWikiUserURL($rev['username']);
+        $sign = $rev['diff'] === 0 ? 'neutral' : ($rev['diff'] > 0 ? 'positive' : 'negative');
+      ?>
+      <tr data-revision-id="<?= intval($rev['id']); ?>">
+        <td>
+          <a href="<?= htmlentities($rev['url']); ?>">
+            <time datetime="<?= htmlentities($rev['timestamp']); ?>"><?= Template::formatTimestamp($rev['timestamp']); ?></time>
+          </a>
+          (<a href="<?= htmlentities($rev['urlDiff']); ?>">diff</a>)
+        </td>
+        <td>
+          <a href="<?= htmlentities($url); ?>"><?= htmlentities($rev['username']); ?></a>
+        </td>
+        <td><?= Template::formatFilesize($rev['size']); ?></td>
+        <td class="diff <?= $sign; ?>"><?= Template::formatNumberWithSign($rev['diff']); ?></td>
+      </tr>
+    <?php endforeach; ?>
+  </table>
   <h2>Basic information</h2>
   <?php
     $explicitContentAllowed = Settings::explicitContentIsEnabled();
@@ -58,11 +84,6 @@
     ];
   ?>
   <?= Template::getComponent('DataTable', ['rows' => $rows, 'data' => $post]); ?>
-  <h2>Download</h2>
-  <ul>
-    <li><a href="<?= htmlspecialchars($originalMedia['url']); ?>">Original <?= $post['file']['type']; ?> file</a> – <?= $originalMedia['width']; ?>×<?= $originalMedia['height']; ?>, <?= Template::formatFilesize($post['file']['size']); ?>, <?= $post['file']['mime']; ?></li>
-    <li><a href="?download_data">JSON data file</a> – note that the data structure may change in the future</li>
-  </ul>
   <?php if ($request['user']['isAdmin'] && $showRawData): ?>
     <h2>Debugging data</h2>
     <p>This is only displayed if you're a Tombooru admin.</p>

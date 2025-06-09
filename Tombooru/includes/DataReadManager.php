@@ -73,6 +73,16 @@ class DataReadManager {
   }
 
   /**
+   * Returns the metadata history for a given post.
+   * 
+   * Takes the post ID, not the page ID.
+   */
+  public static function getPostMetadataHistory($postID) {
+    $history = WikiManager::getPageHistory('Post_metadata/'.$postID, WikiManager::$pageNamespaceTombooru);
+    return $history;
+  }
+
+  /**
    * Returns an imageboard post by post ID, including all related data.
    */
   public static function getPostByID($postID, $getExtendedSetData = false) {

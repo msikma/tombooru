@@ -123,6 +123,76 @@ class WikiManager {
     return $page;
   }
 
+  public static function getPageHistory($pageName, $pageNamespace, $limit = 50) {
+    $title = Title::newFromText($pageName, $pageNamespace);
+    if (!$title || !$title->exists()) {
+      return null;
+    }
+
+    $authority = RequestContext::getMain()->getAuthority();
+    $instance = MediaWikiServices::getInstance();
+    $revisionStore = $instance->getRevisionStore();
+    $wikiPageFactory = $instance->getWikiPageFactory();
+    $pageTitle = $title->getPrefixedText();
+
+    // Look up the revision database for the given page.
+    $revLookup = $instance->getRevisionLookup();
+    $rev = $revLookup->getRevisionByTitle($title);
+    $revisions = [];
+    $n = 0;
+
+    while ($rev) {
+      $id = $rev->getId();
+      $revTimestamp = Template::mwTimestampToISO($rev->getTimestamp());
+      $revReason = $rev->getComment()->text;
+      $user = $rev->getUser(RevisionRecord::FOR_THIS_USER, $authority);
+      $revURL = self::getPageRevisionURL($pageTitle, $id);
+      $revDiffURL = self::getPageRevisionURL($pageTitle, $id, 'prev');
+      $size = $rev->getSize();
+
+      // Save a subset of data.
+      $revisions[] = [
+        'id' => $id,
+        'url' => $revURL,
+        'size' => $size,
+        'diff' => null,
+        'urlDiff' => $revDiffURL,
+        'timestamp' => $revTimestamp,
+        'comment' => $revReason,
+        'username' => $user->getName(),
+      ];
+
+      // Grab the previous revision from the current.
+      $prev = $rev;
+      $rev = $revLookup->getPreviousRevision($rev);
+
+      if (++$n > $limit) {
+        break;
+      }
+    }
+
+    // Get the size diff with previous revisions.
+    $reversed = array_reverse($revisions);
+    $prev = 0;
+    foreach ($reversed as &$rev) {
+      $rev['diff'] = $rev['size'] - $prev;
+      $prev = $rev['size'];
+    }
+    
+    return array_reverse($reversed);
+  }
+
+  /**
+   * Returns a URL to a page revision.
+   */
+  private static function getPageRevisionURL($title, $id, $diff = null) {
+    return wfScript().'?'.http_build_query(array_filter([
+      'title' => $title,
+      'oldid' => $id,
+      'diff' => $diff,
+    ]));
+  }
+
   /**
    * Returns a page hierarchy.
    * 
