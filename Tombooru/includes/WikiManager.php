@@ -76,9 +76,10 @@ class WikiManager {
    * Returns content for the version system page.
    */
   private static function getVersionPageContent() {
-    $extensionData = Settings::getExtensionData();
-    $repoInfo = Settings::getGitRepoInfo();
+    $systemData = Settings::getTombooruSystemData();
     $wikiName = Settings::config()->get('Sitename');
+    $extensionData = $systemData['extension'];
+    $repoInfo = $systemData['repo'];
 
     $repoURL = @$extensionData['repository'];
     $commitURL = !empty($repoURL) ? $repoURL.'/commit/'.$repoInfo['hash'] : null;

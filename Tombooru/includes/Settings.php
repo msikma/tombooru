@@ -3,6 +3,7 @@
 namespace Tombooru;
 use \MediaWiki\MediaWikiServices;
 use \MediaWiki\Registration\ExtensionRegistry;
+use \ObjectCache;
 
 class Settings {
   private static $repoPath = null;
@@ -23,9 +24,36 @@ class Settings {
   }
 
   /**
+   * Returns version about the repo state and about the extension itself.
+   * 
+   * This information is cached for 1 hour.
+   */
+  public static function getTombooruSystemData() {
+    $cache = ObjectCache::getInstance(CACHE_DB);
+    $cacheKey = $cache->makeKey('Tombooru', 'SpecialTombooru', 'TombooruSystemData');
+
+    $data = $cache->get($cacheKey);
+    if ($data !== false) {
+      return json_decode($data, true);
+    }
+
+    $extensionData = self::getExtensionData();
+    $repoInfo = self::getGitRepoInfo();
+    
+    $data = [
+      'extension' => $extensionData,
+      'repo' => $repoInfo,
+    ];
+
+    $cache->set($cacheKey, json_encode($data), 3600);
+
+    return $data;
+  }
+
+  /**
    * Returns the Tombooru extension.json file data.
    */
-  public static function getExtensionData() {
+  private static function getExtensionData() {
     try {
       $registry = ExtensionRegistry::getInstance();
       $allThings = $registry->getAllThings();
@@ -55,7 +83,7 @@ class Settings {
   /**
    * Returns information about the current state of the Git repo.
    */
-  public static function getGitRepoInfo() {
+  private static function getGitRepoInfo() {
     self::$repoPath = dirname(__FILE__, 3);
 
     try {
