@@ -49,6 +49,8 @@ class DataWriteManager {
     if (self::hasAnyErrors($postUpdateData)) {
       throw new \Exception('Some submitted data has errors.');
     }
+    $postOriginalData = self::collectPostOriginalData($postData);
+    $postOriginalData = DataHelper::removeUpdateErrorStubs($postOriginalData);
     $postUpdateData = DataHelper::removeUpdateErrorStubs($postUpdateData);
     $pageID = $postData['pageID'];
 
@@ -59,6 +61,11 @@ class DataWriteManager {
     // This is because we don't yet know if updating the text pages will result
     // in a new page being created on the wiki.
     DB::updatePostData($pageID, $postUpdateData);
+    
+    // We store a copy of the post data in a special wiki page as well,
+    // so that any updates show up in recent changes as well.
+    // This is passively stored; the page's information is not tracked.
+    self::updatePostDataHistory($postID, $postOriginalData, $postUpdateData);
 
     // Post descriptions and notes are stored as pages in the imageboard namespace.
     // These pages are created as needed (as soon as the user posts some content),
@@ -72,6 +79,17 @@ class DataWriteManager {
     }
     
     return true;
+  }
+
+  /**
+   * Stores a copy of a post's metadata in its history.
+   * 
+   * If nothing has changed, no edit will occur.
+   */
+  public static function updatePostDataHistory($postID, $originalData, $updateData) {
+    $data = array_merge($originalData, $updateData);
+    $pageID = WikiManager::updateEntityPageData('post', $postID, 'metadata', Template::formatPostMetadataTable($data));
+    return $pageID;
   }
 
   /**

@@ -448,6 +448,9 @@ class WikiManager {
         throw new \Exception('invalid entity type');
     }
     switch ($contentType) {
+      case 'metadata':
+        $pageDataName = 'metadata';
+        break;
       case 'description':
         $pageDataName = 'description';
         break;

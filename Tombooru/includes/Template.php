@@ -363,4 +363,57 @@ class Template {
     }
     return $dt->format('Y-m-d\TH:i:s.v\Z');
   }
+
+  /**
+   * Returns an HTML table containing metadata about a given post.
+   * 
+   * This is used specifically to store metadata history updates.
+   * 
+   * The data returned by this function is only intended as a quick data preview.
+   */
+  public static function formatPostMetadataTable($data) {
+    $rows = [
+      'filename' => $data['filename'],
+    ];
+    $tagN = 0;
+    foreach ($data['tags'] as $category) {
+      foreach ($category['tags'] as $tag) {
+        $rows['tags.'.$tagN] = $tag;
+        $tagN += 1;
+      }
+    }
+    $sourceN = 0;
+    for ($sourceN = 0; $sourceN < count($data['sources']); ++$sourceN) {
+      $source = $data['sources'][$sourceN];
+      $rows['sources.'.$sourceN.'.url'] = $source['url'];
+      $rows['sources.'.$sourceN.'.archiveURL'] = $source['archiveURL'];
+    }
+    $rows['rating'] = $data['rating'];
+    $rows['license'] = $data['license'];
+    $rows['is_ai_generated'] = $data['is_ai_generated'];
+    $rows['original_publication_date'] = $data['original_publication_date'];
+    
+    $buffer = ['<table class="wikitable align-left">'];
+    foreach ($rows as $k => $v) {
+      $buffer[] = '<tr>';
+      $buffer[] = '<th>'.htmlentities($k).'</th>';
+      if ($v === true) {
+        $v = '<em>true</em>';
+      }
+      else if ($v === false) {
+        $v = '<em>false</em>';
+      }
+      else if (is_null($v)) {
+        $v = '<em>null</em>';
+      }
+      else {
+        $v = htmlentities($v);
+      }
+      $buffer[] = '<td>'.$v.'</td>';
+      $buffer[] = '</tr>';
+    }
+    $buffer[] = '</table>';
+
+    return implode("\n", $buffer);
+  }
 }
