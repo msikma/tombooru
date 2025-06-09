@@ -251,7 +251,7 @@ class Hooks {
       'href' => URL::getURL("/page/Help"),
       'id' => 'n-tombooru_help',
       'active' => true,
-      'class' => $primary === 'page' && $sub === 'Help' ? 'selected' : '',
+      'class' => $primary === 'page' && $sub === 'Help' ? 'selected divider' : 'divider',
     ];
 
     if ($user['isAdmin']) {
@@ -263,6 +263,14 @@ class Hooks {
         'class' => $area === 'static' && $route['sub'] === 'Admin' ? 'selected' : '',
       ];
     }
+
+    $links['namespaces']['back_to_wiki'] = [
+      'text' => 'Back to wiki',
+      'href' => URL::getWikiURL("Main Page"),
+      'id' => 'n-tombooru_back_to_wiki',
+      'active' => true,
+      'class' => 'back-to-wiki',
+    ];
   }
   
   /**
