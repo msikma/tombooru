@@ -142,6 +142,23 @@ class URL {
   }
 
   /**
+   * Returns a URL that takes the current search and removes a given tag from it.
+   */
+  public static function getTagMinusSearchURL($tag) {
+    $search = Request::getRequestSearchString();
+    $query = SearchQuery::parseSearchString($search);
+    $minusQuery = ['filters' => []];
+    $tagValue = mb_strtolower(str_replace(' ', '_', $tag['name']));
+    foreach ($query['filters'] as $filter) {
+      if (mb_strtolower($filter['value']) === $tagValue) {
+        continue;
+      }
+      $minusQuery['filters'][] = $filter;
+    }
+    return self::getURL('/posts', ['search' => SearchQuery::searchQueryToString($minusQuery)]);
+  }
+
+  /**
    * Returns a URL that takes the current search and adds a given tag to it.
    */
   public static function getTagPlusSearchURL($tag) {

@@ -58,11 +58,13 @@
                     $linkTargetCount = $linkTargetTag['count'];
 
                     // URLs for the action buttons.
+                    $hasTag = SearchQuery::hasTagInQuery($tag);
                     $urlInfo = URL::getTagInfoURL($linkTargetTag, 'view', $linkTargetTagHasArtistCategory);
                     $urlSearch = URL::getTagSearchURL($linkTargetTag);
+                    $urlMinusSearch = URL::getTagMinusSearchURL($linkTargetTag);
                     $urlPlusSearch = URL::getTagPlusSearchURL($linkTargetTag);
                   ?>
-                  <div class="tag"
+                  <div class="tag<?= $hasTag ? ' in-query' : ' not-in-query'; ?>"
                       data-tag-id="<?= htmlspecialchars($id); ?>"
                       data-tag-name="<?= htmlspecialchars($name) ?>"
                       data-count="<?= htmlspecialchars($linkTargetCount) ?>">
@@ -74,7 +76,11 @@
                       <?php endif; ?>
                     </a>
                     <span class="tag-actions">
-                      <a href="<?= htmlspecialchars($urlPlusSearch); ?>" class="action plus" title="Add this tag to the current search"><span></span></a>
+                      <?php if (!$hasTag): ?>
+                        <a href="<?= htmlspecialchars($urlPlusSearch); ?>" class="action plus" title="Add this tag to the current search"><span></span></a>
+                      <?php else: ?>
+                        <a href="<?= htmlspecialchars($urlMinusSearch); ?>" class="action minus" title="Remove this tag from the current search"><span></span></a>
+                      <?php endif; ?>
                       <a href="<?= htmlspecialchars($urlInfo); ?>" class="action info" title="See tag info"><span></span></a>
                     </span>
                   </div>

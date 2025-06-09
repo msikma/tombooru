@@ -1,19 +1,28 @@
 <?php
   $filters = $search['filters'];
   $total = $pagination['totalResultCount'];
+  $tags = DataHelper::getFlatPostTags($tags);
+  $hasFilters = !empty($filters);
 ?>
-<div class="search-result-info">
-  <div class="actions">
+<div class="search-result-info<?= $hasFilters ? '' : ' no-filters'; ?>">
+  <div class="actions narrow">
     <?php if (!empty($filters)): ?>
       <span class="item label">Searched for</span>
       <?php foreach ($filters as $filter): ?>
         <?php
+          // We'll display this data from the filter.
           $type = $filter['type'];
           $value = str_replace('_', ' ', $filter['value']);
+          $valueLower = mb_strtolower($filter['value']);
           $modifier = $filter['modifier'];
           $char = SearchQuery::getSearchTokenModifierString($modifier);
+          
+          // Find the associated tag.
+          $tag = array_filter($tags, fn($tag) => mb_strtolower($tag['name']) === $valueLower);
+          $tag = !empty($tag) ? reset($tag) : null;
+          $color = @$tag['category']['color'] ?: 'green';
         ?>
-        <span class="item tag type-<?= htmlentities($type); ?> modifier-<?= htmlentities($modifier); ?>">
+        <span class="item <?= $color; ?> tag type-<?= htmlentities($type); ?> modifier-<?= htmlentities($modifier); ?>">
           <span class="tag-modifier"><?= htmlentities($char); ?></span>
           <span class="tag-type"><?= htmlentities($type); ?></span>
           <span class="tag-value"><?= htmlentities($value); ?></span>

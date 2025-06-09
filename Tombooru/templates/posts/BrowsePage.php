@@ -11,7 +11,7 @@
   'queriedTagCategoryIDs' => $queriedTagCategoryIDs,
 ]); ?>
 <div class="tombooru-page page-browse">
-  <?= Template::getComponent('SearchResultInfo', ['search' => $search, 'pagination' => $pagination]); ?>
+  <?= Template::getComponent('SearchResultInfo', ['search' => $search, 'pagination' => $pagination, 'tags' => empty($tags) ? [] : $tags]); ?>
   <?= Template::getComponent('PostsResultSet', ['posts' => @$results['posts']]); ?>
   <?= Template::getComponent('Pagination', ['pagination' => @$results['pagination']]); ?>
 </div>

@@ -39,6 +39,21 @@ class SearchQuery {
   }
 
   /**
+   * Checks whether a given tag is in the current search query.
+   */
+  static public function hasTagInQuery($tag) {
+    $search = Request::getRequestSearchString();
+    $query = self::parseSearchString($search);
+    $tagValue = mb_strtolower(str_replace(' ', '_', $tag['name']));
+    foreach ($query['filters'] as $filter) {
+      if (mb_strtolower($filter['value']) === mb_strtolower($tagValue)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Converts a single search query object token to a string.
    */
   static private function getSearchTokenString($token) {
