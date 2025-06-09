@@ -386,9 +386,15 @@ class SpecialTombooru extends SpecialPage {
    * 
    * This will display a given page, and all its subpages, as regular wiki content.
    */
-  private function runWikiPage($parentPageName, $pageName) {
+  private function runWikiPage($parentPageName, $pageName, $includeSystemPages) {
     // Fetch subpage data for the given parent page.
     $sectionData = WikiManager::getPageHierarchy($parentPageName, WikiManager::$pageNamespaceTombooru);
+    
+    if ($parentPageName === 'Help' && $includeSystemPages) {
+      // Add in the system pages.
+      $systemSectionData = WikiManager::getSystemPageHierarchy($parentPageName);
+      $sectionData[$parentPageName]['pageSubpages'] = array_merge($sectionData[$parentPageName]['pageSubpages'], $systemSectionData);
+    }
 
     // As a rule, we never actually show the top level page (and it shouldn't be created anyway).
     // The top level page serves purely as a navigation segment.
@@ -404,7 +410,11 @@ class SpecialTombooru extends SpecialPage {
     if (empty($pageData)) {
       throw new \Exception('not_found');
     }
-    return TemplateManager::outputTemplate('static/WikiPage', ['sectionData' => $sectionData, 'pageData' => $pageData, 'pageName' => $pageName]);
+    return TemplateManager::outputTemplate('static/WikiPage', [
+      'sectionData' => $sectionData,
+      'pageData' => $pageData,
+      'pageName' => $pageName,
+    ]);
   }
 
   /**
@@ -485,7 +495,7 @@ class SpecialTombooru extends SpecialPage {
 
       // Handle the help information pages.
       if ($route['primary'] === 'page' && $route['sub'] === 'Help') {
-        return $this->runWikiPage($route['sub'], implode('/', array_filter([$route['sub'], $route['id']])));
+        return $this->runWikiPage($route['sub'], implode('/', array_filter([$route['sub'], $route['id']])), true);
       }
 
       switch ($route['nav']) {

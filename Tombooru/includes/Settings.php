@@ -2,8 +2,10 @@
 
 namespace Tombooru;
 use \MediaWiki\MediaWikiServices;
+use \MediaWiki\Registration\ExtensionRegistry;
 
 class Settings {
+  private static $repoPath = null;
   private static $config = null;
 
   // A giant list of the major image extensions, used by .
@@ -18,6 +20,67 @@ class Settings {
       self::$config = MediaWikiServices::getInstance()->getMainConfig();
     }
     return self::$config;
+  }
+
+  /**
+   * Returns the Tombooru extension.json file data.
+   */
+  public static function getExtensionData() {
+    try {
+      $registry = ExtensionRegistry::getInstance();
+      $allThings = $registry->getAllThings();
+      $extensionData = json_decode(file_get_contents($allThings['Tombooru']['path']), true);
+      return $extensionData;
+    }
+    catch (\Throwable $e) {
+      return [];
+    }
+  }
+
+  /**
+   * Runs a Git command on a given repo.
+   */
+  private static function runGitCommand($command) {
+    if (empty(self::$repoPath)) {
+      throw new \RuntimeException('No Git repo indicated.');
+    }
+    $fullCommand = "git -C ".escapeshellarg(self::$repoPath)." {$command}";
+    $output = shell_exec($fullCommand);
+    if ($output === null) {
+      throw new \RuntimeException("Failed to run Git command: {$command}");
+    }
+    return trim($output);
+  }
+
+  /**
+   * Returns information about the current state of the Git repo.
+   */
+  public static function getGitRepoInfo() {
+    self::$repoPath = dirname(__FILE__, 3);
+
+    try {
+      $branch = self::runGitCommand('rev-parse --abbrev-ref HEAD');
+      $branchRef = self::runGitCommand('symbolic-ref HEAD');
+      $hash = self::runGitCommand('rev-parse HEAD');
+      $shortHash = self::runGitCommand('rev-parse --short HEAD');
+      $commitCount = (int)self::runGitCommand('rev-list --count HEAD');
+      $lastCommitDate = self::runGitCommand('log -1 --format=%cI');
+
+      return [
+        'hasRepoInfo' => true,
+        'branch' => $branch,
+        'branchRef' => $branchRef,
+        'hash' => $hash,
+        'shortHash' => $shortHash,
+        'lastCommitDate' => $lastCommitDate,
+        'commitCount' => $commitCount,
+      ];
+    }
+    catch (\RuntimeException $e) {
+      return [
+        'hasRepoInfo' => false,
+      ];
+    }
   }
 
   /**

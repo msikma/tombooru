@@ -4,6 +4,7 @@
   "version": "1.0",
   "author": "Dada78641",
   "license-name": "MIT",
+  "repository": "https://github.com/msikma/tombooru",
   "descriptionmsg": "tombooru-desc",
   "requires": {
     "MediaWiki": ">= 1.43.0"

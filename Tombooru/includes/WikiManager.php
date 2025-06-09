@@ -63,6 +63,66 @@ class WikiManager {
   }
 
   /**
+   * Generates a hierarchy for system pages.
+   */
+  public static function getSystemPageHierarchy($parentPage) {
+    $versionContent = self::getVersionPageContent();
+    return [
+      'Version' => self::makeSystemPage('Version', $versionContent, $parentPage),
+    ];
+  }
+
+  /**
+   * Returns content for the version system page.
+   */
+  private static function getVersionPageContent() {
+    $extensionData = Settings::getExtensionData();
+    $repoInfo = Settings::getGitRepoInfo();
+    $wikiName = Settings::config()->get('Sitename');
+
+    $repoURL = @$extensionData['repository'];
+    $commitURL = !empty($repoURL) ? $repoURL.'/commit/'.$repoInfo['hash'] : null;
+
+    $commitText = $repoInfo['hasRepoInfo'] ? "{$repoInfo['branch']}-{$repoInfo['commitCount']} [{$repoInfo['shortHash']}&rsqb;" : '(no git repo)';
+    $commitDate = !$repoInfo['hasRepoInfo'] ?: 'last commit: <time datetime="'.htmlentities($repoInfo['lastCommitDate']).'">'.htmlentities(Template::formatRelativeTimestamp($repoInfo['lastCommitDate'])).'</time>';
+
+    $boardName = 'Tombooru';
+    $boardDescription = Template::getMsg('tombooru-desc')->text();
+    $content = [
+      "{$boardName} – {$boardDescription}",
+      "== Current version ==",
+      "[$commitURL ".$commitText."]".(!empty($commitDate) ? ' – '.$commitDate : ''),
+      "Running on MediaWiki ".MW_VERSION.".",
+      "== External links ==",
+      "* <span class=\"site-favicon\">[$repoURL Tombooru Github repo]</span>",
+    ];
+    return trim(implode("\n\n", $content));
+  }
+
+  /**
+   * Returns the same page structure as a regular page.
+   */
+  private static function makeSystemPage($title, $content, $parentPageTitle, $subPages = []) {
+    $parentPageName = str_replace(' ', '_', $parentPageTitle);
+    $name = str_replace(' ', '_', $title);
+    $page = [
+      'pageID' => null,
+      'pageTitle' => $title,
+      'name' => $parentPageName.'/'.$name,
+      'title' => $parentPageTitle.'/'.$title,
+      'prefixedTitle' => 'Tombooru data:'.$parentPageTitle.'/'.$title,
+      'content' => $content,
+      'isProtected' => true,
+      'revisionAuthor' => [
+        'id' => null,
+        'name' => 'TombooruMaintenance',
+      ],
+      'pageSubpages' => $subPages,
+    ];
+    return $page;
+  }
+
+  /**
    * Returns a page hierarchy.
    * 
    * This returns all subpages of a given parent page, plus all of their content.
