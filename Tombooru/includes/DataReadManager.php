@@ -108,6 +108,20 @@ class DataReadManager {
   }
 
   /**
+   * Returns relevant wiki page links for a given post.
+   */
+  public static function getPostDataLinks($post) {
+    $postID = $post['id'];
+    $fileLink = URL::getWikiURLByID($post['pageID']);
+    $fileText = 'File:'.htmlentities($post['file']['name']);
+    $entityLinks = WikiManager::getEntityPageLinks($postID, 'post');
+    return [
+      ...$entityLinks,
+      ['href' => $fileLink, 'text' => $fileText],
+    ];
+  }
+
+  /**
    * Returns the ranking for a single post.
    */
   public static function getPostRanking($pageID) {

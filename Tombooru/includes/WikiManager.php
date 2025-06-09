@@ -498,6 +498,21 @@ class WikiManager {
   }
 
   /**
+   * Returns the entity page titles for a given post.
+   */
+  public static function getEntityPageLinks($entityID, $entityType) {
+    $links = [];
+    
+    foreach (['metadata', 'description', 'notes'] as $contentType) {
+      $name = self::makeEntityPageBaseName($entityType, $contentType);
+      $page = Title::makeTitleSafe(self::$pageNamespaceTombooru, $name.'/'.$entityID);
+      $links[] = ['href' => URL::getWikiURL($page->getPrefixedUrl()), 'text' => $page->getPrefixedDBKey()];
+    }
+
+    return $links;
+  }
+
+  /**
    * Returns the base for the page title for an entity update.
    * 
    * This returns e.g. "Post_description" or "Tag_description".
