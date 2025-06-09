@@ -284,6 +284,9 @@ class Template {
    * Formats a timestamp as date.
    */
   public static function formatTimestampDate($ts) {
+    if (empty($ts)) {
+      return 'Unknown';
+    }
     $date = new DateTime($ts);
     return $date->format('Y-m-d');
   }
@@ -292,6 +295,10 @@ class Template {
    * Formats a formatted timestamp for the current user.
    */
   public static function formatTimestamp($ts) {
+    if (empty($ts)) {
+      return 'Unknown';
+    }
+    
     $userData = WikiManager::getUserData();
     $user = $userData['user'];
     $language = $userData['language'];

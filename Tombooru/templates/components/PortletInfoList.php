@@ -52,8 +52,8 @@
 
     <li class="with-wrap">
       <span class="key">Created</span>
-      <span class="value" title="<?= htmlspecialchars(Template::formatTimestamp($post['data']['originalPublicationDate'])) ?>">
-        <?= htmlspecialchars(Template::formatTimestampDate($post['data']['originalPublicationDate'])) ?>
+      <span class="value" title="<?= htmlspecialchars(Template::formatTimestamp(@$post['data']['originalPublicationDate'])) ?>">
+        <?= htmlspecialchars(Template::formatTimestampDate(@$post['data']['originalPublicationDate'])) ?>
       </span>
     </li>
 
