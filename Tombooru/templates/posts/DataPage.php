@@ -31,7 +31,7 @@
   <h2>Download</h2>
   <ul>
     <li><a href="<?= htmlspecialchars($originalMedia['url']); ?>">Original <?= $post['file']['type']; ?> file</a> – <?= $originalMedia['width']; ?>×<?= $originalMedia['height']; ?>, <?= Template::formatFilesize($post['file']['size']); ?>, <?= $post['file']['mime']; ?></li>
-    <li><a href="?download_data">JSON data file</a> – note that the data structure may change in the future</li>
+    <li><a href="?download_data">JSON data file</a></li>
   </ul>
   <h2>History</h2>
   <?= Template::getComponent('PageHistoryList', ['history' => $metadataHistory, 'fallback' => 'This post has no edit history yet.']); ?>

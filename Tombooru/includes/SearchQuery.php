@@ -56,7 +56,7 @@ class SearchQuery {
    * 
    * The "plus" item is optionally hidden, as that's normally how tags are input.
    */
-  static private function getSearchTokenModifierString($modifier, $hidePlus = false) {
+  static public function getSearchTokenModifierString($modifier, $hidePlus = false) {
     switch ($modifier) {
       case 'plus':
         return $hidePlus ? '' : '+';

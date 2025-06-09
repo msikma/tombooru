@@ -24,6 +24,7 @@ class TemplateManager {
     class_alias(TemplateManager::class, 'TemplateManager');
     class_alias(URL::class, 'URL');
     class_alias(WikiManager::class, 'WikiManager');
+    class_alias(SearchQuery::class, 'SearchQuery');
     self::$hasCreatedAliases = true;
   }
 
