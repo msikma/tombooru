@@ -5,6 +5,9 @@
   $image = $file['media']['original'];
   $filename = Template::withSpaces($file['name']);
 
+  // Whether we show when the item was added to the database.
+  $showAddedDate = false;
+
   $hasSource = !empty($post['sources']);
   // We normally show the sources in the post main body, not here.
   $showSources = !is_null(@$showSources) ? $showSources : false;
@@ -48,11 +51,20 @@
     <?php endif; ?>
 
     <li class="with-wrap">
-      <span class="key">Posted</span>
-      <span class="value" title="<?= htmlspecialchars(Template::formatTimestamp($post['createdAt'])) ?>">
-        <?= htmlspecialchars(Template::formatTimestampDate($post['createdAt'])) ?>
+      <span class="key">Created</span>
+      <span class="value" title="<?= htmlspecialchars(Template::formatTimestamp($post['data']['originalPublicationDate'])) ?>">
+        <?= htmlspecialchars(Template::formatTimestampDate($post['data']['originalPublicationDate'])) ?>
       </span>
     </li>
+
+    <?php if ($showAddedDate): ?>
+      <li class="with-wrap">
+        <span class="key">Added</span>
+        <span class="value" title="<?= htmlspecialchars(Template::formatTimestamp($post['createdAt'])) ?>">
+          <?= htmlspecialchars(Template::formatTimestampDate($post['createdAt'])) ?>
+        </span>
+      </li>
+    <?php endif; ?>
 
     <li class="with-wrap">
       <span class="key">File</span>

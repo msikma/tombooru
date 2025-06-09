@@ -2,7 +2,7 @@
 
 <div class="tombooru-page page-detail subpage-view">
   <h1>Post ID: <?= $post['pageID']; ?></h1>
-  <p>This file was uploaded on <time datetime="<?= $post['createdAt'] ?>"><?= Template::formatTimestamp($post['createdAt']); ?></time>.</p>
+  <p>This file was added to the database on <time datetime="<?= $post['createdAt'] ?>"><?= Template::formatTimestamp($post['createdAt']); ?></time>.</p>
   <h2>History</h2>
   <p>TODO.</p>
   <h2>Basic information</h2>
