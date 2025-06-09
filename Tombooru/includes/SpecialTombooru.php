@@ -120,10 +120,13 @@ class SpecialTombooru extends SpecialPage {
       throw new \Exception('not_found');
     }
     $userPostInteractions = DataReadManager::getUserPostInteractions($post['id']);
-    return TemplateManager::outputTemplate('posts/ViewPage', [
-      'post' => $post,
-      'userPostInteractions' => $userPostInteractions
-    ]);
+    return self::outputTemplate(
+      'posts/ViewPage',
+      [
+        'post' => $post,
+        'userPostInteractions' => $userPostInteractions,
+      ],
+    );
   }
 
   /**
@@ -132,7 +135,12 @@ class SpecialTombooru extends SpecialPage {
   private function runPostsReportPage() {
     $pageID = $this->route['id'];
     $post = DataReadManager::getPost($pageID);
-    return TemplateManager::outputTemplate('posts/ReportPage', ['post' => $post]);
+    return self::outputTemplate(
+      'posts/ReportPage',
+      [
+        'post' => $post,
+      ],
+    );
   }
 
   /**
@@ -166,13 +174,16 @@ class SpecialTombooru extends SpecialPage {
 
     // If not, either the user needs to fix something about their input, or we could not write
     // the data for some reason. Send the user back to the edit page to try again.
-    return self::outputTemplate('posts/EditPage', [
-      'post' => $post,
-      'originalData' => $originalData,
-      'updateData' => $updateData,
-      'updateError' => $updateError,
-      'updateSuccess' => $updateSuccess,
-    ]);
+    return self::outputTemplate(
+      'posts/EditPage',
+      [
+        'post' => $post,
+        'originalData' => $originalData,
+        'updateData' => $updateData,
+        'updateError' => $updateError,
+        'updateSuccess' => $updateSuccess,
+      ],
+    );
   }
 
   /**
@@ -181,7 +192,12 @@ class SpecialTombooru extends SpecialPage {
   private function runPostsSetsPage() {
     $pageID = $this->route['id'];
     $post = DataReadManager::getPost($pageID, true);
-    return TemplateManager::outputTemplate('posts/SetsPage', ['post' => $post]);
+    return self::outputTemplate(
+      'posts/SetsPage',
+      [
+        'post' => $post,
+      ],
+    );
   }
 
   /**
@@ -191,7 +207,13 @@ class SpecialTombooru extends SpecialPage {
     $setID = $this->route['id'];
     $set = DataReadManager::getPostSet($setID, true);
     $post = reset($set['posts']);
-    return TemplateManager::outputTemplate('sets/ViewPage', ['set' => $set, 'post' => $post]);
+    return self::outputTemplate(
+      'sets/ViewPage',
+      [
+        'set' => $set,
+        'post' => $post,
+      ],
+    );
   }
 
   /**
@@ -203,7 +225,12 @@ class SpecialTombooru extends SpecialPage {
     if (!is_null(@$this->params['download_data'])) {
       return self::outputJSON(DataReadManager::collectPostPublicData($post));
     }
-    return TemplateManager::outputTemplate('posts/DataPage', ['post' => $post]);
+    return self::outputTemplate(
+      'posts/DataPage',
+      [
+        'post' => $post,
+      ],
+    );
   }
 
   /**
@@ -216,7 +243,6 @@ class SpecialTombooru extends SpecialPage {
     $query = SearchQuery::parseSearchString($search);
     $results = DataReadManager::getPostSearchResults($query, $page, $perPage);
     $this->setBodyPaginationClasses($results['pagination']);
-    return TemplateManager::outputTemplate('posts/BrowsePage', ['search' => $query, 'results' => $results]);
     return self::outputTemplate(
       'posts/BrowsePage',
       [
@@ -230,7 +256,7 @@ class SpecialTombooru extends SpecialPage {
    * Displays the start page.
    */
   private function runStartPage() {
-    return TemplateManager::outputTemplate('StartPage', []);
+    return self::outputTemplate('StartPage', []);
   }
 
   /**
@@ -240,11 +266,14 @@ class SpecialTombooru extends SpecialPage {
     $tag = DataReadManager::getTag($this->route['id']);
     $tagCategories = DataReadManager::getTagCategories();
     $tagExamples = DataReadManager::getTagExampleResults($tag);
-    return TemplateManager::outputTemplate('tags/ViewPage', [
-      'tag' => $tag,
-      'tagCategories' => array_values($tagCategories),
-      'tagExamples' => $tagExamples,
-    ]);
+    return self::outputTemplate(
+      'tags/ViewPage',
+      [
+        'tag' => $tag,
+        'tagCategories' => array_values($tagCategories),
+        'tagExamples' => $tagExamples,
+      ],
+    );
   }
 
   /**
@@ -292,7 +321,13 @@ class SpecialTombooru extends SpecialPage {
   private function runTagsDataPage() {
     $tag = DataReadManager::getTag($this->route['id']);
     $tagCategories = DataReadManager::getTagCategories();
-    return TemplateManager::outputTemplate('tags/DataPage', ['tag' => $tag, 'tagCategories' => array_values($tagCategories)]);
+    return self::outputTemplate(
+      'tags/DataPage',
+      [
+        'tag' => $tag,
+        'tagCategories' => array_values($tagCategories),
+      ],
+    );
   }
 
   /**
@@ -304,10 +339,13 @@ class SpecialTombooru extends SpecialPage {
     $search = @$this->request['params']['search'] ?? '';
     $results = DataReadManager::getTagSearchResults($search, [], [], $page, $perPage);
     $tagCategories = DataReadManager::getTagCategories();
-    return TemplateManager::outputTemplate('tags/BrowsePage', [
-      'results' => $results,
-      'tagCategories' => array_values($tagCategories),
-    ]);
+    return self::outputTemplate(
+      'tags/BrowsePage',
+      [
+        'results' => $results,
+        'tagCategories' => array_values($tagCategories),
+      ],
+    );
   }
 
   /**
@@ -315,9 +353,12 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runTagCategoriesBrowsePage() {
     $tagCategories = DataReadManager::getTagCategories();
-    return TemplateManager::outputTemplate('tag-categories/BrowsePage', [
-      'tagCategories' => array_values($tagCategories),
-    ]);
+    return self::outputTemplate(
+      'tag-categories/BrowsePage',
+      [
+        'tagCategories' => array_values($tagCategories),
+      ],
+    );
   }
 
   /**
@@ -378,7 +419,12 @@ class SpecialTombooru extends SpecialPage {
       $scriptResult['script'] = 'recount_all_tag_categories';
       $scriptResult['result'] = $result;
     }
-    return TemplateManager::outputTemplate('static/AdminPage', ['scriptResult' => $scriptResult]);
+    return self::outputTemplate(
+      'static/AdminPage',
+      [
+        'scriptResult' => $scriptResult,
+      ],
+    );
   }
 
   /**
@@ -410,11 +456,14 @@ class SpecialTombooru extends SpecialPage {
     if (empty($pageData)) {
       throw new \Exception('not_found');
     }
-    return TemplateManager::outputTemplate('static/WikiPage', [
-      'sectionData' => $sectionData,
-      'pageData' => $pageData,
-      'pageName' => $pageName,
-    ]);
+    return self::outputTemplate(
+      'static/WikiPage',
+      [
+        'sectionData' => $sectionData,
+        'pageData' => $pageData,
+        'pageName' => $pageName,
+      ],
+    );
   }
 
   /**
@@ -450,7 +499,10 @@ class SpecialTombooru extends SpecialPage {
         break;
     }
 
-    return TemplateManager::outputTemplate('static/Error'.$code, array_merge(['error' => $error], $data));
+    return self::outputTemplate(
+      'static/Error'.$code,
+      array_merge(['error' => $error], $data),
+    );
   }
 
   /**
