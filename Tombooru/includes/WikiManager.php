@@ -506,7 +506,12 @@ class WikiManager {
     foreach (['metadata', 'description', 'notes'] as $contentType) {
       $name = self::makeEntityPageBaseName($entityType, $contentType);
       $page = Title::makeTitleSafe(self::$pageNamespaceTombooru, $name.'/'.$entityID);
-      $links[] = ['href' => URL::getWikiURL($page->getPrefixedUrl()), 'text' => $page->getPrefixedDBKey()];
+      $exists = $page && $page->exists();
+      $links[] = [
+        'href' => URL::getWikiURL($page->getPrefixedUrl()),
+        'text' => $page->getPrefixedDBKey(),
+        'exists' => $exists,
+      ];
     }
 
     return $links;

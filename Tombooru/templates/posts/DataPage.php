@@ -38,7 +38,7 @@
   <h2>Links</h2>
   <ul>
     <?php foreach ($fileLinks as $link): ?>
-      <li><a href="<?= htmlentities($link['href']); ?>"><?= htmlentities($link['text']); ?></a></li>
+      <li><a class="<?= !$link['exists'] ? 'new' : ''; ?>" href="<?= htmlentities($link['href']); ?>"><?= htmlentities($link['text']); ?></a></li>
     <?php endforeach; ?>
   </ul>
   <h2>Basic information</h2>

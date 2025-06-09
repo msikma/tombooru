@@ -117,7 +117,7 @@ class DataReadManager {
     $entityLinks = WikiManager::getEntityPageLinks($postID, 'post');
     return [
       ...$entityLinks,
-      ['href' => $fileLink, 'text' => $fileText],
+      ['href' => $fileLink, 'text' => $fileText, 'exists' => true],
     ];
   }
 
