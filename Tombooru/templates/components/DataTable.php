@@ -6,10 +6,10 @@
       $type = @$row[2] ?? 'string';
     ?>
     <tr>
-      <th><?= $key; ?></th>
+      <th><?= htmlentities($key); ?></th>
       <td>
         <?php if ($type === 'string'): ?>
-          <?= is_null($value) ? '<em>null</em>' : $value; ?>
+          <?= is_null($value) ? '<em>null</em>' : htmlentities($value); ?>
         <?php elseif ($type === 'boolean'): ?>
           <?= boolval($value) ? 'true' : 'false'; ?>
         <?php endif; ?>

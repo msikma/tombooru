@@ -200,16 +200,25 @@ class DataHelper {
   /**
    * Flattens a post tags structure.
    */
-  public static function getFlatPostTags($postTags) {
+  public static function getFlatPostTags($postTags, $simplifyTags = false) {
     $flatTags = [];
-    foreach ($postTags as $category) {
-      $tags = $category['tags'];
-      unset($category['tags']);
-      foreach ($tags as $tag) {
-        $flatTags[] = [
-          ...$tag,
-          'category' => $category,
-        ];
+    foreach ($postTags as $group) {
+      foreach ($group as $category) {
+        $tags = $category['tags'];
+        unset($category['tags']);
+        foreach ($tags as $tag) {
+          $flatTag = [
+            ...$tag,
+            'category' => $category,
+          ];
+          if ($simplifyTags) {
+            $flatTag['category'] = @$category['slug'];
+            unset($flatTag['aliasedTo']);
+            unset($flatTag['description']);
+            unset($flatTag['notes']);
+          }
+          $flatTags[] = $flatTag;
+        }
       }
     }
     return $flatTags;
@@ -389,5 +398,22 @@ class DataHelper {
     $shouldHide = in_array('hide_on_browse', $categoryProperties);
     $isQueried = in_array($categoryID, $queriedTagCategoryIDs);
     return $isBrowsePage && ($shouldHide && !$isQueried);
+  }
+
+  /**
+   * Retrieves an artist tag from a set of post tag groups.
+   */
+  public static function findArtistTags($postTagGroups) {
+    foreach ($postTagGroups as $group) {
+      foreach ($group as $category) {
+        $isArtistCategory = DataHelper::isSpecialCategory($category, 'artist');
+        if (!$isArtistCategory) {
+          continue;
+        }
+        $artists = array_column($category['tags'], null, 'name');
+        return $artists;
+      }
+    }
+    return null;
   }
 }

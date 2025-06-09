@@ -187,8 +187,10 @@ class WikiManager {
    * Returns data for a given file.
    * 
    * This is similar to getPageData() but it's used to retrieve media info for uploaded files.
+   * 
+   * If $postData is passed on, we include some metadata from the post.
    */
-  public static function getFileData($pageID) {
+  public static function getFileData($pageID, $postData = null) {
     $file = self::getFileInstanceByPageID($pageID);
 
     // The thumbnail is displayed on the overview page.
@@ -201,7 +203,7 @@ class WikiManager {
     return [
       'name' => $file->getName(),
       'mime' => $file->getMimeType(),
-      'type' => $file->getMediaType(),
+      'type' => !empty($postData) ? @$postData['media_type'] : null,
       'size' => $file->getSize(),
       'media' => [
         'original' => [

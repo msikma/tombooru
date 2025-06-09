@@ -75,6 +75,18 @@ class SpecialTombooru extends SpecialPage {
   }
 
   /**
+   * Outputs raw JSON data.
+   */
+  private function outputJSON($data) {
+    $out = \RequestContext::getMain()->getOutput();
+    $out->clearHTML();
+    $out->disable();
+    http_response_code(200);
+    header('Content-Type: application/json');
+    print(json_encode($data));
+  }
+
+  /**
    * Outputs a template.
    */
   private function outputTemplate($template, $data) {
@@ -188,6 +200,9 @@ class SpecialTombooru extends SpecialPage {
   private function runPostsDataPage() {
     $pageID = $this->route['id'];
     $post = DataReadManager::getPost($pageID);
+    if (!is_null(@$this->params['download_data'])) {
+      return self::outputJSON(DataReadManager::collectPostPublicData($post));
+    }
     return TemplateManager::outputTemplate('posts/DataPage', ['post' => $post]);
   }
 

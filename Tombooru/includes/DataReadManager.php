@@ -432,7 +432,7 @@ class DataReadManager {
    * We don't retrieve the tags at this point, as that's done in bulk afterwards.
    */
   private static function collectPostBasicData($post) {
-    $file = WikiManager::getFileData($post['page_id']);
+    $file = WikiManager::getFileData($post['page_id'], $post);
 
     $postData = [
       'id' => intval($post['id']),
@@ -442,9 +442,6 @@ class DataReadManager {
         'rating' => $post['rating'],
         'status' => $post['status'],
         'isAIGenerated' => boolval($post['is_ai_generated']),
-      ],
-      'media' => [
-        'type' => $post['media_type'],
       ],
       'ranking' => [
         'favorites' => intval($post['favorites']),
@@ -537,7 +534,7 @@ class DataReadManager {
     $sets = DB::getPostSets($post['id']);
 
     // Get the actual file object this is pointing to.
-    $file = WikiManager::getFileData($post['page_id']);
+    $file = WikiManager::getFileData($post['page_id'], $post);
 
     // Get the description and notes page content, if in existence.
     $descriptionPageData = WikiManager::getPageData($post['description_page_id']);
@@ -568,9 +565,6 @@ class DataReadManager {
       'notes' => $notesPageData,
       'poster' => $posterData,
       'approver' => $approverData,
-      'media' => [
-        'type' => $post['media_type'],
-      ],
       'ranking' => [
         'favorites' => intval($post['favorites']),
         'score' => intval($post['score']),
@@ -719,6 +713,16 @@ class DataReadManager {
       'media_type' => 'image',
       'status' => 'pending_approval',
     ]);
+  }
+
+  /**
+   * Restructures a full post for export.
+   * 
+   * This simplifies the structure a bit.
+   */
+  public static function collectPostPublicData($postData) {
+    $postData['tags'] = DataHelper::getFlatPostTags($postData['tags'], true);
+    return $postData;
   }
 
   /**
