@@ -315,32 +315,54 @@ class WikiManager {
   }
 
   /**
-   * Returns data for a given file.
+   * Returns data for a given file instance.
+   * 
+   * If a preview file instance is passed, its data will be used for everything but the "original" value.
+   */
+  public static function getFileData($fileInstance, $previewFileInstance = null, $postData = null) {
+    return self::collectFileData($fileInstance, $previewFileInstance, $postData);
+  }
+
+  /**
+   * Returns data for a given file instance.
    * 
    * This is similar to getPageData() but it's used to retrieve media info for uploaded files.
    * 
    * If $postData is passed on, we include some metadata from the post.
    */
-  public static function getFileData($pageID, $postData = null) {
-    $file = self::getFileInstanceByPageID($pageID);
+  private static function collectFileData($fileInstance, $previewFileInstance = null, $postData = null) {
+    // In almost all cases, the original file is used for generating previews.
+    // The only exception is for posts that aren't images (e.g. videos).
+    $hasPreview = !empty($previewFileInstance);
+    $previewInstance = $hasPreview ? $previewFileInstance : $fileInstance;
 
+    // For video files, we don't have width/height. Use the preview size in that case.
+    $originalWidth = $fileInstance->getWidth();
+    $originalHeight = $fileInstance->getHeight();
+    
+    if ($originalWidth === 0 || $originalHeight === 0) {
+      $originalWidth = $previewInstance->getWidth();
+      $originalHeight = $previewInstance->getHeight();
+    }
+    
     // The thumbnail is displayed on the overview page.
-    $thumb = $file->transform(['width' => 300]);
+    $thumb = $previewInstance->transform(['width' => 300]);
 
     // The preview is displayed on the detail page; it's a safeguard against extremely large files.
     // If the original file is below the width limit, the original file is displayed.
-    $preview = $file->transform(['width' => 1000]);
+    $preview = $previewInstance->transform(['width' => 1000]);
     
     return [
-      'name' => $file->getName(),
-      'mime' => $file->getMimeType(),
+      'name' => $fileInstance->getName(),
+      'mime' => $fileInstance->getMimeType(),
       'type' => !empty($postData) ? @$postData['media_type'] : null,
-      'size' => $file->getSize(),
+      'size' => $fileInstance->getSize(),
+      'hasPreview' => $hasPreview,
       'media' => [
         'original' => [
-          'url' => $file->getUrl(),
-          'width' => $file->getWidth(),
-          'height' => $file->getHeight(),
+          'url' => $fileInstance->getUrl(),
+          'width' => $originalWidth,
+          'height' => $originalHeight,
         ],
         'thumb' => [
           'url' => $thumb->getUrl(),
@@ -361,7 +383,7 @@ class WikiManager {
    * 
    * This will throw an error if the page does not exist in the file namespace.
    */
-  private static function getFileInstanceByPageID($pageID) {
+  public static function getFileInstanceByPageID($pageID) {
     if (!$pageID) {
       throw new \Exception('no_page_id');
     }
@@ -386,8 +408,11 @@ class WikiManager {
    * 
    * This will throw an error if the file was not found.
    */
-  private static function getFileInstance($filename) {
+  public static function getFileInstance($filename, $isOptional = false) {
     if (!$filename) {
+      if ($isOptional) {
+        return null;
+      }
       throw new \Exception('no_filename');
     }
 

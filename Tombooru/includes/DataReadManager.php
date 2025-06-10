@@ -463,7 +463,9 @@ class DataReadManager {
    * We don't retrieve the tags at this point, as that's done in bulk afterwards.
    */
   private static function collectPostBasicData($post) {
-    $file = WikiManager::getFileData($post['page_id'], $post);
+    $fileInstance = WikiManager::getFileInstanceByPageID($post['page_id']);
+    $previewFileInstance = WikiManager::getFileInstance($post['preview_filename'], true);
+    $file = WikiManager::getFileData($fileInstance, $previewFileInstance, $post);
 
     $postData = [
       'id' => intval($post['id']),
@@ -555,6 +557,44 @@ class DataReadManager {
   }
 
   /**
+   * Returns post placeholder data.
+   * 
+   * This is used when a post somehow errors out.
+   */
+  private static function collectPostPlaceholderData() {
+    $postData = [
+      '_isPlaceholder' => true,
+      'id' => 0,
+      'pageID' => 0,
+      'file' => null,
+      'data' => [
+        'rating' => 'safe',
+        'license' => null,
+        'status' => 'active',
+        'originalPublicationDate' => null,
+        'isAIGenerated' => false,
+      ],
+      'description' => null,
+      'notes' => null,
+      'poster' => null,
+      'approver' => null,
+      'ranking' => [
+        'favorites' => 0,
+        'score' => 0,
+        'upvotes' => 0,
+        'downvotes' => 0,
+      ],
+      'tags' => [],
+      'sources' => [],
+      'sets' => [],
+      'createdAt' => null,
+      'updatedAt' => null,
+    ];
+
+    return $postData;
+  }
+
+  /**
    * Takes a post data object from the database and upgrades it to a full post object.
    * 
    * This collects a bunch of additional data from the database and wrangles the data quite a bit.
@@ -566,7 +606,9 @@ class DataReadManager {
     $sets = DB::getPostSets($post['id']);
 
     // Get the actual file object this is pointing to.
-    $file = WikiManager::getFileData($post['page_id'], $post);
+    $fileInstance = WikiManager::getFileInstanceByPageID($post['page_id']);
+    $previewFileInstance = WikiManager::getFileInstance($post['preview_filename'], true);
+    $file = WikiManager::getFileData($fileInstance, $previewFileInstance, $post);
 
     // Get the description and notes page content, if in existence.
     $descriptionPageData = WikiManager::getPageData($post['description_page_id']);
@@ -727,7 +769,12 @@ class DataReadManager {
   private static function collectSearchResultPostData($posts) {
     $postData = [];
     foreach ($posts as $post) {
-      $postData[] = self::collectPostBasicData($post);
+      try {
+        $postData[] = self::collectPostBasicData($post);
+      }
+      catch (\Throwable $e) {
+        $postData[] = self::collectPostPlaceholderData($post);
+      }
     }
     $postIDs = array_column($postData, 'id');
     return [$postData, $postIDs];

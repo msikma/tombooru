@@ -19,6 +19,7 @@ create table /*_*/tombooru_post_data (
   downvotes int unsigned not null default 0,
   media_type varchar(300) null,                 -- typically "image" or "video"; others may be implemented in the future
   license varchar(300) null,                    -- free input, to be constrained by the app code
+  preview_filename varchar(300) default null,   -- image file that serves as preview for video files
   original_publication_date datetime null,      -- when the media was originally published (not on Tombooru, but at the source)
   updated_at timestamp not null default current_timestamp,
   status enum('active', 'flagged', 'pending_approval', 'deleted') null,
@@ -31,6 +32,7 @@ create table /*_*/tombooru_post_data (
   index (status),
   index (media_type),
   index (license),
+  index (preview_filename),
   index (original_publication_date),
   index (poster_user_id),
   index (approver_user_id),
