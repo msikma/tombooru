@@ -212,20 +212,26 @@ class URL {
     $route = $request['route'];
     $url = $route['primary'].(!empty($route['sub']) ? '/'.$route['sub'] : '').(!empty($route['id']) ? '/'.$route['id'] : '');
     return $url;
+  }
 
+  /**
+   * Returns a URL that takes the user to a different page.
+   */
+  public static function getPaginationURL($n) {
+    $request = Request::getRequestData();
+    $params = !empty($request['params']) ? $request['params'] : [];
+    $params['page'] = $n;
+    $url = self::getCurrentURLPath();
+    return self::getURL($url, $params);
   }
 
   /**
    * Returns a URL that takes the user to the previous or next page of the current page.
    */
-  public static function getPaginationURL($delta) {
+  public static function getPaginationDeltaURL($delta) {
     $request = Request::getRequestData();
     $params = $request['params'];
-    if (empty($params['page'])) {
-      $params['page'] = 1;
-    }
-    $params['page'] = max($params['page'] + $delta, 1);
-    $url = self::getCurrentURLPath();
-    return self::getURL($url, $params);
+    $page = intval(@$params['page'] ?: 1);
+    return self::getPaginationURL(max($page + $delta, 1));
   }
 }

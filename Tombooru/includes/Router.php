@@ -66,12 +66,26 @@ class Router {
    * Table pages have a .tc-big-table on them.
    */
   public static function isTablePage() {
-    $route = Router::getRoute();
-    return (
-      $route['area'] === 'tags' ||
-      $route['area'] === 'tag-categories' ||
-      $route['area'] === 'artists'
-    ) && $route['type'] === 'browse';
+    $request = Request::getRequestData();
+    $params = $request['params'];
+    $route = $request['route'];
+
+    $isTagsBrowsePage = (
+      (
+        $route['area'] === 'tags' ||
+        $route['area'] === 'tag-categories' ||
+        $route['area'] === 'artists'
+      ) &&
+      $route['type'] === 'browse'
+    );
+
+    $isPostsHistoryPage = (
+      $route['area'] === 'posts' &&
+      $route['type'] === 'browse' &&
+      @$params['type'] === 'history'
+    );
+    
+    return ($isTagsBrowsePage || $isPostsHistoryPage);
   }
 
   /**

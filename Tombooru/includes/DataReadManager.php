@@ -151,15 +151,22 @@ class DataReadManager {
    *   * a pagination object
    * 
    * At this point we must already have parsed the search string into a query object.
+   * 
+   * The "type" is either "browse" (which is the regular search results page type), or "history".
+   * In case it's history, we always sort chronologically by pd.original_publication_date
+   * and exclude all posts that don't have a value set for it.
    */
-  public static function getPostSearchResults($query, $page, $perPage, $getTags = true) {
+  public static function getPostSearchResults($query, $page, $perPage, $getTags = true, $type = null) {
+    // Whether this is a history query that requires the post publication dates to be known.
+    $isHistoryQuery = $type === 'history';
+
     // Ensure that the request is within limits.
     [$page, $perPage] = DataHelper::limitPaginationValues($page, $perPage);
     
     // Run the search to get the result set for this page,
     // then count the total number of results in the database.
-    $posts = DB::getPostsSearchResult($query, $page, $perPage);
-    $totalPostCount = DB::countPostsSearchResult($query);
+    $posts = DB::getPostsSearchResult($query, $page, $perPage, $isHistoryQuery);
+    $totalPostCount = DB::countPostsSearchResult($query, $isHistoryQuery);
     
     // Get a basic pagination object.
     $pagination = DataHelper::getResultPagination($page, $perPage, $totalPostCount);
@@ -465,6 +472,7 @@ class DataReadManager {
       'data' => [
         'rating' => $post['rating'],
         'status' => $post['status'],
+        'originalPublicationDate' => Template::sqlTimestampToISO($post['original_publication_date']),
         'isAIGenerated' => boolval($post['is_ai_generated']),
       ],
       'ranking' => [

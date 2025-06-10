@@ -1,4 +1,5 @@
 <?php
+  $defaultColor = 'green';
   $filters = $search['filters'];
   $total = $pagination['totalResultCount'];
   $tags = DataHelper::getFlatPostTags($tags);
@@ -20,7 +21,7 @@
           // Find the associated tag.
           $tag = array_filter($tags, fn($tag) => mb_strtolower($tag['name']) === $valueLower);
           $tag = !empty($tag) ? reset($tag) : null;
-          $color = @$tag['category']['color'] ?: 'green';
+          $color = @$tag['category']['color'] ?: $defaultColor;
         ?>
         <span class="item <?= $color; ?> tag type-<?= htmlentities($type); ?> modifier-<?= htmlentities($modifier); ?>">
           <span class="tag-modifier"><?= htmlentities($char); ?></span>

@@ -1305,7 +1305,7 @@ class DB {
    * 
    * Takes a search query object, which should include a set of filters we'll search by.
    */
-  public static function getPostsSearchResult($searchQuery, $page = 1, $perPage = 12) {
+  public static function getPostsSearchResult($searchQuery, $page = 1, $perPage = 12, $isHistoryQuery = false) {
     $db = self::instReplicaDB();
 
     // Convert the caller's query filters to a simpler format.
@@ -1328,6 +1328,7 @@ class DB {
         'pd.upvotes',
         'pd.downvotes',
         'pd.media_type',
+        'pd.original_publication_date',
         'pd.updated_at',
         'pd.status',
         'pd.is_ai_generated',
@@ -1351,12 +1352,24 @@ class DB {
       );
     }
 
+    if ($isHistoryQuery) {
+      $query->where('pd.original_publication_date', '!=', null);
+    }
+
     $query
       ->groupBy('p.id')
       ->limit($perPage)
       ->offset($offset)
-      ->orderBy('p.id', SelectQueryBuilder::SORT_DESC)
       ->caller(__METHOD__);
+    
+    if ($isHistoryQuery) {
+      // If this is a history query, always sort latest first by original publication date.
+      $query->orderBy('pd.original_publication_date', SelectQueryBuilder::SORT_DESC);
+    }
+    else {
+      // TODO: implement ordering search query directives.
+      $query->orderBy('p.id', SelectQueryBuilder::SORT_DESC);
+    }
     
     foreach ($excludeTagGroups as $group) {
       if (empty($group)) {
@@ -1389,7 +1402,7 @@ class DB {
    * 
    * This takes a list of query clauses, which are determined by convertFiltersToQueryClauses().
    */
-  public static function countPostsSearchResult($searchQuery) {
+  public static function countPostsSearchResult($searchQuery, $isHistoryQuery = false) {
     $db = self::instReplicaDB();
 
     // Convert the caller's query filters to a simpler format.

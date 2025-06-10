@@ -7,9 +7,7 @@
       ?>
       <tr data-revision-id="<?= intval($rev['id']); ?>">
         <td>
-          <a href="<?= htmlentities($rev['url']); ?>">
-            <time datetime="<?= htmlentities($rev['timestamp']); ?>"><?= Template::formatTimestamp($rev['timestamp']); ?></time>
-          </a>
+          <a href="<?= htmlentities($rev['url']); ?>"><time datetime="<?= htmlentities($rev['timestamp']); ?>"><?= Template::formatTimestamp($rev['timestamp']); ?></time></a>
           (<a href="<?= htmlentities($rev['urlDiff']); ?>">diff</a>)
         </td>
         <td>

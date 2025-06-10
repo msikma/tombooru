@@ -11,6 +11,7 @@ class SpecialTombooru extends SpecialPage {
   private array $params;
 
   public static int $postsBrowsePageSize = 16;
+  public static int $postsHistoryPageSize = 48;
   public static int $tagsBrowsePageSize = 50;
 
   public function __construct() {
@@ -72,6 +73,24 @@ class SpecialTombooru extends SpecialPage {
     if ($pagination['current'] < $pagination['totalPages']) {
       $out->addBodyClasses("pagination-has-next");
     }
+  }
+
+  /**
+   * Returns the specific browse page type we're viewing.
+   */
+  private function getBrowsePageType() {
+    if (@$this->params['type'] === 'history') {
+      return 'history';
+    }
+    return 'browse';
+  }
+
+  /**
+   * Returns the page size to be used for the current request.
+   */
+  private function getPostsBrowsePageSize() {
+    $isHistory = self::getBrowsePageType() === 'history';
+    return $isHistory ? self::$postsHistoryPageSize : self::$postsBrowsePageSize;
   }
 
   /**
@@ -237,15 +256,17 @@ class SpecialTombooru extends SpecialPage {
    * Displays the post browse page.
    */
   private function runPostsBrowsePage() {
-    $perPage = self::$postsBrowsePageSize;
+    $type = self::getBrowsePageType();
+    $perPage = self::getPostsBrowsePageSize();
     $search = $this->request['search'];
     $page = $this->request['page'];
     $query = SearchQuery::parseSearchString($search);
-    $results = DataReadManager::getPostSearchResults($query, $page, $perPage);
-    $this->setBodyPaginationClasses($results['pagination']);
+    $results = DataReadManager::getPostSearchResults($query, $page, $perPage, true, $type);
+
     return self::outputTemplate(
       'posts/BrowsePage',
       [
+        'browsePageType' => $type,
         'search' => $query,
         'results' => $results,
       ],

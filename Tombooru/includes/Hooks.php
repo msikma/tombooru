@@ -133,6 +133,7 @@ class Hooks {
    */
   private static function addPostsBrowseNavigation($route, &$links) {
     $request = Request::getRequestData();
+    $isHistoryBrowsePage = @$request['params']['type'] === 'history';
     [$primary, $sub, $id] = self::getRouteSegments($route);
 
     $links['views'][] = [
@@ -146,7 +147,14 @@ class Hooks {
       'text' => 'Browse recent',
       'href' => URL::getURL('/posts'),
       'id' => 'ca-tombooru_recent',
-      'class' => $primary === 'posts' ? 'selected' : '',
+      'class' => $primary === 'posts' && !$isHistoryBrowsePage ? 'selected' : '',
+      'active' => true,
+    ];
+    $links['views'][] = [
+      'text' => 'By year',
+      'href' => URL::getURL('/posts', ['type' => 'history']),
+      'id' => 'ca-tombooru_by_year',
+      'class' => $primary === 'posts' && $isHistoryBrowsePage ? 'selected' : '',
       'active' => true,
     ];
 
@@ -160,13 +168,13 @@ class Hooks {
       ];
       $links['views'][] = [
         'text' => 'Previous',
-        'href' => URL::getPaginationURL(-1),
+        'href' => URL::getPaginationDeltaURL(-1),
         'class' => 'nav-browse-page-previous right arrow-left no-text selected stick-right blue',
         'active' => true,
       ];
       $links['views'][] = [
         'text' => 'Next',
-        'href' => URL::getPaginationURL(1),
+        'href' => URL::getPaginationDeltaURL(1),
         'class' => 'nav-browse-page-next right arrow-right no-text selected stick-left blue',
         'active' => true,
       ];

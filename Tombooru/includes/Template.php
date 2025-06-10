@@ -217,7 +217,7 @@ class Template {
 
       $pageLinks[] = [
         'type' => 'link',
-        'url' => '?page='.$page,
+        'url' => URL::getPaginationURL($page),
         'active' => $page !== $pagination['current'],
         'text' => $page,
       ];
@@ -225,16 +225,18 @@ class Template {
 
     // The previous and next buttons.
     $hasPrevious = $pagination['previous'] !== $pagination['current'] && $pagination['previous'] < $pagination['current'];
+    $previousPage = max($pagination['current'] - 1, 0);
     $previous = [
       'type' => 'link',
-      'url' => '?page='.max($pagination['current'] - 1, 0),
+      'url' => URL::getPaginationURL($previousPage),
       'active' => $hasPrevious,
       'text' => 'Previous',
     ];
     $hasNext = $pagination['next'] !== $pagination['current'] && $pagination['next'] > $pagination['current'];
+    $nextPage = min($pagination['current'] + 1, $pagination['totalResultCount']);
     $next = [
       'type' => 'link',
-      'url' => '?page='.min($pagination['current'] + 1, $pagination['totalResultCount']),
+      'url' => URL::getPaginationURL($nextPage),
       'active' => $hasNext,
       'text' => 'Next',
     ];
@@ -300,6 +302,17 @@ class Template {
     }
     $date = new DateTime($ts);
     return $date->format('Y-m-d');
+  }
+
+  /**
+   * Formats a timestamp as a four digit year.
+   */
+  public static function formatYear($ts) {
+    if (empty($ts)) {
+      return 'Unknown';
+    }
+    $date = new DateTime($ts);
+    return $date->format('Y');
   }
   
   /**
