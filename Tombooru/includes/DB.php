@@ -1292,13 +1292,53 @@ class DB {
    * Collects data needed for the search query based on the query clauses.
    */
   private static function collectQueryClauseGroups($queryClauses) {
-    $includeTagIDs = self::getTagNameMatches($queryClauses['includeTags']);
-    $excludeTagIDs = self::getTagNameMatches($queryClauses['excludeTags']);
+    [$includeTagIDs, $resolvedIncludeTagIDs] = self::getTagNameMatches($queryClauses['includeTags']);
+    [$excludeTagIDs, $resolvedExcludeTagIDs] = self::getTagNameMatches($queryClauses['excludeTags']);
 
     return [
       $includeTagIDs,
       $excludeTagIDs,
+      $resolvedIncludeTagIDs,
+      $resolvedExcludeTagIDs,
     ];
+  }
+
+  /**
+   * Collects tag clauses that the user requested but that we could not find in the database.
+   * 
+   * This is used to display to the user that a requested tag was excluded from search because it doesn't exist,
+   * and also to fail the search query altogether if it consists entirely of missing tags.
+   */
+  private static function collectMissingTagClauses($includeTagClauses, $excludeTagClauses, $queryData) {
+    $resolvedIncludeTagIDs = $queryData[2];
+    $resolvedExcludeTagIDs = $queryData[3];
+    $missingIncludeTags = [];
+    $missingExcludeTags = [];
+
+    foreach ($includeTagClauses as $tag) {
+      $tagLc = mb_strtolower($tag);
+      $tagInfo = $resolvedIncludeTagIDs[$tagLc];
+      if (is_null($tagInfo)) {
+        $missingIncludeTags[] = $tag;
+      }
+    }
+    foreach ($excludeTagClauses as $tag) {
+      $tagLc = mb_strtolower($tag);
+      $tagInfo = $resolvedExcludeTagIDs[$tagLc];
+      if (is_null($tagInfo)) {
+        $missingExcludeTags[] = $tag;
+      }
+    }
+
+    // Count how many tags are left after subtracting the missing ones.
+    $requestedIncludeTags = count(array_keys($resolvedIncludeTagIDs));
+    $requestedExcludeTags = count(array_keys($resolvedExcludeTagIDs));
+    $remainingIncludeTags = $requestedIncludeTags - count($missingIncludeTags);
+    $remainingExcludeTags = $requestedExcludeTags - count($missingExcludeTags);
+    
+    $missingTags = [...$missingIncludeTags, ...$missingExcludeTags];
+
+    return [$missingTags, [$requestedIncludeTags, $remainingIncludeTags, $requestedExcludeTags, $remainingExcludeTags]];
   }
 
   /**
@@ -1313,6 +1353,20 @@ class DB {
     $queryClauses = self::convertFiltersToQueryClauses($searchQuery);
     $queryData = self::collectQueryClauseGroups($queryClauses);
     [$includeTagGroups, $excludeTagGroups] = $queryData;
+    
+    // Check if we have missing tags.
+    [$missingTags, $missingTagStats] = self::collectMissingTagClauses($queryClauses['includeTags'], $queryClauses['excludeTags'], $queryData);
+    [$requestedIncludeTags, $remainingIncludeTags, $requestedExcludeTags, $remainingExcludeTags] = $missingTagStats;
+    
+    // If we requested a non-zero number of tags, and ended up with zero resolved tags,
+    // the search query should return 0 results rather than returning *all* results.
+    $willAlwaysReturnZero = $requestedIncludeTags > 0 && $remainingIncludeTags < 1;
+
+    // Report missing tags back to the caller.
+    $meta = [
+      'missingTags' => $missingTags,
+      'willAlwaysReturnZero' => $willAlwaysReturnZero,
+    ];
 
     $offset = DataHelper::getQueryOffset($page, $perPage);
 
@@ -1339,6 +1393,10 @@ class DB {
       ->join('tombooru_post_data', 'pd', 'p.id = pd.id')
       ->leftJoin('tombooru_post_tag', 'pt', 'pt.post_id = p.id')
       ->leftJoin('tombooru_tag', 't', 't.id = pt.tag_id');
+    
+    if ($willAlwaysReturnZero) {
+      $query->where(['p.id' => '-1']);
+    }
     
     if (!empty($includeTagGroups)) {
       $flatTagIDs = array_merge(...$includeTagGroups);
@@ -1394,7 +1452,7 @@ class DB {
     foreach ($res as $row) {
       $posts[] = (array)$row;
     }
-    return $posts;
+    return [$posts, $meta];
   }
 
   /**
@@ -1404,7 +1462,10 @@ class DB {
    * 
    * This takes a list of query clauses, which are determined by convertFiltersToQueryClauses().
    */
-  public static function countPostsSearchResult($searchQuery, $isHistoryQuery = false) {
+  public static function countPostsSearchResult($searchQuery, $isHistoryQuery = false, $willAlwaysReturnZero = false) {
+    if ($willAlwaysReturnZero) {
+      return 0;
+    }
     $db = self::instReplicaDB();
 
     // Convert the caller's query filters to a simpler format.
@@ -1556,22 +1617,27 @@ class DB {
    */
   public static function getTagNameMatches($names) {
     if (empty($names)) {
-      return [];
+      return [[], []];
     }
+    $desiredTags = array_fill_keys(array_map('mb_strtolower', $names), null);
+
     $db = self::instReplicaDB();
-    
+
     $res = $db->newSelectQueryBuilder()
       ->select([
         't.id',
+        't.name',
         't.aliased_to',
       ])
       ->from('tombooru_tag', 't')
       ->where(['name' => $names])
       ->caller(__METHOD__)
       ->fetchResultSet();
+    
     $baseTagIDs = [];
     $aliasedTagIDs = [];
     foreach ($res as $row) {
+      $desiredTags[mb_strtolower($row->name)] = (int)$row->id;
       $baseTagIDs[] = is_null($row->aliased_to) ? $row->id : $row->aliased_to;
     }
 
@@ -1602,7 +1668,7 @@ class DB {
       }
     }
 
-    return array_values($tagIDGroups);
+    return [array_values($tagIDGroups), $desiredTags];
   }
 
   /**

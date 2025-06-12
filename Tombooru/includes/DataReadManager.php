@@ -165,8 +165,8 @@ class DataReadManager {
     
     // Run the search to get the result set for this page,
     // then count the total number of results in the database.
-    $posts = DB::getPostsSearchResult($query, $page, $perPage, $isHistoryQuery);
-    $totalPostCount = DB::countPostsSearchResult($query, $isHistoryQuery);
+    [$posts, $meta] = DB::getPostsSearchResult($query, $page, $perPage, $isHistoryQuery);
+    $totalPostCount = DB::countPostsSearchResult($query, $isHistoryQuery, $meta['willAlwaysReturnZero']);
     
     // Get a basic pagination object.
     $pagination = DataHelper::getResultPagination($page, $perPage, $totalPostCount);
@@ -190,6 +190,7 @@ class DataReadManager {
     return array_filter([
       'query' => $query,
       'posts' => $postData,
+      'meta' => $meta,
       'tags' => $getTags ? $postTagsByCategory : null,
       'pagination' => $pagination,
       'queriedTagCategoryIDs' => $queriedTagCategoryIDs,
