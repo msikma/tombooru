@@ -109,8 +109,9 @@ class SpecialTombooru extends SpecialPage {
    * Outputs a template.
    */
   private function outputTemplate($template, $data) {
-    if (!empty($data['pagination'])) {
-      $this->setBodyPaginationClasses($data['pagination']);
+    $pagination = @$data['results']['pagination'];
+    if (!empty($pagination)) {
+      $this->setBodyPaginationClasses($pagination);
     }
     return TemplateManager::outputTemplate($template, $data);
   }
