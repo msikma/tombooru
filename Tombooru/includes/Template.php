@@ -53,10 +53,21 @@ class Template {
    * Throws an error for input that isn't a valid URL.
    */
   public static function parseURL($url) {
-    if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
-      throw new \Exception('This is not a valid URL.');
+    $parsed = parse_url($url);
+    if ($parsed === false) {
+      throw new \Exception('URL is malformed.');
     }
-    return parse_url($url);
+    $host = @$parsed['host'] ?: '';
+    if (
+      empty($url) ||
+      !str_contains($url, '://') ||
+      preg_match('/\.\./', $host) ||
+      empty($host) || preg_match('/[^a-zA-Z0-9\-\.]/', $host) ||
+      empty($parsed['scheme'])
+    ) {
+      throw new \Exception('URL is invalid.');
+    }
+    return $parsed;
   }
 
   /**

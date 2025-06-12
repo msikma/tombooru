@@ -5,7 +5,7 @@ use \RequestContext;
 
 class DataWriteManager {
   // Maximum string length for a source.
-  private static int $sourceMaxLength = 240;
+  private static int $sourceMaxLength = 495;
   // Maximum string length for a tag.
   private static int $tagMaxLength = 50;
 
