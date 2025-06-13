@@ -1,3 +1,7 @@
+<?php
+  $hasDescription = !empty($post['description']['content']);
+  $hasNotes = !empty($post['notes']['content']);
+?>
 <?= Template::getComponent('MediaSidebarPanel', ['post' => $post]); ?>
 
 <div class="tombooru-page page-detail subpage-view">
@@ -10,7 +14,7 @@
       [
         'title' => 'Description',
         'name' => 'description',
-        'showIfEmpty' => true,
+        'showIfEmpty' => $hasDescription || (!$hasDescription && !$hasNotes),
         'placeholder' => 'No description.',
         'data' => $post,
       ]
