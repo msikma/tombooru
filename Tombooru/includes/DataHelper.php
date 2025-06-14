@@ -1,6 +1,7 @@
 <?php
 
 namespace Tombooru;
+use Sanitizer;
 
 class DataHelper {
   // The generic category is ordered here.
@@ -114,6 +115,30 @@ class DataHelper {
   }
 
   /**
+   * Returns a blurb about a post based on its data (mainly its description).
+   */
+  public static function getPostBlurb($postData) {
+    $description = @$postData['description'];
+    if (empty($description)) {
+      return '';
+    }
+    $input = WikiManager::renderWikiText(mb_substr($description['content'], 0, 200));
+    $input = preg_replace('/\s+/u', ' ', $input);
+    $input = mb_substr($input, 0, 500);
+    $input = str_replace(['&lt;nowiki&gt;', '&lt;/nowiki&gt;'], '', $input);
+    $input = preg_replace_callback(
+      '#<a [^>]*>(.*?)</a>#is',
+      function ($matches) {
+        return htmlspecialchars($matches[1]);
+      },
+      $input
+    );
+    $sanitized = Sanitizer::removeSomeTags($input);
+    // $finalOutput = Sanitizer::sanitizeHTML($sanitized);
+    return $sanitized;
+  }
+
+  /**
    * Groups tags by their category and sorts them.
    * 
    * Tag categories are sorted by the order provided by DataReadManager::getTagCategories().
@@ -121,6 +146,9 @@ class DataHelper {
    * Tags inside groups themselves are sorted alphabetically.
    */
   public static function getTagCategoryGroups($tags, $tagCategories) {
+    if (empty($tagCategories)) {
+      return [];
+    }
     $tagsByCategory = self::groupPostTagsByCategory($tags, $tagCategories);
     $orderedTagCategories = self::orderPostTagCategories($tagsByCategory);
     $orderedTagCategories = self::omitOrderValues($orderedTagCategories);
@@ -306,6 +334,9 @@ class DataHelper {
    * Returns image dimensions data for a given image.
    */
   public static function getImageDimensions($image) {
+    if (empty($image)) {
+      return [];
+    }
     $width = $image['width'];
     $height = $image['height'];
     $ratio = $width / $height;
@@ -404,6 +435,9 @@ class DataHelper {
    * Retrieves an artist tag from a set of post tag groups.
    */
   public static function findArtistTags($postTagGroups) {
+    if (empty($postTagGroups)) {
+      return null;
+    }
     foreach ($postTagGroups as $group) {
       foreach ($group as $category) {
         $isArtistCategory = DataHelper::isSpecialCategory($category, 'artist');

@@ -1346,7 +1346,7 @@ class DB {
    * 
    * Takes a search query object, which should include a set of filters we'll search by.
    */
-  public static function getPostsSearchResult($searchQuery, $page = 1, $perPage = 12, $isHistoryQuery = false) {
+  public static function getPostsSearchResult($searchQuery, $page = 1, $perPage = 12, $getPostTextMetadata = false, $orderByPublicationDate = false) {
     $db = self::instReplicaDB();
 
     // Convert the caller's query filters to a simpler format.
@@ -1362,11 +1362,18 @@ class DB {
     // the search query should return 0 results rather than returning *all* results.
     $willAlwaysReturnZero = $requestedIncludeTags > 0 && $remainingIncludeTags < 1;
 
-    // Report missing tags back to the caller.
+    // Collect metadata for this search query. Report missing tags back to the caller as well.
     $meta = [
+      'getPostTextMetadata' => $getPostTextMetadata,
+      'orderByPublicationDate' => $orderByPublicationDate,
       'missingTags' => $missingTags,
       'willAlwaysReturnZero' => $willAlwaysReturnZero,
     ];
+    
+    if ($willAlwaysReturnZero) {
+      // If this search result should always return zero, do so now.
+      return [[], $meta];
+    }
 
     $offset = DataHelper::getQueryOffset($page, $perPage);
 
@@ -1394,10 +1401,16 @@ class DB {
       ->leftJoin('tombooru_post_tag', 'pt', 'pt.post_id = p.id')
       ->leftJoin('tombooru_tag', 't', 't.id = pt.tag_id');
     
-    if ($willAlwaysReturnZero) {
-      $query->where(['p.id' => '-1']);
+    // Add some additional data if we need it.
+    if ($getPostTextMetadata) {
+      $query->select([
+        'pd.description_page_id',
+        'pd.notes_page_id',
+        'group_concat(pt.tag_id) as post_tags',
+      ]);
     }
     
+    // Include tags.
     if (!empty($includeTagGroups)) {
       $flatTagIDs = array_merge(...$includeTagGroups);
       $query->where(['t.id' => $flatTagIDs]);
@@ -1412,7 +1425,7 @@ class DB {
       );
     }
 
-    if ($isHistoryQuery) {
+    if ($orderByPublicationDate) {
       $query->where('pd.original_publication_date', '!=', null);
     }
 
@@ -1422,15 +1435,14 @@ class DB {
       ->offset($offset)
       ->caller(__METHOD__);
     
-    if ($isHistoryQuery) {
-      // If this is a history query, always sort latest first by original publication date.
+    if ($orderByPublicationDate) {
       $query->orderBy('pd.original_publication_date', SelectQueryBuilder::SORT_DESC);
     }
-    else {
-      // TODO: implement ordering search query directives.
-      $query->orderBy('p.id', SelectQueryBuilder::SORT_DESC);
-    }
+
+    // Note: even if sorting by publication date first, use this to break ties.
+    $query->orderBy('p.id', SelectQueryBuilder::SORT_DESC);
     
+    // Exclude tags.
     foreach ($excludeTagGroups as $group) {
       if (empty($group)) {
         continue;
@@ -1462,8 +1474,9 @@ class DB {
    * 
    * This takes a list of query clauses, which are determined by convertFiltersToQueryClauses().
    */
-  public static function countPostsSearchResult($searchQuery, $isHistoryQuery = false, $willAlwaysReturnZero = false) {
-    if ($willAlwaysReturnZero) {
+  public static function countPostsSearchResult($searchQuery, $searchResultMeta = null) {
+    // If we already know from the search itself that this will return 0, exit early.
+    if (@$searchResultMeta['willAlwaysReturnZero']) {
       return 0;
     }
     $db = self::instReplicaDB();

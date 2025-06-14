@@ -68,7 +68,7 @@ class DataReadManager {
 
     $postData = DB::getPostData($pageID);
     $tagCategories = self::getTagCategories();
-    $extendedPostData = self::collectPostExtendedData($postData, $tagCategories, $getExtendedSetData);
+    $extendedPostData = self::collectPostExtendedData($postData, null, $tagCategories, $getExtendedSetData);
     return $extendedPostData;
   }
 
@@ -140,61 +140,128 @@ class DataReadManager {
       ],
     ];
   }
-
+  
   /**
    * Runs a search and returns the results.
    * 
    * The search result will include the following things:
    * 
-   *   * an array of posts that matched the search query
-   *   * all tags associated with those posts and their metadata
-   *   * a pagination object
+   *   - an array of posts that matched the search query;
+   *   - all tags associated with those posts and their metadata;
+   *   - a pagination object;
+   *   - various other metadata.
    * 
-   * At this point we must already have parsed the search string into a query object.
-   * 
-   * The "type" is either "browse" (which is the regular search results page type), or "history".
-   * In case it's history, we always sort chronologically by pd.original_publication_date
-   * and exclude all posts that don't have a value set for it.
+   * This is the "regular" search function used for browsing.
    */
-  public static function getPostSearchResults($query, $page, $perPage, $getTags = true, $type = null) {
-    // Whether this is a history query that requires the post publication dates to be known.
-    $isHistoryQuery = $type === 'history';
-
-    // Ensure that the request is within limits.
-    [$page, $perPage] = DataHelper::limitPaginationValues($page, $perPage);
-    
-    // Run the search to get the result set for this page,
-    // then count the total number of results in the database.
-    [$posts, $meta] = DB::getPostsSearchResult($query, $page, $perPage, $isHistoryQuery);
-    $totalPostCount = DB::countPostsSearchResult($query, $isHistoryQuery, $meta['willAlwaysReturnZero']);
-    
-    // Get a basic pagination object.
-    $pagination = DataHelper::getResultPagination($page, $perPage, $totalPostCount);
-    
-    // Retrieve basic post data for these items. We only return a subset of data useful for the browse page.
-    [$postData, $postIDs] = self::collectSearchResultPostData($posts);
-
-    // Given the list of post IDs that matched this search, get the tag data in bulk for those IDs.
-    if ($getTags) {
-      $tagCategories = self::getTagCategories();
-      $tags = DB::getPostTags($postIDs);
-      $postTags = self::collectPostTagsData($tags, false, $tagCategories);
-      $postTagsByCategory = DataHelper::getTagCategoryGroups($postTags, $tagCategories);
-    }
-
-    // Also, get a list of what tag categories we have searched tags for.
-    // This is mainly for the "artists" tags, which are hidden by default when browsing;
-    // if an artist is explicitly searched for, we want it visible.
-    $queriedTagCategoryIDs = self::getQueriedTagCategoryIDs($query, @$postTags ?: []);
+  private static function getPostBrowseSearchResults($query, $page, $perPage) {
+    [$posts, $meta] = DB::getPostsSearchResult($query, $page, $perPage, false, false);
+    $totalPostCount = DB::countPostsSearchResult($query, $meta);
+    [$postData, $postIDs] = self::collectSearchResultPostData($posts, $meta);
 
     return array_filter([
       'query' => $query,
       'posts' => $postData,
-      'meta' => $meta,
-      'tags' => $getTags ? $postTagsByCategory : null,
-      'pagination' => $pagination,
-      'queriedTagCategoryIDs' => $queriedTagCategoryIDs,
+      'meta' => [
+        ...$meta,
+        'postIDs' => $postIDs,
+        'totalPostCount' => $totalPostCount,
+      ],
     ]);
+  }
+
+  /**
+   * Returns tag IDs for posts in a search result.
+   * 
+   * Only used by the history query.
+   */
+  private static function collectSearchResultTagIDs($posts) {
+    // Collect all tags associated with each post into one flat array.
+    $tags = array_map('intval', explode(',', implode(',', array_column($posts, 'post_tags'))));
+    return array_unique($tags);
+  }
+  
+  /**
+   * Runs a search and returns the results.
+   * 
+   * This is for the history search pages, which display a bit more information about each post.
+   */
+  private static function getPostHistorySearchResults($query, $page, $perPage) {
+    // Since history queries are a bit costly, we'll cache them.
+    $cacheKey = 'PostHistorySearchResults '.$query['searchString'].' p'.$page.' pp'.$perPage;
+    $cacheDuration = 3600;
+
+    $data = Settings::getCacheValue($cacheKey);
+    if ($data !== false) {
+      return $data;
+    }
+
+    [$posts, $meta] = DB::getPostsSearchResult($query, $page, $perPage, true, true);
+    $totalPostCount = DB::countPostsSearchResult($query, $meta);
+
+    $postTagIDs = self::collectSearchResultTagIDs($posts);
+    $postTags = DB::getTagsByIDs($postTagIDs);
+    $tagCategories = self::getTagCategories();
+    [$postData, $postIDs] = self::collectSearchResultPostData($posts, $meta, $postTags, $tagCategories);
+
+    $data = array_filter([
+      'query' => $query,
+      'posts' => $postData,
+      'meta' => [
+        ...$meta,
+        'postIDs' => $postIDs,
+        'totalPostCount' => $totalPostCount,
+      ],
+    ]);
+
+    Settings::setCacheValue($cacheKey, $data, $cacheDuration);
+
+    return $data;
+  }
+
+  /**
+   * Runs a search and returns the results.
+   */
+  public static function getPostSearchResults($query, $page, $perPage, $getTags, $searchType) {
+    // Ensure that the request is within limits.
+    [$page, $perPage] = DataHelper::limitPaginationValues($page, $perPage);
+
+    switch ($searchType) {
+      case 'history':
+        $result = self::getPostHistorySearchResults($query, $page, $perPage);
+        break;
+      case 'browse':
+        $result = self::getPostBrowseSearchResults($query, $page, $perPage);
+        break;
+      default:
+        throw new \Exception('Invalid search type: '.$searchType);
+    }
+
+    // Given the list of post IDs that matched this search, get the tag data in bulk for those IDs.
+    // When viewing the latest posts for a given tag, we don't do this since the tags aren't displayed.
+    if ($getTags) {
+      $tagCategories = self::getTagCategories();
+      $tags = DB::getPostTags($result['meta']['postIDs']);
+      $postTags = self::collectPostTagsData($tags, false, $tagCategories);
+      $postTagsByCategory = DataHelper::getTagCategoryGroups($postTags, $tagCategories);
+    }
+
+    // Get a basic pagination object.
+    $pagination = DataHelper::getResultPagination($page, $perPage, $result['meta']['totalPostCount']);
+
+    // Also, get a list of what tag categories we have searched tags for.
+    // This is mainly for the "artists" tags, which are hidden by default when browsing;
+    // if an artist is explicitly searched for, we want it visible.
+    $queriedTagCategoryIDs = self::getQueriedTagCategoryIDs($query, @$result['meta']['flatTags'] ?: []);
+
+    return [
+      ...$result,
+      'meta' => [
+        ...$result['meta'],
+        'queriedTagCategoryIDs' => $queriedTagCategoryIDs,
+      ],
+      'pagination' => $pagination,
+      'tags' => $getTags ? @$postTagsByCategory : null,
+    ];
   }
 
   /**
@@ -601,12 +668,22 @@ class DataReadManager {
    * This collects a bunch of additional data from the database and wrangles the data quite a bit.
    * This is for posts we intend to view a detail page of.
    */
-  private static function collectPostExtendedData($post, $tagCategories, $getExtendedSetData = false) {
-    $tags = DB::getPostTags([$post['id']]);
+  private static function collectPostExtendedData($post, $postTags, $tagCategories, $getExtendedSetData = false) {
     $sources = DB::getPostSources($post['id']);
     $sets = DB::getPostSets($post['id']);
 
-    // Get the actual file object this is pointing to.
+    // Fetch the tags for this post on the fly (this is what we do when fetching a single post),
+    // or if we already have the flat tags from a search result, use those.
+    if (empty($postTags)) {
+      $tags = DB::getPostTags([$post['id']]);
+    }
+    else {
+      $postTags = array_column($postTags, null, 'id');
+      $tagIDs = array_map('intval', explode(',', @$post['post_tags']));
+      $tags = array_values(array_intersect_key($postTags, array_flip($tagIDs)));
+    }
+
+    // Get the actual file object this is pointing to.)
     $fileInstance = WikiManager::getFileInstanceByPageID($post['page_id']);
     $previewFileInstance = WikiManager::getFileInstance($post['preview_filename'], true);
     $file = WikiManager::getFileData($fileInstance, $previewFileInstance, $post);
@@ -616,8 +693,8 @@ class DataReadManager {
     $notesPageData = WikiManager::getPageData($post['notes_page_id']);
 
     // Get the poster and approver.
-    $posterData = WikiManager::getUserBasicData($post['poster_user_id']);
-    $approverData = WikiManager::getUserBasicData($post['approver_user_id']);
+    $posterData = WikiManager::getUserBasicData(@$post['poster_user_id']);
+    $approverData = WikiManager::getUserBasicData(@$post['approver_user_id']);
 
     // Retrieve additional data.
     $postTags = self::collectPostTagsData($tags, false, $tagCategories);
@@ -631,7 +708,7 @@ class DataReadManager {
       'file' => $file,
       'data' => [
         'rating' => $post['rating'],
-        'license' => $post['license'],
+        'license' => @$post['license'],
         'status' => $post['status'],
         'originalPublicationDate' => Template::sqlTimestampToISO($post['original_publication_date']),
         'isAIGenerated' => boolval($post['is_ai_generated']),
@@ -646,7 +723,7 @@ class DataReadManager {
         'upvotes' => intval($post['upvotes']),
         'downvotes' => intval($post['downvotes']),
       ],
-      'tags' => $postTagCategoryGroups,
+      'tags' => @$postTagCategoryGroups,
       'sources' => $postSources,
       'sets' => $postSets,
       'createdAt' => Template::sqlTimestampToISO($post['created_at']),
@@ -765,20 +842,26 @@ class DataReadManager {
   /**
    * Takes post data objects from the database and processes them into basic post objects, and a list of post IDs.
    * 
-   * See self::collectPostBasicData(). 
+   * Normally we do not get extended data for search results.
    */
-  private static function collectSearchResultPostData($posts) {
-    $postData = [];
+  private static function collectSearchResultPostData($posts, $meta = [], $postTags = null, $tagCategories = null) {
+    $postDataItems = [];
     foreach ($posts as $post) {
       try {
-        $postData[] = self::collectPostBasicData($post);
+        if ($meta['getPostTextMetadata']) {
+          $postData = self::collectPostExtendedData($post, $postTags, $tagCategories, $meta);
+        }
+        else {
+          $postData = self::collectPostBasicData($post);
+        }
+        $postDataItems[] = $postData;
       }
       catch (\Throwable $e) {
-        $postData[] = self::collectPostPlaceholderData($post);
+        $postDataItems[] = self::collectPostPlaceholderData($post);
       }
     }
-    $postIDs = array_column($postData, 'id');
-    return [$postData, $postIDs];
+    $postIDs = array_column($postDataItems, 'id');
+    return [$postDataItems, $postIDs];
   }
 
   /**

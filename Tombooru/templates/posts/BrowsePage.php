@@ -2,7 +2,7 @@
   $posts = @$results['posts'];
   $tags = @$results['tags'];
   $pagination = $results['pagination'];
-  $queriedTagCategoryIDs = @$results['queriedTagCategoryIDs'] ?: [];
+  $queriedTagCategoryIDs = @$results['meta']['queriedTagCategoryIDs'] ?: [];
 ?>
 <?= Template::getComponent('PostsSidebarPanel', [
   'posts' => $posts,

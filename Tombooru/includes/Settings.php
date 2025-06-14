@@ -24,28 +24,60 @@ class Settings {
   }
 
   /**
-   * Returns version about the repo state and about the extension itself.
+   * Retrieves values from the cache.
    * 
-   * This information is cached for 1 hour.
+   * If a value is not found, false is returned.
    */
-  public static function getTombooruSystemData() {
+  public static function getCacheValue($key) {
+    if (empty($key)) {
+      throw new \Exception('No cache key set.');
+    }
     $cache = ObjectCache::getInstance(CACHE_DB);
-    $cacheKey = $cache->makeKey('Tombooru', 'SpecialTombooru', 'TombooruSystemData');
+    $cacheKey = $cache->makeKey('Tombooru', 'SpecialTombooru', $key);
 
     $data = $cache->get($cacheKey);
     if ($data !== false) {
       return json_decode($data, true);
     }
 
+    return false;
+  }
+
+  /**
+   * Stores a value in the cache.
+   * 
+   * Data is always JSON encoded.
+   */
+  public static function setCacheValue($key, $data, $time) {
+    if (empty($key) || empty($time)) {
+      throw new \Exception('No cache key or time set.');
+    }
+    $cache = ObjectCache::getInstance(CACHE_DB);
+    $cacheKey = $cache->makeKey('Tombooru', 'SpecialTombooru', $key);
+    $cache->set($cacheKey, json_encode($data), $time);
+
+    return true;
+  }
+
+  /**
+   * Returns version about the repo state and about the extension itself.
+   * 
+   * This information is cached for 1 hour.
+   */
+  public static function getTombooruSystemData() {
+    $data = self::getCacheValue('TombooruSystemData');
+    if ($data !== false) {
+      return $data;
+    }
+
     $extensionData = self::getExtensionData();
     $repoInfo = self::getGitRepoInfo();
-    
     $data = [
       'extension' => $extensionData,
       'repo' => $repoInfo,
     ];
 
-    $cache->set($cacheKey, json_encode($data), 3600);
+    self::setCacheValue('TombooruSystemData', $data, 3600);
 
     return $data;
   }
