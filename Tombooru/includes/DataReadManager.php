@@ -283,7 +283,7 @@ class DataReadManager {
    */
   public static function getTagExampleResults($tag) {
     $query = SearchQuery::parseSearchString($tag['name']);
-    $results = self::getPostSearchResults($query, 1, self::$tagExampleAmount, false);
+    $results = self::getPostSearchResults($query, 1, self::$tagExampleAmount, false, 'browse');
     return $results;
   }
 
