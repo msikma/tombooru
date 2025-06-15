@@ -82,6 +82,9 @@ class SpecialTombooru extends SpecialPage {
     if (@$this->params['type'] === 'list') {
       return 'list';
     }
+    if (@$this->params['type'] === 'history') {
+      return 'history';
+    }
     return 'browse';
   }
 

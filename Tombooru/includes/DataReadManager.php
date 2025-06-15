@@ -153,8 +153,8 @@ class DataReadManager {
    * 
    * This is the "regular" search function used for browsing.
    */
-  private static function getPostBrowseSearchResults($query, $page, $perPage) {
-    [$posts, $meta] = DB::getPostsSearchResult($query, $page, $perPage, false, false);
+  private static function getPostBrowseSearchResults($query, $page, $perPage, $orderByPublicationDate) {
+    [$posts, $meta] = DB::getPostsSearchResult($query, $page, $perPage, false, $orderByPublicationDate);
     $totalPostCount = DB::countPostsSearchResult($query, $meta);
     [$postData, $postIDs] = self::collectSearchResultPostData($posts, $meta);
 
@@ -229,8 +229,11 @@ class DataReadManager {
       case 'list':
         $result = self::getPostListSearchResults($query, $page, $perPage);
         break;
+      case 'history':
+        $result = self::getPostBrowseSearchResults($query, $page, $perPage, true);
+        break;
       case 'browse':
-        $result = self::getPostBrowseSearchResults($query, $page, $perPage);
+        $result = self::getPostBrowseSearchResults($query, $page, $perPage, false);
         break;
       default:
         throw new \Exception('Invalid search type: '.$searchType);

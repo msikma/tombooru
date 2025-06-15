@@ -15,7 +15,7 @@
     <?= Template::getComponent('PostsTable', ['posts' => @$results['posts']]); ?>
   <?php else: ?>
     <?= Template::getComponent('SearchResultInfo', ['search' => $search, 'pagination' => $pagination, 'tags' => empty($tags) ? [] : $tags, 'meta' => @$results['meta']]); ?>
-    <?= Template::getComponent('PostsResultSet', ['posts' => @$results['posts']]); ?>
+    <?= Template::getComponent('PostsResultSet', ['posts' => @$results['posts'], 'showYearHeaders' => $browsePageType === 'history']); ?>
   <?php endif; ?>
   <?= Template::getComponent('Pagination', ['pagination' => @$results['pagination']]); ?>
 </div>

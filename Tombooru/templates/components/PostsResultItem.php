@@ -11,4 +11,9 @@
       <?php endif; ?>
     </a>
   </div>
+  <?php if ($showDateCaption): ?>
+    <div class="caption">
+      <p><?= htmlspecialchars(Template::formatTimestampDate(@$post['data']['originalPublicationDate'])) ?></p>
+    </div>
+  <?php endif; ?>
 </div>

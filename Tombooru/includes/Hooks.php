@@ -134,6 +134,7 @@ class Hooks {
   private static function addPostsBrowseNavigation($route, &$links) {
     $request = Request::getRequestData();
     $isListBrowsePage = @$request['params']['type'] === 'list';
+    $isHistoryBrowsePage = @$request['params']['type'] === 'history';
     [$primary, $sub, $id] = self::getRouteSegments($route);
 
     $links['views'][] = [
@@ -147,7 +148,14 @@ class Hooks {
       'text' => 'Browse recent',
       'href' => URL::getURL('/posts'),
       'id' => 'ca-tombooru_recent',
-      'class' => $primary === 'posts' && !$isListBrowsePage ? 'selected' : '',
+      'class' => $primary === 'posts' && !$isListBrowsePage && !$isHistoryBrowsePage ? 'selected' : '',
+      'active' => true,
+    ];
+    $links['views'][] = [
+      'text' => 'By year',
+      'href' => URL::getURL('/posts', ['type' => 'history']),
+      'id' => 'ca-tombooru_by_year',
+      'class' => $primary === 'posts' && $isHistoryBrowsePage ? 'selected' : '',
       'active' => true,
     ];
     $links['views'][] = [
