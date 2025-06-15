@@ -390,6 +390,7 @@ class SpecialTombooru extends SpecialPage {
    * Displays the upload page.
    */
   private function runUploadPage() {
+    $systemSectionData = WikiManager::getPageHierarchy('System', WikiManager::$pageNamespaceTombooru, ['Upload']);
     $helpSectionData = WikiManager::getPageHierarchy('Help', WikiManager::$pageNamespaceTombooru);
     $boardUploadPolicy = DataReadManager::getBoardUploadPolicy();
     $pageID = WikiManager::getPageID('System/Upload');
@@ -420,7 +421,7 @@ class SpecialTombooru extends SpecialPage {
     return self::outputTemplate('static/UploadPage', [
       'policy' => $boardUploadPolicy,
       'pageData' => $pageData,
-      'sectionData' => $helpSectionData,
+      'sectionDataItems' => [$helpSectionData, $systemSectionData],
       'originalData' => $originalData,
       'updateData' => $updateData,
       'updateError' => $updateError,
@@ -460,12 +461,6 @@ class SpecialTombooru extends SpecialPage {
   private function runWikiPage($parentPageName, $pageName, $includeSystemPages) {
     // Fetch subpage data for the given parent page.
     $sectionData = WikiManager::getPageHierarchy($parentPageName, WikiManager::$pageNamespaceTombooru);
-    
-    if ($parentPageName === 'Help' && $includeSystemPages) {
-      // Add in the system pages.
-      $systemSectionData = WikiManager::getSystemPageHierarchy($parentPageName);
-      $sectionData[$parentPageName]['pageSubpages'] = array_merge($sectionData[$parentPageName]['pageSubpages'], $systemSectionData);
-    }
 
     // As a rule, we never actually show the top level page (and it shouldn't be created anyway).
     // The top level page serves purely as a navigation segment.
@@ -474,6 +469,14 @@ class SpecialTombooru extends SpecialPage {
     if ($parentPageName === $pageName) {
       $defaultPage = WikiManager::getPageHierarchyDefaultPage($sectionData);
       return $this->getOutput()->redirect(URL::getPageURL($defaultPage['name']));
+    }
+
+    $sectionDataItems = [$sectionData];
+
+    // Add in the system pages if we're on the standard help pages.
+    if ($parentPageName === 'Help') {
+      $systemSectionData = WikiManager::getPageHierarchy('System', WikiManager::$pageNamespaceTombooru, ['Upload']);
+      $sectionDataItems = [...$sectionDataItems, $systemSectionData];
     }
     
     // If not, that means we should be at a proper subpage.
@@ -484,7 +487,7 @@ class SpecialTombooru extends SpecialPage {
     return self::outputTemplate(
       'static/WikiPage',
       [
-        'sectionData' => $sectionData,
+        'sectionDataItems' => $sectionDataItems,
         'pageData' => $pageData,
         'pageName' => $pageName,
       ],

@@ -7,7 +7,7 @@
   // The maximum filesize that a user can upload.
   $formattedMaxSize = $request['user']['language']->formatSize($policy['maxSize']);
 ?>
-<?= Template::getComponent('StaticSidebarPanel', ['sectionData' => $sectionData, 'pageData' => $pageData, 'pageName' => 'Upload']); ?>
+<?= Template::getComponent('StaticSidebarPanel', ['sectionDataItems' => $sectionDataItems, 'pageData' => $pageData, 'pageName' => 'Upload']); ?>
 
 <div class="tombooru-page page-detail subpage-edit">
   <h1>Upload</h1>

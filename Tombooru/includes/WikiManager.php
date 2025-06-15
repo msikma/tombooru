@@ -44,15 +44,19 @@ class WikiManager {
     $name = $title->getDBKey();
     $fullTitle = $title->getPrefixedText();
     $titleValue = $title->getText();
+    $nameValue = $title->getDBKey();
     $wikitext = $revision->getContent(SlotRecord::MAIN)->getText();
 
     // In case this is a subpage, get a cleaned up version of the name.
     $pageTitle = explode('/', $titleValue);
     $pageTitle = end($pageTitle);
+    $pageName = explode('/', $nameValue);
+    $pageName = end($pageName);
 
     return [
       'pageID' => intval($pageID),
       'pageTitle' => $pageTitle,
+      'pageName' => $pageName,
       'name' => $name,
       'title' => $titleValue,
       'prefixedTitle' => $fullTitle,
@@ -194,11 +198,38 @@ class WikiManager {
   }
 
   /**
+   * Returns the data for a wiki page hierarchy.
+   * 
+   * This returns all pages and subpages of a given hierarchy plus the content.
+   * 
+   * If the "help" parent page is requested, additional data is added in.
+   */
+  public static function getPageHierarchy($parentPageName, $parentPageNamespace, $includePageNames = [], $includeSpecialCases = true) {
+    $pageHierarchy = self::getParentPageHierarchy($parentPageName, $parentPageNamespace, $includePageNames);
+    
+    // Add in the system pages.
+    if ($parentPageName === 'Help' && $includeSpecialCases) {
+      $systemSectionData = WikiManager::getSystemPageHierarchy($parentPageName);
+      $pageHierarchy[$parentPageName]['pageSubpages'] = array_merge($pageHierarchy[$parentPageName]['pageSubpages'], $systemSectionData);
+    }
+    // Erase the "System/" part of the page names.
+    if ($parentPageName === 'System' && $includeSpecialCases) {
+      $pageHierarchy[$parentPageName]['pageTitle'] = 'Actions';
+      foreach ($pageHierarchy[$parentPageName]['pageSubpages'] as &$subPage) {
+        $subPage['name'] = mb_substr($subPage['name'], mb_strlen($parentPageName) + 1);
+        $subPage['title'] = mb_substr($subPage['title'], mb_strlen($parentPageName) + 1);
+      }
+    }
+
+    return $pageHierarchy;
+  }
+
+  /**
    * Returns a page hierarchy.
    * 
    * This returns all subpages of a given parent page, plus all of their content.
    */
-  public static function getPageHierarchy($parentPageName, $parentPageNamespace) {
+  private static function getParentPageHierarchy($parentPageName, $parentPageNamespace, $includePageNames = []) {
     $parentPage = Title::newFromText($parentPageName, $parentPageNamespace);
     $parentPageData = self::getPageData($parentPage->getID()) ?? [];
 
@@ -226,7 +257,9 @@ class WikiManager {
       foreach ($subpages as $subpage) {
         $pageID = $subpage->getID();
         $pageData = self::getPageData($pageID);
-        $parentSubpages[] = $pageData;
+        if (empty($includePageNames) || in_array($pageData['pageName'], $includePageNames)) {
+          $parentSubpages[] = $pageData;
+        }
       }
     }
 

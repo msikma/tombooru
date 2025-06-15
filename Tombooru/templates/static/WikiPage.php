@@ -1,4 +1,4 @@
-<?= Template::getComponent('StaticSidebarPanel', ['sectionData' => $sectionData, 'pageData' => $pageData, 'pageName' => $pageName]); ?>
+<?= Template::getComponent('StaticSidebarPanel', ['sectionDataItems' => $sectionDataItems, 'pageData' => $pageData, 'pageName' => $pageName]); ?>
 
 <div class="tombooru-page page-wiki">
   <h1><?= htmlentities($pageData['pageTitle']); ?></h1>
