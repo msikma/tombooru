@@ -11,7 +11,7 @@ class SpecialTombooru extends SpecialPage {
   private array $params;
 
   public static int $postsBrowsePageSize = 16;
-  public static int $postsHistoryPageSize = 48;
+  public static int $postsListPageSize = 48;
   public static int $tagsBrowsePageSize = 50;
 
   public function __construct() {
@@ -79,8 +79,8 @@ class SpecialTombooru extends SpecialPage {
    * Returns the specific browse page type we're viewing.
    */
   private function getBrowsePageType() {
-    if (@$this->params['type'] === 'history') {
-      return 'history';
+    if (@$this->params['type'] === 'list') {
+      return 'list';
     }
     return 'browse';
   }
@@ -89,8 +89,8 @@ class SpecialTombooru extends SpecialPage {
    * Returns the page size to be used for the current request.
    */
   private function getPostsBrowsePageSize() {
-    $isHistory = self::getBrowsePageType() === 'history';
-    return $isHistory ? self::$postsHistoryPageSize : self::$postsBrowsePageSize;
+    $isList = self::getBrowsePageType() === 'list';
+    return $isList ? self::$postsListPageSize : self::$postsBrowsePageSize;
   }
 
   /**

@@ -11,7 +11,7 @@
   'queriedTagCategoryIDs' => $queriedTagCategoryIDs,
 ]); ?>
 <div class="tombooru-page page-browse">
-  <?php if ($browsePageType === 'history'): ?>
+  <?php if ($browsePageType === 'list'): ?>
     <?= Template::getComponent('PostsTable', ['posts' => @$results['posts']]); ?>
   <?php else: ?>
     <?= Template::getComponent('SearchResultInfo', ['search' => $search, 'pagination' => $pagination, 'tags' => empty($tags) ? [] : $tags, 'meta' => @$results['meta']]); ?>

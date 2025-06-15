@@ -79,13 +79,13 @@ class Router {
       $route['type'] === 'browse'
     );
 
-    $isPostsHistoryPage = (
+    $isPostsListPage = (
       $route['area'] === 'posts' &&
       $route['type'] === 'browse' &&
-      @$params['type'] === 'history'
+      @$params['type'] === 'list'
     );
     
-    return ($isTagsBrowsePage || $isPostsHistoryPage);
+    return ($isTagsBrowsePage || $isPostsListPage);
   }
 
   /**

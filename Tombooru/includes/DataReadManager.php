@@ -172,7 +172,7 @@ class DataReadManager {
   /**
    * Returns tag IDs for posts in a search result.
    * 
-   * Only used by the history query.
+   * Only used by the list query.
    */
   private static function collectSearchResultTagIDs($posts) {
     // Collect all tags associated with each post into one flat array.
@@ -183,11 +183,11 @@ class DataReadManager {
   /**
    * Runs a search and returns the results.
    * 
-   * This is for the history search pages, which display a bit more information about each post.
+   * This is for the list search pages, which display a bit more information about each post.
    */
-  private static function getPostHistorySearchResults($query, $page, $perPage) {
-    // Since history queries are a bit costly, we'll cache them.
-    $cacheKey = 'PostHistorySearchResults '.$query['searchString'].' p'.$page.' pp'.$perPage;
+  private static function getPostListSearchResults($query, $page, $perPage) {
+    // Since list queries are a bit costly, we'll cache them.
+    $cacheKey = 'PostListSearchResults '.$query['searchString'].' p'.$page.' pp'.$perPage;
     $cacheDuration = 3600;
 
     $data = Settings::getCacheValue($cacheKey);
@@ -226,8 +226,8 @@ class DataReadManager {
     [$page, $perPage] = DataHelper::limitPaginationValues($page, $perPage);
 
     switch ($searchType) {
-      case 'history':
-        $result = self::getPostHistorySearchResults($query, $page, $perPage);
+      case 'list':
+        $result = self::getPostListSearchResults($query, $page, $perPage);
         break;
       case 'browse':
         $result = self::getPostBrowseSearchResults($query, $page, $perPage);
