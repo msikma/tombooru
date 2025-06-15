@@ -1,15 +1,15 @@
 <?php
 ?>
-<div class="tc-big-table no-visited is-article-header" data-default-direction="desc" data-default-sort="created_at">
+<div class="tc-big-table no-visited is-article-header" data-default-direction="desc" data-is-sortable="false">
   <div class="inner">
     <table>
       <tbody>
         <tr class="header">
-          <th data-type="number" class="id minimal" data-slug="id" data-direction="asc" data-active="false">#<span class="sorter"></span></th>
-          <th data-slug="name" data-direction="asc" data-active="false">Name<span class="sorter"></span></th>
-          <th data-slug="artist" data-direction="asc" data-active="false">Artist<span class="sorter"></span></th>
-          <th data-slug="category" data-direction="asc" data-active="false">Tags<span class="sorter"></span></th>
-          <th data-slug="created_at" data-direction="asc" data-active="true" data-is-sortable="false">Created<span class="sorter"></span></th>
+          <th data-type="number" class="id minimal" data-slug="id" data-direction="asc" data-active="false" data-is-sortable="false">#<span class="sorter"></span></th>
+          <th data-slug="name" data-direction="asc" data-default-active="true" data-is-sortable="false">Name<span class="sorter"></span></th>
+          <th data-slug="artist" data-direction="asc" data-active="false" data-is-sortable="false">Artist<span class="sorter"></span></th>
+          <th data-slug="category" data-direction="asc" data-active="false" data-is-sortable="false">Tags<span class="sorter"></span></th>
+          <th data-slug="created_at" data-direction="asc" data-active="false" data-is-sortable="false">Created<span class="sorter"></span></th>
         </tr>
         <?php if (count($posts) === 0): ?>
           <tr class="notification">
@@ -40,8 +40,8 @@
             <tr class="section"><td></td><td colspan="999"><span class="title"><?= $year; ?></span></td></tr>
           <?php endif; ?>
           <tr class="post orientation-<?= htmlspecialchars($dimensions['orientation']); ?>">
-            <td class="right"><span class="inner"><?= htmlentities($pageID); ?></span></td>
-            <td class="blurb"><span class="inner"><a href="<?= URL::getURL("/posts/view/{$pageID}"); ?>"><?= $blurb; ?></a></span></td>
+            <td class="right"><span class="inner"><?= $post['id']; ?></span></td>
+            <td class="blurb highlighted"><span class="inner"><a href="<?= URL::getURL("/posts/view/{$pageID}"); ?>"><?= $blurb; ?></a></span></td>
             <td><span class="inner"><?php
               foreach (($artistTags ?? []) as $artistTag): ?>
                 <a href="<?= htmlentities(URL::getTagSearchURL($artistTag)); ?>"><?= htmlentities(str_replace('_', ' ', $artistTag['name'])); ?></a>
@@ -65,7 +65,7 @@
                 </div>
               </span>
             </td>
-            <td class="right highlighted"><span class="inner"><?= $date; ?></span></td>
+            <td class="right"><span class="inner"><?= $date; ?></span></td>
           </tr>
           <?php $previousYear = $year; ?>
         <?php endforeach; ?>
