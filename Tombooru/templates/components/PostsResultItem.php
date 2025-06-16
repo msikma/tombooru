@@ -3,7 +3,7 @@
   $thumb = @$post['file']['media']['thumb'];
   $dimensions = DataHelper::getImageDimensions($thumb);
 ?>
-<div class="post orientation-<?= htmlspecialchars($dimensions['orientation']); ?>">
+<div class="post orientation-<?= htmlspecialchars($dimensions['orientation']); ?><?= @$isSelected ? ' selected' : ''; ?>">
   <div class="image">
     <a href="<?= URL::getURL("/posts/view/{$pageID}"); ?>" class="media">
       <?php if (!empty($thumb)): ?>
@@ -11,7 +11,7 @@
       <?php endif; ?>
     </a>
   </div>
-  <?php if ($showDateCaption): ?>
+  <?php if (@$showDateCaption): ?>
     <div class="caption">
       <p><?= htmlspecialchars(Template::formatTimestampDate(@$post['data']['originalPublicationDate'])) ?></p>
     </div>

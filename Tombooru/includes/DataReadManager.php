@@ -61,14 +61,14 @@ class DataReadManager {
    * 
    * This fetches the core post data as well as all associated data from other tables.
    */
-  public static function getPost($pageID, $getExtendedSetData = false) {
+  public static function getPost($pageID, $includeSetPostData = false) {
     if (empty($pageID)) {
       throw new \Exception('no_page_id');
     }
 
     $postData = DB::getPostData($pageID);
     $tagCategories = self::getTagCategories();
-    $extendedPostData = self::collectPostExtendedData($postData, null, $tagCategories, $getExtendedSetData);
+    $extendedPostData = self::collectPostExtendedData($postData, null, $tagCategories, $includeSetPostData);
     return $extendedPostData;
   }
 
@@ -102,12 +102,12 @@ class DataReadManager {
   /**
    * Returns an imageboard post by post ID, including all related data.
    */
-  public static function getPostByID($postID, $getExtendedSetData = false) {
+  public static function getPostByID($postID, $includeSetPostData = false) {
     if (empty($postID)) {
       throw new \Exception('no_post_id');
     }
     $pageID = DB::getPostPageID($postID);
-    return self::getPost($pageID, $getExtendedSetData);
+    return self::getPost($pageID, $includeSetPostData);
   }
 
   /**
@@ -120,7 +120,8 @@ class DataReadManager {
       throw new \Exception('no_page_id');
     }
     $set = DB::getPostSetByID($setID);
-    $extendedSetData = self::collectSetExtendedData($set, true);
+    $setPosts = DB::getPostSetPostIDs([$set['id']]);
+    $extendedSetData = self::collectSetExtendedData($set, $setPosts, true);
     return $extendedSetData;
   }
 
@@ -612,43 +613,58 @@ class DataReadManager {
   /**
    * Takes a set data object from the database and processes it.
    */
-  private static function collectSetExtendedData($set, $getExtendedPostData = false) {
-    $creatorUserData = WikiManager::getUserBasicData($set['creator_user_id']);
-    $descriptionPageData = WikiManager::getPageData($set['description_page_id']);
-    $notesPageData = WikiManager::getPageData($set['notes_page_id']);
+  private static function collectSetExtendedData($set, $setPostIDs, $includeSetPosts = false) {
+    // Fetch basic metadata about the set. If we're not including set posts, don't include this data either.
+    if ($includeSetPosts) {
+      $creatorUserData = WikiManager::getUserBasicData($set['creator_user_id']);
+      $descriptionPageData = WikiManager::getPageData($set['description_page_id']);
+      $notesPageData = WikiManager::getPageData($set['notes_page_id']);
+    }
 
+    // Drill down to this set's post IDs.
+    $setPostIDs = @$setPostIDs[$set['id']]['postIDs'] ?? [];
     $setPosts = [];
-
-    if (!empty($set['posts'])) {
-      foreach ($set['posts'] as $post) {
-        if ($getExtendedPostData) {
-          $postData = self::getPostByID($post['post_id'], false);
-          $setPosts[$postData['id']] = $postData;
+    
+    if (!empty($setPostIDs)) {
+      foreach ($setPostIDs as $postID) {
+        if ($includeSetPosts) {
+          $postData = self::getPostByID($postID, false);
+          $setPosts[$postID] = $postData;
         }
         else {
-          $setPosts[] = intval($post['post_id']);
+          $setPosts[] = intval($postID);
         }
       }
     }
     
     $firstPost = reset($setPosts);
 
-    if ($getExtendedPostData) {
+    if ($includeSetPosts) {
       $setPostTags = self::mergePostTags(array_column($setPosts, 'tags'));
     }
 
     $setData = [
       'id' => intval($set['id']),
       'name' => $set['name'],
-      'creator' => $creatorUserData,
-      'description' => $descriptionPageData,
-      'notes' => $notesPageData,
+      'creator' => @$creatorUserData,
+      'description' => @$descriptionPageData,
+      'notes' => @$notesPageData,
       'posts' => $setPosts,
+      'data' => [
+        'firstPostID' => intval($set['first_post_id']),
+        'firstPageID' => intval($set['first_page_id']),
+        'isPrimary' => $set['is_primary'] === '1',
+      ],
       'tags' => @$setPostTags ?? [],
-      'firstPostID' => @$firstPost['id'],
-      'firstPageID' => !empty($firstPost['pageID']) ? $firstPost['pageID'] : (!empty($set['first_page_id']) ? intval($set['first_page_id']) : null),
       'createdAt' => Template::sqlTimestampToISO($set['created_at']),
     ];
+
+    if (!$includeSetPosts) {
+      unset($setData['creator']);
+      unset($setData['description']);
+      unset($setData['notes']);
+      unset($setData['tags']);
+    }
     
     return $setData;
   }
@@ -697,9 +713,10 @@ class DataReadManager {
    * This collects a bunch of additional data from the database and wrangles the data quite a bit.
    * This is for posts we intend to view a detail page of.
    */
-  private static function collectPostExtendedData($post, $postTags, $tagCategories, $getExtendedSetData = false) {
+  private static function collectPostExtendedData($post, $postTags, $tagCategories, $includeSetPostData = false) {
     $sources = DB::getPostSources($post['id']);
     $sets = DB::getPostSets($post['id']);
+    $setPostIDs = $includeSetPostData ? DB::getPostSetPostIDs(array_column($sets, 'id')) : [];
 
     // Fetch the tags for this post on the fly (this is what we do when fetching a single post),
     // or if we already have the flat tags from a search result, use those.
@@ -729,7 +746,7 @@ class DataReadManager {
     $postTags = self::collectPostTagsData($tags, false, $tagCategories);
     $postTagCategoryGroups = DataHelper::getTagCategoryGroups($postTags, $tagCategories);
     $postSources = self::collectPostSourceData($sources);
-    $postSets = self::collectPostSetData($sets, $getExtendedSetData);
+    $postSets = self::collectPostSetData($sets, $setPostIDs, $includeSetPostData);
 
     $postData = [
       'id' => intval($post['id']),
@@ -782,13 +799,10 @@ class DataReadManager {
   /**
    * Returns post set data.
    */
-  private static function collectPostSetData($sets, $includeText = true) {
-    if (!$includeText) {
-      return [];
-    }
+  private static function collectPostSetData($sets, $setPostIDs, $includeSetPosts = true) {
     $postSets = [];
     foreach ($sets as $set) {
-      $postSets[] = self::collectSetExtendedData($set, false);
+      $postSets[] = self::collectSetExtendedData($set, $setPostIDs, $includeSetPosts);
     }
     return $postSets;
   }
@@ -881,7 +895,7 @@ class DataReadManager {
     foreach ($posts as $post) {
       try {
         if ($meta['getPostTextMetadata']) {
-          $postData = self::collectPostExtendedData($post, $postTags, $tagCategories, $meta);
+          $postData = self::collectPostExtendedData($post, $postTags, $tagCategories);
         }
         else {
           $postData = self::collectPostBasicData($post);

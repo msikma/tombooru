@@ -6,6 +6,7 @@
 
 <div class="tombooru-page page-detail subpage-view">
   <?= Template::getComponent('MediaEmbed', ['post' => $post]); ?>
+  <?= Template::getComponent('MediaPrimarySets', ['post' => $post]); ?>
   <?= Template::getComponent('MediaUserActions', ['post' => $post, 'userPostInteractions' => $userPostInteractions]); ?>
   
   <div class="post-details">
@@ -16,6 +17,7 @@
         'name' => 'description',
         'showIfEmpty' => $hasDescription || (!$hasDescription && !$hasNotes),
         'placeholder' => 'No description.',
+        'isQuote' => true,
         'data' => $post,
       ]
     ); ?>

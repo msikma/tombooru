@@ -88,6 +88,7 @@ create table /*_*/tombooru_post_set (
   name varchar(300) not null,                   -- name of the set/series
   description_page_id int unsigned null,        -- page that stores the description
   notes_page_id int unsigned null,              -- page that stores the notes
+  is_primary bool not null default 0,
   creator_user_id int unsigned null,            -- references user.user_id
   created_at timestamp not null default current_timestamp,
 

@@ -150,6 +150,7 @@ class SpecialTombooru extends SpecialPage {
       throw new \Exception('not_found');
     }
     $userPostInteractions = DataReadManager::getUserPostInteractions($post['id']);
+
     return self::outputTemplate(
       'posts/ViewPage',
       [
@@ -222,6 +223,7 @@ class SpecialTombooru extends SpecialPage {
   private function runPostsSetsPage() {
     $pageID = $this->route['id'];
     $post = DataReadManager::getPost($pageID, true);
+
     return self::outputTemplate(
       'posts/SetsPage',
       [
@@ -236,7 +238,8 @@ class SpecialTombooru extends SpecialPage {
   private function runSetsViewPage() {
     $setID = $this->route['id'];
     $set = DataReadManager::getPostSet($setID, true);
-    $post = @$set['posts'][$set['firstPostID']];
+    $post = @$set['posts'][$set['data']['firstPostID']];
+
     return self::outputTemplate(
       'sets/ViewPage',
       [

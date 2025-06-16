@@ -959,6 +959,7 @@ class DB {
         'ps.name',
         'ps.description_page_id',
         'ps.notes_page_id',
+        'ps.is_primary',
         'ps.creator_user_id',
         'ps.created_at',
       ])
@@ -966,29 +967,22 @@ class DB {
       ->where(['ps.id' => $setID])
       ->caller(__METHOD__);
 
-    $set = (array)$query->fetchRow();
+    $row = (array)$query->fetchRow();
+    $firstPost = self::getPostSetFirstPostID($row['id']);
+    $row['first_post_id'] = $firstPost['post_id'];
+    $row['first_page_id'] = $firstPost['page_id'];
 
-    $query = $db->newSelectQueryBuilder()
-      ->select([
-        'psp.post_id',
-        'psp.ordering',
-      ])
-      ->from('tombooru_post_set_post', 'psp')
-      ->where(['psp.post_set_id' => $setID])
-      ->orderBy('psp.ordering', SelectQueryBuilder::SORT_ASC)
-      ->caller(__METHOD__);
-    
-    $res = $query->fetchResultSet();
-    foreach ($res as $row) {
-      $set['posts'][] = (array)$row;
-    }
-    return $set;
+    return $row;
   }
 
   /**
    * Retrieves the first post ID (and page ID) of a given set.
    */
   public static function getPostSetFirstPostID($setID) {
+    if (empty($setID)) {
+      return ['post_id' => null, 'page_id' => null];
+    }
+
     $db = self::instReplicaDB();
 
     $query = $db->newSelectQueryBuilder()
@@ -1012,18 +1006,54 @@ class DB {
   }
 
   /**
+   * Retrieves all post IDs inside of a given list of sets.
+   */
+  public static function getPostSetPostIDs($setIDs = []) {
+    if (empty($setIDs)) {
+      return [];
+    }
+
+    $db = self::instReplicaDB();
+
+    $query = $db->newSelectQueryBuilder()
+      ->select([
+        'psp.post_set_id',
+        'group_concat(psp.post_id) as post_ids',
+        'psp.ordering',
+      ])
+      ->from('tombooru_post_set_post', 'psp')
+      ->where(['psp.post_set_id' => $setIDs])
+      ->groupBy('psp.post_set_id')
+      ->orderBy('psp.ordering', SelectQueryBuilder::SORT_ASC)
+      ->orderBy('psp.post_id', SelectQueryBuilder::SORT_ASC)
+      ->caller(__METHOD__);
+
+    $res = $query->fetchResultSet();
+    $sets = [];
+    foreach ($res as $row) {
+      $row = (array)$row;
+      $sets[$row['post_set_id']] = [
+        'postSetID' => intval($row['post_set_id']),
+        'postIDs' => array_map('intval', explode(',', $row['post_ids'])),
+      ];
+    }
+    
+    return $sets;
+  }
+
+  /**
    * Retrieves all sets for a single post.
    */
   public static function getPostSets($postID) {
     $db = self::instReplicaDB();
 
-    // Fetch all 
     $query = $db->newSelectQueryBuilder()
       ->select([
         'ps.id',
         'ps.name',
         'ps.description_page_id',
         'ps.notes_page_id',
+        'ps.is_primary',
         'ps.creator_user_id',
         'ps.created_at',
       ])
@@ -1041,6 +1071,7 @@ class DB {
       $row['first_page_id'] = $firstPost['page_id'];
       $sets[] = $row;
     }
+
     return $sets;
   }
 

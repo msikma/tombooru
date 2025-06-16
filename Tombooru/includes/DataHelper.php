@@ -132,6 +132,27 @@ class DataHelper {
   }
 
   /**
+   * Returns all sets belonging to a given type ("primary" or "nonprimary").
+   * 
+   * If none match, an empty array is returned.
+   */
+  public static function reduceSetsByType($sets, $type) {
+    if (!in_array($type, ['primary', 'nonprimary'])) {
+      throw new \Exception('Invalid set type: '.$type);
+    }
+    $matchingSets = [];
+    foreach ($sets as $set) {
+      $matches =
+        ($type === 'primary' && $set['data']['isPrimary']) ||
+        ($type === 'nonprimary' && !$set['data']['isPrimary']);
+      if ($matches) {
+        $matchingSets[] = $set;
+      }
+    }
+    return $matchingSets;
+  }
+
+  /**
    * Returns whether we have right-aligned panels in a given piece of rendered wikitext.
    */
   public static function hasRightPanels($html) {

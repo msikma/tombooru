@@ -5,18 +5,6 @@ use MediaWiki\MediaWikiServices;
 
 class Hooks {
   /**
-   * Navigation tabs for a set detail page.
-   * 
-   * The set detail page will always have a first-post query value.
-   * We'll use that to generate the post detail subnav.
-   */
-  private static function addPostSetSingleNavigation($route, &$links, $params) {
-    [$primary, $sub, $id] = self::getRouteSegments($route);
-    $firstPostPageID = @$params['first-post'];
-    var_dump($firstPostPageID);
-  }
-
-  /**
    * Navigation tabs for a post detail page.
    */
   private static function addPostsSingleNavigation($route, &$links, $params) {

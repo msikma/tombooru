@@ -1,10 +1,16 @@
-<?php if (!empty($post['sets'])): ?>
+<?php
+  // Non-primary sets are ones we show in this list here.
+  // Primary sets are shown underneath the media embed.
+  $nonPrimarySets = DataHelper::reduceSetsByType($post['sets'], 'nonprimary');
+?>
+<?php if (!empty($nonPrimarySets)): ?>
   <?php ob_start(); ?>
   <div class="vector-menu-content-static">
-    <ul class="data-list">
-      <?php foreach ($post['sets'] as $set): ?>
+    <ul class="links-list">
+      <?php foreach ($nonPrimarySets as $set): ?>
+        <?php $isHere = intval(@$request['route']['id']) === $set['id']; ?>
         <li>
-          <a href="<?= URL::getSetInfoURL($set['id'], $set['firstPageID']) ?>" class="item"><?= $set['name']; ?></a>
+          <a href="<?= URL::getSetInfoURL($set['id'], $set['data']['firstPageID']) ?>" class="item<?= $isHere ? ' here' : ''; ?>"><?= $set['name']; ?></a>
         </li>
       <?php endforeach; ?>
     </ul>
