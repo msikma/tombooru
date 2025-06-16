@@ -127,7 +127,7 @@ class WikiManager {
     return $page;
   }
 
-  public static function getPageHistory($pageName, $pageNamespace, $limit = 50) {
+  public static function getPageHistory($pageName, $pageNamespace, $limit = 10) {
     $title = Title::newFromText($pageName, $pageNamespace);
     if (!$title || !$title->exists()) {
       return null;

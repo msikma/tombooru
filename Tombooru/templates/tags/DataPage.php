@@ -9,6 +9,7 @@
 <div class="tombooru-page page-tags">
   <h1>Tag: <?= htmlentities(str_replace('_', ' ', $tag['name'])); ?></h1>
   <p>This tag was created on <time datetime="<?= $tag['createdAt'] ?>"><?= Template::formatTimestamp($tag['createdAt']); ?></time>.</p>
+  <p>It's currently used by <span data-count="<?= $tag['count']; ?>"><?= $tag['count']; ?></span> <?= Template::getPlural($tag['count'], ['post', 'posts']); ?>.</p>
   <h2>Download</h2>
   <ul>
     <li><a href="?download_data">JSON data file</a></li>

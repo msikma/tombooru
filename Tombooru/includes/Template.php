@@ -5,6 +5,7 @@ use \DateTime;
 use \DateTimeZone;
 use \MWTimestamp;
 use \RequestContext;
+use \MediaWiki\MediaWikiServices;
 
 class Template {
   /**
@@ -45,6 +46,16 @@ class Template {
   public static function getMsg($message) {
     $context = RequestContext::getMain();
     return $context->msg($message);
+  }
+
+  /**
+   * Returns singular or plural terms.
+   */
+  public static function getPlural($count, $terms) {
+    $services = MediaWikiServices::getInstance();
+    $language = $services->getContentLanguage();
+    $word = $language->convertPlural($count, $terms);
+    return $word;
   }
 
   /**
