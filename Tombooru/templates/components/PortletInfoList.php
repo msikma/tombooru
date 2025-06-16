@@ -21,6 +21,11 @@
       <span class="value"><?= htmlspecialchars($post['pageID']) ?></span>
     </li>
 
+    <li>
+      <span class="key">Index</span>
+      <span class="value"><?= htmlspecialchars($post['id']) ?></span>
+    </li>
+
     <?php if ($hasSource && $showSources): ?>
       <li class="url-items">
         <span class="key">Source</span>
