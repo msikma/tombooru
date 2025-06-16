@@ -288,7 +288,7 @@ class Template {
   /**
    * Returns a number with a sign included.
    */
-  public static function formatNumberWithSign($number, $signOnZero = '') {
+  public static function formatNumberWithSign($number, $signOnZero = ' ') {
     if ($number === 0) {
       return $signOnZero.$number;
     }

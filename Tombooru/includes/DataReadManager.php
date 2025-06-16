@@ -125,6 +125,13 @@ class DataReadManager {
   }
 
   /**
+   * Returns relevant wiki page links for a given tag.
+   */
+  public static function getTagDataLinks($tag) {
+    return WikiManager::getEntityPageLinks($tag['id'], 'tag');
+  }
+
+  /**
    * Returns relevant wiki page links for a given post.
    */
   public static function getPostDataLinks($post) {
@@ -133,8 +140,8 @@ class DataReadManager {
     $fileText = 'File:'.htmlentities($post['file']['name']);
     $entityLinks = WikiManager::getEntityPageLinks($postID, 'post');
     return [
-      ...$entityLinks,
       ['href' => $fileLink, 'text' => $fileText, 'exists' => true],
+      ...$entityLinks,
     ];
   }
 
@@ -896,6 +903,13 @@ class DataReadManager {
       'media_type' => 'image',
       'status' => 'pending_approval',
     ]);
+  }
+
+  /**
+   * Restructures a full tag for export.
+   */
+  public static function collectTagPublicData($tagData) {
+    return $tagData;
   }
 
   /**

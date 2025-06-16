@@ -346,6 +346,9 @@ class SpecialTombooru extends SpecialPage {
   private function runTagsDataPage() {
     $tag = DataReadManager::getTag($this->route['id'], true);
     $tagCategories = DataReadManager::getTagCategories();
+    if (!is_null(@$this->params['download_data'])) {
+      return self::outputJSON(DataReadManager::collectTagPublicData($tag));
+    }
     return self::outputTemplate(
       'tags/DataPage',
       [

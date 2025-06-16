@@ -14,7 +14,7 @@
           <a href="<?= htmlentities($url); ?>"><?= htmlentities($rev['username']); ?></a>
         </td>
         <td><?= Template::formatFilesize($rev['size']); ?></td>
-        <td class="diff <?= $sign; ?>"><?= Template::formatNumberWithSign($rev['diff']); ?></td>
+        <td class="diff <?= $sign; ?>"><code><?= htmlspecialchars(Template::formatNumberWithSign($rev['diff'])); ?></code></td>
       </tr>
     <?php endforeach; ?>
   </table>
