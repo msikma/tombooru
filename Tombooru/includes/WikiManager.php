@@ -581,7 +581,7 @@ class WikiManager {
    * This returns e.g. "Post_description" or "Tag_description".
    * Used by self::updateEntityPageData() to determine where to save a user's input.
    */
-  private static function makeEntityPageBaseName($entityType, $contentType) {
+  public static function makeEntityPageBaseName($entityType, $contentType) {
     $pageEntityName = '';
     $pageDataName = '';
 
