@@ -1018,16 +1018,14 @@ class DB {
     $query = $db->newSelectQueryBuilder()
       ->select([
         'psp.post_set_id',
-        'group_concat(psp.post_id) as post_ids',
-        'psp.ordering',
+        'group_concat(psp.post_id order by psp.ordering asc) as post_ids',
       ])
       ->from('tombooru_post_set_post', 'psp')
       ->where(['psp.post_set_id' => $setIDs])
-      ->groupBy('psp.post_set_id')
-      ->orderBy('psp.ordering', SelectQueryBuilder::SORT_ASC)
       ->orderBy('psp.post_id', SelectQueryBuilder::SORT_ASC)
+      ->groupBy('psp.post_set_id')
       ->caller(__METHOD__);
-
+    
     $res = $query->fetchResultSet();
     $sets = [];
     foreach ($res as $row) {
