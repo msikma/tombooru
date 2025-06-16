@@ -174,21 +174,49 @@ class URL {
   }
 
   /**
+   * Returns whether a given URL matches the current location.
+   */
+  public static function matchesCurrentLocation($url) {
+    $imageboardPath = self::getBasePath();
+    $path = self::getCurrentURLPath();
+    $here = str_replace('$1', ltrim($path, '/'), $imageboardPath);
+
+    // Knock out the query strings.
+    $url = explode('?', $url, 2);
+    $here = explode('?', $here, 2);
+    $url = reset($url);
+    $here = reset($here);
+    
+    return trim($url, '/') === trim($here, '/');
+  }
+
+  /**
+   * Returns the imageboard base URL.
+   * 
+   * If the base URL is not set, null is returned.
+   */
+  private static function getBasePath() {
+    try {
+      // Attempt to get the ImageboardPath value from the LocalSettings.php.
+      $imageboardPath = Settings::config()->get('TombooruBasePath');
+      return $imageboardPath;
+    }
+    catch (\Throwable $e) {
+      return null;
+    }
+  }
+
+  /**
    * Returns a pretty URL for a given path.
    * 
    * URLs returned by this function will be e.g. "/imageboard/view/File.jpg".
    */
   private static function getPrettyURL($path) {
-    $config = MediaWikiServices::getInstance()->getMainConfig();
-    try {
-      // Attempt to get the ImageboardPath value from the LocalSettings.php.
-      $imageboardPath = $config->get('TombooruBasePath');
+    $imageboardPath = self::getBasePath();
+    if (isset($imageboardPath)) {
       return str_replace('$1', ltrim($path, '/'), $imageboardPath);
     }
-    catch (\Exception $e) {
-      // If the user did not set it for some reason, we'll just show regular URLs.
-      return self::getRegularURL($path);
-    }
+    return self::getRegularURL($path);
   }
 
   /**

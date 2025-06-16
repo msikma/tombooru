@@ -7,9 +7,16 @@
           <?php
             $pageID = $post['pageID'];
             $filename = $post['file']['name'];
+            $links = [
+              ['link' => URL::getURL("/posts/report/{$pageID}"), 'text' => 'Report', 'icon' => 'stop'],
+              ['link' => URL::getURL("/posts/sets/{$pageID}"), 'text' => 'Edit sets', 'icon' => 'archive'],
+              ['link' => URL::getWikiURL("File:{$filename}"), 'text' => 'View file on wiki', 'icon' => 'external'],
+            ];
           ?>
-          <a href="<?= URL::getURL("/posts/report/{$pageID}"); ?>" class="item label icon" <?= Template::setIcon('stop'); ?>>Report</a>
-          <a href="<?= URL::getWikiURL("File:{$filename}"); ?>" class="item label icon" <?= Template::setIcon('external'); ?>>View file on wiki</a>
+          <?php foreach ($links as $link): ?>
+            <?php $isActive = URL::matchesCurrentLocation($link['link']); ?>
+            <a href="<?= htmlspecialchars($link['link']); ?>" class="item label icon <?= $isActive ? 'here' : ''; ?>" <?= Template::setIcon($link['icon']); ?>><?= htmlspecialchars($link['text']); ?></a>
+          <?php endforeach; ?>
         </div>
       </div>
     </div>

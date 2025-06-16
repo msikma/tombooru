@@ -36,7 +36,7 @@ class Hooks {
       'text' => 'View',
       'href' => URL::getURL("/{$primary}/view/{$id}"),
       'id' => 'ca-tombooru_post',
-      'class' => $sub === 'view' ? 'selected' : '',
+      'class' => $sub === 'view' || $sub === 'sets' ? 'selected' : '',
       'active' => true,
     ];
     $links['views'][] = [
@@ -44,13 +44,6 @@ class Hooks {
       'href' => URL::getURL("/{$primary}/edit/{$id}"),
       'id' => 'ca-tombooru_edit',
       'class' => $sub === 'edit' ? 'selected' : '',
-      'active' => true,
-    ];
-    $links['views'][] = [
-      'text' => 'Sets',
-      'href' => URL::getURL("/{$primary}/sets/{$id}"),
-      'id' => 'ca-tombooru_sets',
-      'class' => $sub === 'sets' ? 'selected' : '',
       'active' => true,
     ];
     $links['views'][] = [
