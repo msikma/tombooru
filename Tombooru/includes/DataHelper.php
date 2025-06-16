@@ -115,6 +115,52 @@ class DataHelper {
   }
 
   /**
+   * Parses rendered wikitext as HTML and returns the .mw-parser-output div.
+   */
+  private static function parseWikitextOutput($html) {
+    $doc = new \DOMDocument();
+    @$doc->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+    $xpath = new \DOMXPath($doc);
+
+    // We only need to look for items that are a direct descendant of the .mw-parser-output div.
+    $mwParserDiv = $xpath->query('//div[contains(@class, "mw-parser-output")]');
+    if ($mwParserDiv->length === 0) {
+      return false;
+    }
+    $mwParserOutput = $mwParserDiv->item(0);
+    return $mwParserOutput;
+  }
+
+  /**
+   * Returns whether we have right-aligned panels in a given piece of rendered wikitext.
+   */
+  public static function hasRightPanels($html) {
+    $parsed = self::parseWikitextOutput($html);
+    if ($parsed === false) {
+      return false;
+    }
+
+    // Find thumbnails and infoboxes that float right.
+    foreach ($parsed->childNodes as $child) {
+      if ($child->nodeType !== XML_ELEMENT_NODE) {
+        continue;
+      }
+
+      $classAttr = $child->getAttribute('class');
+      $classes = preg_split('/\s+/', trim($classAttr));
+
+      // Relevant items will have .tright as well as one of .thumb or .box.
+      if (in_array('tright', $classes)) {
+        if (in_array('thumb', $classes) || in_array('box', $classes)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Returns a blurb about a post based on its data (mainly its description).
    */
   public static function getPostBlurb($postData) {

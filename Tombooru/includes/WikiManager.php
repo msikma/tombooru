@@ -803,6 +803,57 @@ class WikiManager {
   }
 
   /**
+   * Renders entity text (description and notes) and returns metadata.
+   */
+  public static function getRenderedEntityTextData($entity) {
+    $textData = [];
+
+    // Collect rendered data for all text types.
+    $textTypes = ['description', 'notes'];
+    $textMeta = [];
+    foreach ($textTypes as $textType) {
+      $content = @$entity[$textType];
+      $data = self::getRenderedWikiContentData($content);
+      $meta = @$data['meta'] ?: [];
+
+      $textData[$textType] = @$data['rendered'];
+      $textMeta[] = $meta;
+    }
+
+    // Merge the metadata together for all text types.
+    $mergedMeta = array_reduce($textMeta, function($merged, $arr) {
+      foreach ($arr as $k => $v) {
+        $merged[$k] = !empty($merged[$k]) || $v;
+      }
+      return $merged;
+    }, []);
+
+    $textData['meta'] = $mergedMeta;
+    
+    return $textData;
+  }
+
+  /**
+   * Returns rendered page content data.
+   * 
+   * This returns both the rendered wiki content as well as any relevant metadata.
+   */
+  public static function getRenderedWikiContentData($pageData) {
+    if (empty($pageData['content'])) {
+      return null;
+    }
+    $content = $pageData['content'];
+    $html = self::renderWikiText($content);
+    $hasRightPanels = DataHelper::hasRightPanels($html);
+    return [
+      'rendered' => $html,
+      'meta' => [
+        'hasRightPanels' => $hasRightPanels,
+      ],
+    ];
+  }
+
+  /**
    * Renders wikitext to HTML for the current context.
    */
   public static function renderWikiText($code, $userID = null) {

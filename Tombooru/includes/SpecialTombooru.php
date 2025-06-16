@@ -43,7 +43,7 @@ class SpecialTombooru extends SpecialPage {
   /**
    * Adds the Tombooru body classes.
    */
-  private function setBodyClasses() {
+  private function setBodyClasses($meta = []) {
     $primary = $this->route['primary'] ?: 'start';
 
     $out = $this->getOutput();
@@ -57,6 +57,9 @@ class SpecialTombooru extends SpecialPage {
     if (Router::isTablePage()) {
       $out->addBodyClasses('alt-content');
     }
+    if (@$meta['hasRightPanels']) {
+      $out->addBodyClasses('right-panel');
+    }
   }
 
   /**
@@ -65,6 +68,9 @@ class SpecialTombooru extends SpecialPage {
    * This is used by the navigation links.
    */
   private function setBodyPaginationClasses($pagination) {
+    if (empty($pagination)) {
+      return;
+    }
     $out = $this->getOutput();
     $out->addBodyClasses("pagination-page-{$pagination['current']}");
     if ($pagination['previous'] < $pagination['current']) {
@@ -111,11 +117,12 @@ class SpecialTombooru extends SpecialPage {
   /**
    * Outputs a template.
    */
-  private function outputTemplate($template, $data) {
+  private function outputTemplate($template, $data, $pageMeta = []) {
     $pagination = @$data['results']['pagination'];
-    if (!empty($pagination)) {
-      $this->setBodyPaginationClasses($pagination);
-    }
+
+    $this->setBodyClasses($pageMeta);
+    $this->setBodyPaginationClasses($pagination);
+
     return TemplateManager::outputTemplate($template, $data);
   }
 
@@ -291,6 +298,8 @@ class SpecialTombooru extends SpecialPage {
     $tag = DataReadManager::getTag($this->route['id'], true);
     $tagCategories = DataReadManager::getTagCategories();
     $tagExamples = DataReadManager::getTagExampleResults($tag);
+    $tagTextData = WikiManager::getRenderedEntityTextData($tag);
+
     return self::outputTemplate(
       'tags/ViewPage',
       [
@@ -298,6 +307,7 @@ class SpecialTombooru extends SpecialPage {
         'tagCategories' => array_values($tagCategories),
         'tagExamples' => $tagExamples,
       ],
+      @$tagTextData['meta'],
     );
   }
 
@@ -487,6 +497,9 @@ class SpecialTombooru extends SpecialPage {
     if (empty($pageData)) {
       throw new \Exception('not_found');
     }
+    // Render the page data and extract metadata.
+    $renderedPageData = WikiManager::getRenderedWikiContentData($pageData);
+    
     return self::outputTemplate(
       'static/WikiPage',
       [
@@ -494,6 +507,7 @@ class SpecialTombooru extends SpecialPage {
         'pageData' => $pageData,
         'pageName' => $pageName,
       ],
+      @$renderedPageData['meta'],
     );
   }
 
@@ -563,7 +577,6 @@ class SpecialTombooru extends SpecialPage {
    */
   public function execute($par) {
     $this->setHeaders();
-    $this->setBodyClasses();
 
     $route = $this->route;
 
