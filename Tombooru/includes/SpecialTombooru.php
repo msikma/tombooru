@@ -144,7 +144,7 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runPostsViewPage() {
     $pageID = $this->route['id'];
-    $post = DataReadManager::getPost($pageID);
+    $post = DataReadManager::getPost($pageID, true);
     if (empty($post['file']['name'])) {
       // todo: exception in readmanager
       throw new \Exception('not_found');
@@ -164,7 +164,7 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runPostsReportPage() {
     $pageID = $this->route['id'];
-    $post = DataReadManager::getPost($pageID);
+    $post = DataReadManager::getPost($pageID, true);
     return self::outputTemplate(
       'posts/ReportPage',
       [
@@ -178,7 +178,7 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runPostsEditPage() {
     $pageID = $this->route['id'];
-    $post = DataReadManager::getPost($pageID);
+    $post = DataReadManager::getPost($pageID, true);
     
     $originalData = DataWriteManager::collectPostOriginalData($post);
     $updateData = [];
@@ -251,7 +251,7 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runPostsDataPage() {
     $pageID = $this->route['id'];
-    $post = DataReadManager::getPost($pageID);
+    $post = DataReadManager::getPost($pageID, true);
     if (!is_null(@$this->params['download_data'])) {
       return self::outputJSON(DataReadManager::collectPostPublicData($post));
     }
