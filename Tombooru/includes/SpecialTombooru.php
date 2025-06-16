@@ -236,7 +236,7 @@ class SpecialTombooru extends SpecialPage {
   private function runSetsViewPage() {
     $setID = $this->route['id'];
     $set = DataReadManager::getPostSet($setID, true);
-    $post = reset($set['posts']);
+    $post = @$set['posts'][$set['firstPostID']];
     return self::outputTemplate(
       'sets/ViewPage',
       [

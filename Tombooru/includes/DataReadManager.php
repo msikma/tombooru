@@ -594,12 +594,15 @@ class DataReadManager {
     $mergedTagGroups = [];
     foreach ($postTagSets as $tagGroups) {
       foreach ($tagGroups as $groupName => $tagGroup) {
-        $mergedTagGroups[$groupName] = array_merge(@$mergedTagGroups[$groupName] ?: [], $tagGroup);
+        $mergedTagGroups[$groupName] = [...$tagGroup, ...@$mergedTagGroups[$groupName] ?: []];
         foreach ($tagGroup as $categoryName => $tagCategory) {
           $existingData = @$mergedTagGroups[$groupName][$categoryName] ?: [];
           $existingTags = $existingData['tags'];
-          $mergedTagGroups[$groupName][$categoryName] = $tagCategory;
-          $mergedTagGroups[$groupName][$categoryName]['tags'] = array_values(array_column(array_merge($tagCategory['tags'], $existingTags), null, 'id'));
+          $mergedTagGroups[$groupName][$categoryName] = [
+            ...$existingData,
+            ...$tagCategory,
+            'tags' => array_values(array_column(array_merge($tagCategory['tags'], $existingData['tags']), null, 'id')),
+          ];
         }
       }
     }
@@ -631,10 +634,7 @@ class DataReadManager {
     $firstPost = reset($setPosts);
 
     if ($getExtendedPostData) {
-      // Merge all the tags together and add them to the first post.
-      // That way we'll see all posts' tags on the overview page merged as one.
       $setPostTags = self::mergePostTags(array_column($setPosts, 'tags'));
-      $setPosts[$firstPost['id']]['tags'] = $setPostTags;
     }
 
     $setData = [
@@ -644,6 +644,8 @@ class DataReadManager {
       'description' => $descriptionPageData,
       'notes' => $notesPageData,
       'posts' => $setPosts,
+      'tags' => @$setPostTags ?? [],
+      'firstPostID' => @$firstPost['id'],
       'firstPageID' => !empty($firstPost['pageID']) ? $firstPost['pageID'] : (!empty($set['first_page_id']) ? intval($set['first_page_id']) : null),
       'createdAt' => Template::sqlTimestampToISO($set['created_at']),
     ];
@@ -781,6 +783,9 @@ class DataReadManager {
    * Returns post set data.
    */
   private static function collectPostSetData($sets, $includeText = true) {
+    if (!$includeText) {
+      return [];
+    }
     $postSets = [];
     foreach ($sets as $set) {
       $postSets[] = self::collectSetExtendedData($set, false);

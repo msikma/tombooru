@@ -1,4 +1,4 @@
-<?= Template::getComponent('MediaSidebarPanel', ['post' => $post]); ?>
+<?= Template::getComponent('MediaSidebarPanel', ['post' => $post, 'setTags' => $set['tags']]); ?>
 
 <div class="tombooru-page page-detail subpage-view">
   <h1><?= $set['name']; ?></h1>
@@ -12,7 +12,7 @@
         'showIfEmpty' => false,
         'showHeader' => false,
         'placeholder' => 'No description.',
-        'data' => $post,
+        'data' => $set,
       ]
     ); ?>
   </div>
@@ -27,7 +27,7 @@
         'name' => 'notes',
         'showIfEmpty' => false,
         'placeholder' => 'No notes.',
-        'data' => $post,
+        'data' => $set,
       ]
     ); ?>
   </div>
