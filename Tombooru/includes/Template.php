@@ -293,7 +293,7 @@ class Template {
       return $signOnZero.$number;
     }
     $sign = $number > 0 ? '+' : '-';
-    return $sign.$number;
+    return $sign.abs($number);
   }
   
   /**
