@@ -288,7 +288,7 @@ class SpecialTombooru extends SpecialPage {
    * Displays the tag view page.
    */
   private function runTagsViewPage() {
-    $tag = DataReadManager::getTag($this->route['id']);
+    $tag = DataReadManager::getTag($this->route['id'], true);
     $tagCategories = DataReadManager::getTagCategories();
     $tagExamples = DataReadManager::getTagExampleResults($tag);
     return self::outputTemplate(
@@ -306,7 +306,7 @@ class SpecialTombooru extends SpecialPage {
    */
   private function runTagsEditPage() {
     $tagName = $this->route['id'];
-    $tag = DataReadManager::getTag($tagName);
+    $tag = DataReadManager::getTag($tagName, true);
     $tagCategories = DataReadManager::getTagCategories();
 
     $originalData = DataWriteManager::collectTagOriginalData($tag);
