@@ -57,22 +57,19 @@ class Hooks {
     $links['views'][] = [
       'text' => 'View',
       'href' => URL::getURL("/{$primary}/view/{$id}"),
-      'id' => 'ca-tombooru_post',
-      'class' => self::navClass(['view', 'sets']),
+      'class' => ['icon-image', self::navClass(['view', 'sets'])],
       'active' => true,
     ];
     $links['views'][] = [
       'text' => 'Edit',
       'href' => URL::getURL("/{$primary}/edit/{$id}"),
-      'id' => 'ca-tombooru_edit',
-      'class' => self::navClass(['edit']),
+      'class' => ['icon-file-code', self::navClass(['edit'])],
       'active' => true,
     ];
     $links['views'][] = [
       'text' => 'View data',
       'href' => URL::getURL("/{$primary}/data/{$id}"),
-      'id' => 'ca-tombooru_viewdata',
-      'class' => self::navClass(['data']),
+      'class' => ['icon-package', self::navClass(['data'])],
       'active' => true,
     ];
     // try {
@@ -99,28 +96,25 @@ class Hooks {
     $links['views'][] = [
       'text' => 'View',
       'href' => URL::getURL("/{$primary}/view/{$name}"),
-      'id' => 'ca-tombooru_post',
-      'class' => self::navClass(['view']),
+      'class' => ['icon-image', self::navClass(['view'])],
       'active' => true,
     ];
     $links['views'][] = [
       'text' => 'Edit',
       'href' => URL::getURL("/{$primary}/edit/{$name}"),
-      'id' => 'ca-tombooru_edit',
-      'class' => self::navClass(['edit']),
+      'class' => ['icon-file-code', self::navClass(['edit'])],
       'active' => true,
     ];
     $links['views'][] = [
       'text' => 'View data',
       'href' => URL::getURL("/{$primary}/data/{$name}"),
-      'id' => 'ca-tombooru_viewdata',
-      'class' => self::navClass(['data']),
+      'class' => ['icon-package', self::navClass(['data'])],
       'active' => true,
     ];
   }
 
   /**
-   * Navigation tabs for a page detail page.
+   * Navigation tabs for a wiki detail page.
    */
   private static function addPageSingleNavigation($route, &$links) {
     $user = WikiManager::getUserData();
@@ -130,15 +124,13 @@ class Hooks {
     $links['views'][] = [
       'text' => 'Read',
       'href' => URL::getURL("/{$primary}/{$sub}/{$id}"),
-      'id' => 'ca-view',
-      'class' => self::navClass([], ['page']),
+      'class' => ['icon-book', self::navClass([], ['page'])],
       'active' => true,
     ];
     $links['views'][] = [
       'text' => 'Edit on wiki',
       'href' => URL::getWikiURL("Tombooru_data:{$sub}/{$id}", ['action' => 'edit']),
-      'id' => 'ca-tombooru_edit',
-      'class' => self::navClass(['edit']),
+      'class' => ['icon-file-code', self::navClass(['edit'])],
       'active' => true,
     ];
   }
@@ -155,29 +147,26 @@ class Hooks {
     $links['views'][] = [
       'text' => 'Search',
       'href' => URL::getURL('/'),
-      'id' => 'ca-tombooru_search',
-      'class' => self::navClass([], ['']),
+      'class' => ['icon-search', self::navClass([], [''])],
       'active' => true,
     ];
     $links['views'][] = [
       'text' => 'Browse recent',
       'href' => URL::getURL('/posts'),
       'id' => 'ca-tombooru_recent',
-      'class' => self::navClass([], ['posts'], [], !$isListBrowsePage && !$isHistoryBrowsePage),
+      'class' => ['icon-history', self::navClass([], ['posts'], [], !$isListBrowsePage && !$isHistoryBrowsePage)],
       'active' => true,
     ];
     $links['views'][] = [
       'text' => 'By year',
       'href' => URL::getURL('/posts', ['type' => 'history']),
-      'id' => 'ca-tombooru_by_year',
-      'class' => self::navClass([], ['posts'], [], $isHistoryBrowsePage),
+      'class' => ['icon-calendar', self::navClass([], ['posts'], [], $isHistoryBrowsePage)],
       'active' => true,
     ];
     $links['views'][] = [
       'text' => 'List',
       'href' => URL::getURL('/posts', ['type' => 'list']),
-      'id' => 'ca-tombooru_list',
-      'class' => self::navClass([], ['posts'], [], $isListBrowsePage),
+      'class' => ['icon-list-ordered', self::navClass([], ['posts'], [], $isListBrowsePage)],
       'active' => true,
     ];
 
@@ -192,19 +181,19 @@ class Hooks {
       $links['views'][] = [
         'text' => 'Previous',
         'href' => URL::getPaginationDeltaURL(-1),
-        'class' => 'nav-browse-page-previous right arrow-left no-text selected stick-right blue',
+        'class' => 'nav-browse-page-previous right icon-arrow-left no-text selected stick-right blue',
         'active' => true,
       ];
       $links['views'][] = [
         'text' => 'Next',
         'href' => URL::getPaginationDeltaURL(1),
-        'class' => 'nav-browse-page-next right arrow-right no-text selected stick-left blue',
+        'class' => 'nav-browse-page-next right icon-arrow-right no-text selected stick-left blue',
         'active' => true,
       ];
       $links['views'][] = [
         'text' => 'Settings',
         'href' => '#',
-        'class' => 'right settings selected yellow',
+        'class' => 'right icon-gear selected yellow',
         'active' => true,
       ];
     }
@@ -219,16 +208,13 @@ class Hooks {
     $links['views'][] = [
       'text' => 'List all tags',
       'href' => URL::getURL('/tags'),
-      'id' => 'ca-tombooru_tags',
-      'class' => ($primary === 'tags') ? 'selected' : '',
-      'class' => self::navClass([], ['tags']),
+      'class' => ['icon-tag', self::navClass([], ['tags'])],
       'active' => true,
     ];
     $links['views'][] = [
       'text' => 'Tag categories',
       'href' => URL::getURL('/tag-categories'),
-      'id' => 'ca-tombooru_tag_categories',
-      'class' => self::navClass([], ['tag-categories']),
+      'class' => ['icon-file-directory', self::navClass([], ['tag-categories'])],
       'active' => true,
     ];
   }
@@ -246,35 +232,30 @@ class Hooks {
     $links['namespaces']['posts'] = [
       'text' => 'Posts',
       'href' => URL::getURL("/posts"),
-      'id' => 'n-tombooru_posts',
       'active' => true,
-      'class' => self::navClass([], [], ['posts', 'sets']),
+      'class' => ['icon-apps', self::navClass([], [], ['posts', 'sets'])],
     ];
     $links['namespaces']['tags'] = [
       'text' => 'Tags',
       'href' => URL::getURL("/tags"),
-      'id' => 'n-tombooru_tags',
       'active' => true,
-      'class' => self::navClass([], [], ['tags', 'tag-categories']),
+      'class' => ['icon-tag', self::navClass([], [], ['tags', 'tag-categories'])],
     ];
     $links['namespaces']['artists'] = [
       'text' => 'Artists',
       'href' => URL::getURL("/artists"),
-      'id' => 'n-tombooru_artists',
       'active' => true,
-      'class' => self::navClass([], [], ['artists']),
+      'class' => ['icon-paintbrush', self::navClass([], [], ['artists'])],
     ];
     $links['namespaces']['upload'] = [
       'text' => 'Upload',
       'href' => URL::getURL("/page/Upload"),
-      'id' => 'n-tombooru_upload',
       'active' => true,
-      'class' => self::navClass(['Upload'], ['page']),
+      'class' => ['icon-upload', self::navClass(['Upload'], ['page'])],
     ];
     $links['namespaces']['help'] = [
       'text' => 'Help',
       'href' => URL::getURL("/page/Help"),
-      'id' => 'n-tombooru_help',
       'active' => true,
       'class' => ['divider', self::navClass(['Help'], ['page'])],
     ];
@@ -283,7 +264,6 @@ class Hooks {
       $links['namespaces']['admin'] = [
         'text' => 'Admin',
         'href' => URL::getURL("/page/Admin"),
-        'id' => 'n-tombooru_admin',
         'active' => true,
         'class' => self::navClass(['Admin'], [], ['static']),
       ];
@@ -292,9 +272,8 @@ class Hooks {
     $links['namespaces']['back_to_wiki'] = [
       'text' => 'Back to wiki',
       'href' => URL::getWikiURL("Main Page"),
-      'id' => 'n-tombooru_back_to_wiki',
       'active' => true,
-      'class' => 'back-to-wiki',
+      'class' => 'icon-globe-arrow back-to-wiki',
     ];
   }
   
