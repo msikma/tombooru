@@ -6,7 +6,7 @@
 
   $plural = intval($tag['count']) === 1 ? '' : 's';
 ?>
-<?= Template::getComponent('TagsSidebarPanel', ['tagCategories' => $tagCategories]); ?>
+<?= Template::getComponent('TagsSidebarPanel', ['tagCategories' => $tagCategories, 'tag' => $tag]); ?>
 
 <div class="tombooru-page page-tags subpage-edit">
   <h1>Editing Tag ID: <?= $tag['id']; ?></h1>
