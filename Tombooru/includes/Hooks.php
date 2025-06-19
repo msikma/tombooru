@@ -166,7 +166,7 @@ class Hooks {
       'active' => true,
     ];
     $links['views'][] = [
-      'text' => 'By year',
+      'text' => 'History',
       'href' => URL::getURL('/posts', ['type' => 'history']),
       'class' => ['icon-calendar', self::navClass([], ['posts'], [], $isHistoryBrowsePage)],
       'active' => true,
