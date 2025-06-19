@@ -37,7 +37,7 @@
           ?>
           <?php if ($year !== $previousYear): ?>
             <tr class="separator"><td colspan="999"></td></tr>
-            <tr class="section"><td></td><td colspan="999"><span class="title"><?= $year; ?></span></td></tr>
+            <tr class="section"><td></td><td colspan="999"><span class="icon-item" <?= Template::setIcon('calendar'); ?>></span><span class="title"><?= $year; ?></span></td></tr>
           <?php endif; ?>
           <tr class="post orientation-<?= htmlspecialchars($dimensions['orientation']); ?>">
             <td class="right"><span class="inner"><?= $post['id']; ?></span></td>
