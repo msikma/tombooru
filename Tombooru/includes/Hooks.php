@@ -216,6 +216,19 @@ class Hooks {
   /**
    * Navigation tabs for the tags browse page.
    */
+  private static function addArtistsBrowseNavigation($route, &$links) {
+    [$primary, $sub, $id] = self::getRouteSegments($route);
+    $links['views'][] = [
+      'text' => 'List all artists',
+      'href' => URL::getURL('/artists'),
+      'class' => ['icon-paintbrush', self::navClass([], ['artists'])],
+      'active' => true,
+    ];
+  }
+
+  /**
+   * Navigation tabs for the tags browse page.
+   */
   private static function addTagsBrowseNavigation($route, &$links) {
     $isArtists = $route['area'] === 'artists';
     [$primary, $sub, $id] = self::getRouteSegments($route);
@@ -327,12 +340,20 @@ class Hooks {
         self::addPostsBrowseNavigation($route, $links);
       }
     }
-    if ($area === 'tags' || $area === 'tag-categories' || $area === 'artists') {
+    if ($area === 'tags' || $area === 'tag-categories') {
       if ($type === 'single') {
         self::addTagsSingleNavigation($route, $links);
       }
       if ($type === 'browse') {
         self::addTagsBrowseNavigation($route, $links);
+      }
+    }
+    if ($area === 'artists') {
+      if ($type === 'single') {
+        self::addTagsSingleNavigation($route, $links);
+      }
+      if ($type === 'browse') {
+        self::addArtistsBrowseNavigation($route, $links);
       }
     }
     if ($primary === 'page' && $sub === 'Help') {

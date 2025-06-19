@@ -1799,6 +1799,12 @@ class DB {
         't.created_at',
       ])
       ->from('tombooru_tag', 't');
+    
+    foreach ($filters as $filter) {
+      if ($filter['type'] === 'category') {
+        $query->where(['t.category' => $filter['value']]);
+      }
+    }
 
     if (!empty($tagLike)) {
       $query->where(['name '.self::convertWildcardToLikeClause($db, $tagLike)]);
@@ -1927,7 +1933,7 @@ class DB {
   /**
    * Counts the total number of search results for a given tags search.
    */
-  public static function countTagsSearchResult($tagLike) {
+  public static function countTagsSearchResult($tagLike, $filters = []) {
     $db = self::instReplicaDB();
 
     // TODO: apply $searchQuery filters. see self::getTagsSearchResult()
@@ -1937,6 +1943,12 @@ class DB {
     
     if (!empty($tagLike)) {
       $query->where(['name '.self::convertWildcardToLikeClause($db, $tagLike)]);
+    }
+
+    foreach ($filters as $filter) {
+      if ($filter['type'] === 'category') {
+        $query->where(['t.category' => $filter['value']]);
+      }
     }
 
     $query

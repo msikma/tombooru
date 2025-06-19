@@ -103,7 +103,7 @@ class SearchQuery {
    * The type is always a plain string with no modifiers. The value can have various modifiers,
    * for example "score:>100" having the modifier ">".
    */
-  static private function parseSearchToken($segment) {
+  static public function parseSearchToken($segment) {
     if (empty($segment)) {
       return null;
     }
@@ -129,6 +129,7 @@ class SearchQuery {
    * All tokens will receive an "isInvalid" boolean, which, if true, means the token cannot be used.
    */
   static private function getValidatedToken($type, $value, $modifier) {
+    $regularTagTypes = ['score', 'favcount', 'upvotes', 'downvotes', 'date', 'rating'];
     $isInvalid = false;
 
     if ($type === 'tag') {
@@ -140,10 +141,14 @@ class SearchQuery {
       }
     }
 
-    if (in_array($type, ['score', 'favcount', 'upvotes', 'downvotes', 'date', 'rating'])) {
+    if (in_array($type, $regularTagTypes)) {
       if ($modifier === null) {
         $modifier = 'equal';
       }
+    }
+
+    if (!in_array($type, [...$regularTagTypes, 'tag', 'category'])) {
+      $isInvalid = true;
     }
 
     if (empty($value)) {

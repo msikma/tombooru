@@ -474,7 +474,7 @@ class DataReadManager {
     [$page, $perPage] = DataHelper::limitPaginationValues($page ?? 1, $perPage);
 
     $tags = DB::getTagsSearchResult($tagSearch, $filters, $order, $page, $perPage);
-    $totalTagCount = DB::countTagsSearchResult($tagSearch);
+    $totalTagCount = DB::countTagsSearchResult($tagSearch, $filters);
 
     $tags = self::collectPostTagsData($tags, false, $tagCategories);
     

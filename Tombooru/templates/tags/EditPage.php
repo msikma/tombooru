@@ -4,18 +4,19 @@
   // Whether this tag is a stub or not.
   $isNewTag = empty($tag);
 
-  $plural = intval($tag['count']) === 1 ? '' : 's';
+  $base = $request['route']['primary'];
+  $typeName = $base === 'tags' ? 'Tag' : 'Artist';
 ?>
 <?= Template::getComponent('TagsSidebarPanel', ['tagCategories' => $tagCategories, 'tag' => $tag]); ?>
 
 <div class="tombooru-page page-tags subpage-edit">
-  <h1>Editing Tag ID: <?= $tag['id']; ?></h1>
-  <p>You are editing information for the <strong><?= str_replace('_', ' ', $tag['name']); ?></strong> tag, used in <?= Template::formatNumber($tag['count']) ?> post<?= $plural; ?>.</p>
+  <h1>Editing <?= $typeName; ?> ID: <?= $tag['id']; ?></h1>
+  <p>You are editing information for the <strong><?= str_replace('_', ' ', $tag['name']); ?></strong> tag, used in <?= Template::formatNumber($tag['count']) ?> <?= Template::getPlural($tag['count'], ['post', 'posts']); ?>.</p>
   <?php
     $tagDescription = !empty($tag['description']) ? $tag['description']['content'] : '';
   ?>
   <div class="edit-form-wrapper">
-    <form class="edit-form" method="post" action="<?= URL::getURL("/tags/edit/{$tag['name']}?submit"); ?>">
+    <form class="edit-form" method="post" action="<?= URL::getURL("/{$base}/edit/{$tag['name']}?submit"); ?>">
 
       <?= Template::getComponent('Form/ErrorNotification', ['updateError' => $updateError]); ?>
       <?= Template::getComponent('Form/Header', ['title' => 'Basic information']); ?>

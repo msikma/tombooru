@@ -408,6 +408,8 @@ class SpecialTombooru extends SpecialPage {
    * Displays the tag view page.
    */
   private function runTagsEditPage() {
+    $base = $this->route['primary'];
+
     $tagName = $this->route['id'];
     $tag = DataReadManager::getTag($tagName, true);
     $tagCategories = DataReadManager::getTagCategories();
@@ -430,7 +432,7 @@ class SpecialTombooru extends SpecialPage {
     if ($updateSuccess && empty($updateError)) {
       $updatedTag = DataReadManager::getTagByID($tag['id']);
       $updatedTagName = $updatedTag['name'];
-      return $this->getOutput()->redirect(URL::getURL("/tags/view/{$updatedTagName}", ['result' => 'success']));
+      return $this->getOutput()->redirect(URL::getURL("/{$base}/view/{$updatedTagName}", ['result' => 'success']));
     }
     
     return self::outputTemplate('tags/EditPage', [
@@ -462,6 +464,44 @@ class SpecialTombooru extends SpecialPage {
   }
 
   /**
+   * Displays the artist view page.
+   */
+  private function runArtistsViewPage() {
+    $tag = DataReadManager::getTag($this->route['id'], true);
+    $tagCategories = DataReadManager::getTagCategories();
+    $tagExamples = DataReadManager::getTagExampleResults($tag);
+    $tagTextData = WikiManager::getRenderedEntityTextData($tag);
+
+    return self::outputTemplate(
+      'tags/ViewPage',
+      [
+        'tag' => $tag,
+        'tagCategories' => array_values($tagCategories),
+        'tagExamples' => $tagExamples,
+      ],
+      @$tagTextData['meta'],
+    );
+  }
+
+  /**
+   * Displays the artists browse page.
+   */
+  private function runArtistsBrowsePage() {
+    $perPage = self::$tagsBrowsePageSize;
+    $page = $this->request['page'];
+    $search = @$this->request['params']['search'] ?? '';
+    $query = SearchQuery::parseSearchString('category:artist');
+    $results = DataReadManager::getTagSearchResults($search, $query['filters'], [], $page, $perPage);
+    return self::outputTemplate(
+      'tags/BrowsePage',
+      [
+        'results' => $results,
+        'type' => 'artists',
+      ],
+    );
+  }
+
+  /**
    * Displays the tag browse page.
    */
   private function runTagsBrowsePage() {
@@ -474,6 +514,7 @@ class SpecialTombooru extends SpecialPage {
       'tags/BrowsePage',
       [
         'results' => $results,
+        'type' => 'tags',
         'tagCategories' => array_values($tagCategories),
       ],
     );
@@ -711,15 +752,21 @@ class SpecialTombooru extends SpecialPage {
           return $this->runSetsBrowsePage();
         // Tag pages:
         case '/tags/view':
+        case '/artists/view':
           return $this->runTagsViewPage();
         case '/tags/data':
+        case '/artists/data':
           return $this->runTagsDataPage();
         case '/tags/edit':
+        case '/artists/edit':
           return $this->runTagsEditPage();
         case '/tags':
           return $this->runTagsBrowsePage();
         case '/tag-categories':
           return $this->runTagCategoriesBrowsePage();
+        // Artist pages:
+        case '/artists':
+          return $this->runArtistsBrowsePage();
         // Static pages:
         case '/page/Admin':
           return $this->runAdminPage();

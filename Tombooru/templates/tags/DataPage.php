@@ -4,10 +4,13 @@
   $showRawData = false;
   $descriptionHistory = DataReadManager::getTagDescriptionHistory($tag['id']);
   $pageLinks = DataReadManager::getTagDataLinks($tag);
+
+  $base = $request['route']['primary'];
+  $typeName = $base === 'tags' ? 'Tag' : 'Artist';
 ?>
 
 <div class="tombooru-page page-tags">
-  <h1>Tag: <?= htmlentities(str_replace('_', ' ', $tag['name'])); ?></h1>
+  <h1><?= $typeName; ?>: <?= htmlentities(str_replace('_', ' ', $tag['name'])); ?></h1>
   <p>This tag was created on <time datetime="<?= $tag['createdAt'] ?>"><?= Template::formatTimestamp($tag['createdAt']); ?></time>.</p>
   <p>It's currently used by <span data-count="<?= $tag['count']; ?>"><?= Template::formatNumber($tag['count']); ?></span> <?= Template::getPlural($tag['count'], ['post', 'posts']); ?>.</p>
   <h2>Download</h2>

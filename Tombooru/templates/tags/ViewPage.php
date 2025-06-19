@@ -1,7 +1,12 @@
 <?= Template::getComponent('TagsSidebarPanel', ['tagCategories' => $tagCategories, 'tag' => $tag]); ?>
 
+<?php
+  $base = $request['route']['primary'];
+  $typeName = $base === 'tags' ? 'Tag' : 'Artist';
+?>
+
 <div class="tombooru-page page-tags">
-  <h1>Tag: <?= htmlentities(str_replace('_', ' ', $tag['name'])); ?></h1>
+  <h1><?= $typeName; ?>: <?= htmlentities(str_replace('_', ' ', $tag['name'])); ?></h1>
   <div class="entity-description <?= empty($tag['description']) ? 'no-description' : ''; ?>">
     <?= Template::getComponent(
       'EntityWikiText',
@@ -24,7 +29,12 @@
         'data' => $tag,
       ]
     ); ?>
-    <h2>Latest posts with this tag</h2>
+    <?php if ($base === 'tags'): ?>
+      <h2>Latest posts with this tag</h2>
+    <?php endif; ?>
+    <?php if ($base === 'artists'): ?>
+      <h2>Fanart by this artist</h2>
+    <?php endif; ?>
     <?= Template::getComponent('PostsResultSet', ['posts' => @$tagExamples['posts']]); ?>
   </div>
 </div>

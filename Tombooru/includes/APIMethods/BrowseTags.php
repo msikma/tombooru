@@ -21,14 +21,32 @@ class BrowseTags {
         'page' => 'page',
       ],
     ],
+    'artists' => [
+      'requiredParams' => [
+        'search' => 'search',
+        'sort' => 'sort',
+        'direction' => 'direction',
+        'page' => 'page',
+      ],
+    ],
   ];
+
+  /**
+   * Returns search suggestions for artists.
+   * 
+   * This functions just like get(), but with an additional filter that only selects artist tags.
+   */
+  public static function artists($search = '', $sort = 'id', $direction = 'desc', $page = 1) {
+    $query = SearchQuery::parseSearchString('category:artist');
+    return self::get($search, $sort, $direction, $page, $query['filters']);
+  }
 
   /**
    * Returns search suggestions for a given search query phrase.
    */
-  public static function get($search = '', $sort = 'id', $direction = 'desc', $page = 1) {
+  public static function get($search = '', $sort = 'id', $direction = 'desc', $page = 1, $filters = []) {
     $perPage = SpecialTombooru::$tagsBrowsePageSize;
-    $results = DataReadManager::getTagSearchResults($search, [], ['sort' => $sort, 'direction' => $direction], intval($page), $perPage);
+    $results = DataReadManager::getTagSearchResults($search, $filters, ['sort' => $sort, 'direction' => $direction], intval($page), $perPage);
     $tagRows = DataReadManager::collectTagResultRows($results['tags']);
     $paginationLinks = Template::getPaginationLinkData($results['pagination']);
     return [
