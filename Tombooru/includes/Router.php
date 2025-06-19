@@ -32,7 +32,7 @@ class Router {
    */
   private static function getRouteArea($primary, $sub) {
     if (in_array($primary, ['posts', 'tags', 'tag-categories', 'artists', 'sets'])) {
-      if (in_array($sub, ['view', 'edit', 'data', 'sets', 'report'])) {
+      if (in_array($sub, ['view', 'edit', 'data', 'sets', 'report', 'new'])) {
         return [$primary, 'single'];
       }
       if (empty($sub)) {
@@ -84,8 +84,13 @@ class Router {
       $route['type'] === 'browse' &&
       @$params['type'] === 'list'
     );
+
+    $isSetsListPage = (
+      $route['area'] === 'sets' &&
+      $route['type'] === 'browse'
+    );
     
-    return ($isTagsBrowsePage || $isPostsListPage);
+    return ($isTagsBrowsePage || $isPostsListPage || $isSetsListPage);
   }
 
   /**

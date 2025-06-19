@@ -82,6 +82,27 @@ class DB {
   }
 
   /**
+   * Inserts a new set stub.
+   */
+  public static function insertSetStub($name, $creatorUserID) {
+    if (is_null($name) || empty($creatorUserID)) {
+      throw new \Exception('Insufficient data to make set stub.');
+    }
+    $db = self::instPrimaryDB();
+
+    $db->newInsertQueryBuilder()
+      ->insertInto('tombooru_post_set')
+      ->row([
+        'name' => $name,
+        'creator_user_id' => $creatorUserID,
+      ])
+      ->caller(__METHOD__)
+      ->execute();
+
+    return $db->insertId();
+  }
+
+  /**
    * Inserts a new post stub for a given page ID.
    * 
    * This creates tombooru_post and tombooru_post_data rows.
@@ -143,6 +164,39 @@ class DB {
     }
 
     return (int)$post->id;
+  }
+
+  /**
+   * Returns a post IDs from a list of page IDs or post IDs.
+   * 
+   * This can also be used to confirm that posts exist.
+   * 
+   * Returned posts are always indexed by their page ID.
+   */
+  public static function getPostIDs($pageIDs, $postIDs = []) {
+    $db = self::instReplicaDB();
+
+    $query = $db->newSelectQueryBuilder()
+      ->select([
+        'p.id',
+        'p.page_id',
+      ])
+      ->from('tombooru_post', 'p');
+    if (!empty($pageIDs)) {
+      $query->where(['p.page_id' => $pageIDs]);
+    }
+    if (!empty($postIDs)) {
+      $query->where(['p.id' => $postIDs]);
+    }
+    $query->caller(__METHOD__);
+    
+    $res = $query->fetchResultSet();
+    $posts = [];
+    foreach ($res as $row) {
+      $posts[$row->page_id] = $row->id;
+    }
+
+    return $posts;
   }
 
   /**
@@ -273,6 +327,36 @@ class DB {
             self::recountTagCategory($newCategoryID);
           }
         }
+      }
+    );
+
+    return true;
+  }
+
+  /**
+   * Saves new data to a given set.
+   */
+  public static function updateSetData($setID, $data) {
+    $db = self::instPrimaryDB();
+    $scope = __METHOD__;
+
+    $db->doAtomicSection(
+      $scope,
+      function ($dbw) use ($setID, $data, $scope) {
+        $query = $dbw->newUpdateQueryBuilder()
+          ->update('tombooru_post_set')
+          ->set(['name' => !empty($data['name']) ? $data['name'] : ''])
+          ->set(['is_primary' => $data['is_primary']])
+          ->where(['id' => $setID])
+          ->caller($scope)
+          ->execute();
+        
+        if (!$dbw->affectedRows()) {
+          throw new \Exception('Could not update set.');
+        }
+
+        // Update post sources (insert and delete as needed).
+        self::updateSetPosts($setID, $data['posts'], $dbw, $scope);
       }
     );
 
@@ -705,6 +789,31 @@ class DB {
   }
 
   /**
+   * Saves a new set of set post IDs.
+   * 
+   * This replaces all the previous items for the given post_set_id value.
+   */
+  private static function updateSetPosts($postSetID, $data, $dbw, $scope = __METHOD__) {
+    // Delete all previous set posts.
+    $dbw->newDeleteQueryBuilder()
+      ->deleteFrom('tombooru_post_set_post')
+      ->where(['post_set_id' => $postSetID])
+      ->caller($scope)
+      ->execute();
+    
+    // Now insert new rows for whichever posts we want.
+    $rows = array_map(
+      fn($item) => ['post_set_id' => $postSetID, 'post_id' => $item['postID'], 'ordering' => intval($item['ordering'])],
+      array_values($data)
+    );
+    $dbw->newInsertQueryBuilder()
+      ->insertInto('tombooru_post_set_post')
+      ->rows($rows)
+      ->caller(__METHOD__)
+      ->execute();
+  }
+
+  /**
    * Saves a new set of source URLs for a given post.
    * 
    * Part of the self::updatePostData() transaction.
@@ -831,6 +940,22 @@ class DB {
   }
 
   /**
+   * Sets the description/notes page ID for a given set.
+   */
+  public static function updateSetTextPage($setID, $textPageID, $textType) {
+    $dbw = self::instPrimaryDB();
+    $col = $textType.'_page_id';
+    $dbw->newUpdateQueryBuilder()
+      ->update('tombooru_post_set')
+      ->set([
+        "$col" => $textPageID,
+      ])
+      ->where(['id' => $setID])
+      ->caller(__METHOD__)
+      ->execute();
+  }
+
+  /**
    * Sets the description/notes page ID for a given post.
    * 
    * This takes a post ID, not a page ID.
@@ -951,6 +1076,9 @@ class DB {
    * Returns a single post set.
    */
   public static function getPostSetByID($setID) {
+    if (empty($setID)) {
+      throw new \Exception('No set ID.');
+    }
     $db = self::instReplicaDB();
 
     $query = $db->newSelectQueryBuilder()
@@ -968,6 +1096,9 @@ class DB {
       ->caller(__METHOD__);
 
     $row = (array)$query->fetchRow();
+    if (empty($row['id'])) {
+      throw new \Exception('Set not found.');
+    }
     $firstPost = self::getPostSetFirstPostID($row['id']);
     $row['first_post_id'] = $firstPost['post_id'];
     $row['first_page_id'] = $firstPost['page_id'];
@@ -1019,6 +1150,7 @@ class DB {
       ->select([
         'psp.post_set_id',
         'group_concat(psp.post_id order by psp.ordering asc) as post_ids',
+        'group_concat(psp.ordering order by psp.ordering asc) as post_ordering',
       ])
       ->from('tombooru_post_set_post', 'psp')
       ->where(['psp.post_set_id' => $setIDs])
@@ -1033,9 +1165,45 @@ class DB {
       $sets[$row['post_set_id']] = [
         'postSetID' => intval($row['post_set_id']),
         'postIDs' => array_map('intval', explode(',', $row['post_ids'])),
+        'postOrdering' => array_map('intval', explode(',', $row['post_ordering'])),
       ];
     }
     
+    return $sets;
+  }
+
+  /**
+   * Lists post sets.
+   */
+  public static function getPostSetsSearchResult($page = 1, $perPage = 12) {
+    $db = self::instReplicaDB();
+
+    $offset = DataHelper::getQueryOffset($page, $perPage);
+
+    $query = $db->newSelectQueryBuilder()
+      ->select([
+        'ps.id',
+        'ps.name',
+        'ps.is_primary',
+        'ps.creator_user_id',
+        'ps.description_page_id',
+        'ps.notes_page_id',
+        'ps.created_at',
+        'group_concat(psp.post_id order by psp.ordering asc) as post_ids',
+      ])
+      ->from('tombooru_post_set', 'ps')
+      ->join('tombooru_post_set_post', 'psp', 'psp.post_set_id = ps.id')
+      ->groupBy('ps.id')
+      ->limit($perPage)
+      ->offset($offset)
+      ->orderBy('ps.id', SelectQueryBuilder::SORT_DESC)
+      ->caller(__METHOD__);
+
+    $res = $query->fetchResultSet();
+    $sets = [];
+    foreach ($res as $row) {
+      $sets[] = (array)$row;
+    }
     return $sets;
   }
 
@@ -1494,6 +1662,22 @@ class DB {
       $posts[] = (array)$row;
     }
     return [$posts, $meta];
+  }
+
+  /**
+   * Counts the number of post sets in the database.
+   */
+  public static function countPostSetsSearchResult() {
+    $db = self::instReplicaDB();
+
+    $res = $db->newSelectQueryBuilder()
+      ->select('count(distinct ps.id) as total')
+      ->from('tombooru_post_set', 'ps')
+      ->caller(__METHOD__);
+    
+    $row = $res->fetchRow();
+
+    return (int)$row->total;
   }
 
   /**

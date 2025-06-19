@@ -284,6 +284,37 @@ Tombooru.ComponentUserFavorite = class {
     this.el.classList.toggle('is-faved', value);
   }
 }
+Tombooru.ComponentSetEditPostIDs = class {
+  constructor(el) {
+    this.el = el;
+    this.rows = 0;
+    this.addNewRow = el.querySelector('a.add-another-link');
+    this.postInputField = el.querySelector('.group-input.post-id .post-id-input-field');
+    this.orderInputField = el.querySelector('.group-input.ordering .post-id-input-field');
+    this.countRows();
+    this.decorate();
+  }
+  countRows() {
+    this.rows = [...this.el.querySelectorAll('.group-input.post-id .post-id-input-field input')].length;
+  }
+  addRow() {
+    // Create a new input element
+    // Append it to the postInputField div
+    const postRowDiv = document.createElement('div');
+    postRowDiv.innerHTML = `<input name="post_id_${this.rows}" value="" type="text">`;
+    this.postInputField.appendChild(postRowDiv);
+    const orderRowDiv = document.createElement('div');
+    orderRowDiv.innerHTML = `<div class="form-affixed"><span class="prefix">Order:</span><input name="ordering_${this.rows}" value="" type="text"></div>`;
+    this.orderInputField.appendChild(orderRowDiv);
+    this.countRows();
+  }
+  decorate() {
+    this.addNewRow.addEventListener('click', ev => {
+      ev.preventDefault();
+      this.addRow();
+    });
+  }
+}
 Tombooru.ComponentPostEditSources = class {
   constructor(el) {
     this.el = el;
@@ -309,7 +340,6 @@ Tombooru.ComponentPostEditSources = class {
     this.countRows();
   }
   decorate() {
-    console.log(this.inputRows)
     this.addNewRow.addEventListener('click', ev => {
       ev.preventDefault();
       this.addRow();

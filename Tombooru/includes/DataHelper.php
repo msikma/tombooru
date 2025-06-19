@@ -27,6 +27,23 @@ class DataHelper {
   /**
    * Converts all sources to a list of URLs and their archived equivalents.
    */
+  public static function convertSetPostsToList($setPosts) {
+    if (empty($setPosts)) {
+      return [];
+    }
+    $setPostsList = [];
+    foreach ($setPosts as $post) {
+      $setPostsList[] = [
+        'postID' => $post['postID'],
+        'ordering' => @$post['ordering'],
+      ];
+    }
+    return $setPostsList;
+  }
+
+  /**
+   * Converts all sources to a list of URLs and their archived equivalents.
+   */
   public static function convertSourcesToList($sources) {
     if (empty($sources)) {
       return [];

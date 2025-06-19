@@ -5,7 +5,7 @@
   $dataErrors = $errors($key);
 
   // This field's currently stored data (ground truth).
-  $currentData = @$post[$key];
+  $currentData = @$item[$key];
   if (!empty($currentData)) {
     $link = URL::getWikiURL(@$currentData['prefixedTitle']);
     $isProtected = @$currentData['isProtected'];
@@ -24,7 +24,7 @@
         <textarea <?= @$isProtected ? 'disabled' : ''; ?> name="<?= htmlentities($name); ?>" rows="<?= intval($rows); ?>"><?= htmlentities($dataValue); ?></textarea>
         <div class="input-caption help">
           <?php if (@$isProtected): ?>
-            <p><strong>This post's description has been locked and can't be edited.</strong></p>
+            <p><strong>This item's description has been locked and can't be edited.</strong></p>
           <?php endif; ?>
           <?= @$inputHelp; ?>
           <?= Template::getComponent('Form/ErrorList', ['errors' => $dataErrors]); ?>

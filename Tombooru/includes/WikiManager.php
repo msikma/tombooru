@@ -592,6 +592,9 @@ class WikiManager {
       case 'tag':
         $pageEntityName = 'Tag';
         break;
+      case 'set':
+        $pageEntityName = 'Set';
+        break;
       default:
         throw new \Exception('invalid entity type');
     }

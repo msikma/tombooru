@@ -111,6 +111,27 @@ class DataReadManager {
   }
 
   /**
+   * Returns a list of post sets.
+   * 
+   * This does not include post metadata.
+   */
+  public static function getPostSets($page, $perPage) {
+    [$page, $perPage] = DataHelper::limitPaginationValues($page, $perPage);
+    $sets = DB::getPostSetsSearchResult($page, $perPage);
+    $totalCount = DB::countPostSetsSearchResult();
+    $setsData = self::collectPostSetData($sets, [], false, true);
+    $pagination = DataHelper::getResultPagination($page, $perPage, $totalCount);
+
+    return array_filter([
+      'sets' => $setsData,
+      'meta' => [
+        'totalCount' => $totalCount,
+      ],
+      'pagination' => $pagination,
+    ]);
+  }
+
+  /**
    * Returns a post set.
    * 
    * This includes the metadata for the post set as well as the data for all associated posts.
@@ -123,6 +144,27 @@ class DataReadManager {
     $setPosts = DB::getPostSetPostIDs([$set['id']]);
     $extendedSetData = self::collectSetExtendedData($set, $setPosts, true);
     return $extendedSetData;
+  }
+
+  /**
+   * Returns the post set data for the current request.
+   */
+  public static function getRequestPostSet($setID) {
+    $request = Request::getRequestData();
+    $params = $request['params'];
+    $post = null;
+
+    if (!empty($params['post-id'])) {
+      $post = self::getPost($params['post-id'], true);
+      return [[], [$post]];
+    }
+    else if (!empty($setID)) {
+      $set = self::getPostSet($setID);
+      return [$set, $set['posts']];
+    }
+    else {
+      return [[], []];
+    }
   }
 
   /**
@@ -180,7 +222,7 @@ class DataReadManager {
    */
   private static function getPostBrowseSearchResults($query, $page, $perPage, $orderByPublicationDate) {
     [$posts, $meta] = DB::getPostsSearchResult($query, $page, $perPage, false, $orderByPublicationDate);
-    $totalPostCount = DB::countPostsSearchResult($query, $meta);
+    $totalCount = DB::countPostsSearchResult($query, $meta);
     [$postData, $postIDs] = self::collectSearchResultPostData($posts, $meta);
 
     return array_filter([
@@ -189,7 +231,7 @@ class DataReadManager {
       'meta' => [
         ...$meta,
         'postIDs' => $postIDs,
-        'totalPostCount' => $totalPostCount,
+        'totalCount' => $totalCount,
       ],
     ]);
   }
@@ -221,7 +263,7 @@ class DataReadManager {
     }
 
     [$posts, $meta] = DB::getPostsSearchResult($query, $page, $perPage, true, true);
-    $totalPostCount = DB::countPostsSearchResult($query, $meta);
+    $totalCount = DB::countPostsSearchResult($query, $meta);
 
     $postTagIDs = self::collectSearchResultTagIDs($posts);
     $postTags = DB::getTagsByIDs($postTagIDs);
@@ -234,7 +276,7 @@ class DataReadManager {
       'meta' => [
         ...$meta,
         'postIDs' => $postIDs,
-        'totalPostCount' => $totalPostCount,
+        'totalCount' => $totalCount,
       ],
     ]);
 
@@ -274,7 +316,7 @@ class DataReadManager {
     }
 
     // Get a basic pagination object.
-    $pagination = DataHelper::getResultPagination($page, $perPage, $result['meta']['totalPostCount']);
+    $pagination = DataHelper::getResultPagination($page, $perPage, $result['meta']['totalCount']);
 
     // Also, get a list of what tag categories we have searched tags for.
     // This is mainly for the "artists" tags, which are hidden by default when browsing;
@@ -611,9 +653,31 @@ class DataReadManager {
   }
 
   /**
+   * Takes a set object from the database and returns basic data.
+   * 
+   * This is used for the sets browse page.
+   */
+  private static function collectSetBasicData($set) {
+    $setPosts = array_map('intval', explode(',', $set['post_ids']));
+    $setData = [
+      'id' => intval($set['id']),
+      'name' => $set['name'],
+      'posts' => $setPosts,
+      'creatorUserID' => !empty($set['creator_user_id']) ? intval($set['creator_user_id']) : null,
+      'descriptionPageID' => !empty($set['description_page_id']) ? intval($set['description_page_id']) : null,
+      'notesPageID' => !empty($set['notes_page_id']) ? intval($set['notes_page_id']) : null,
+      'data' => [
+        'isPrimary' => $set['is_primary'] === '1',
+      ],
+      'createdAt' => Template::sqlTimestampToISO($set['created_at']),
+    ];
+    return $setData;
+  }
+
+  /**
    * Takes a set data object from the database and processes it.
    */
-  private static function collectSetExtendedData($set, $setPostIDs, $includeSetPosts = false) {
+  private static function collectSetExtendedData($set, $setPostData, $includeSetPosts = false) {
     // Fetch basic metadata about the set. If we're not including set posts, don't include this data either.
     if ($includeSetPosts) {
       $creatorUserData = WikiManager::getUserBasicData($set['creator_user_id']);
@@ -622,17 +686,20 @@ class DataReadManager {
     }
 
     // Drill down to this set's post IDs.
-    $setPostIDs = @$setPostIDs[$set['id']]['postIDs'] ?? [];
+    $setPostIDs = @$setPostData[$set['id']]['postIDs'] ?? [];
+    $setPostOrdering = @$setPostData[$set['id']]['postOrdering'] ?? [];
+    $setPostOrderingMap = array_combine($setPostIDs, $setPostOrdering);
     $setPosts = [];
     
     if (!empty($setPostIDs)) {
       foreach ($setPostIDs as $postID) {
         if ($includeSetPosts) {
           $postData = self::getPostByID($postID, false);
+          $postData['ordering'] = $setPostOrderingMap[$postID];
           $setPosts[$postID] = $postData;
         }
         else {
-          $setPosts[] = intval($postID);
+          $setPosts[] = [intval($postID), intval($setPostOrderingMap[$postID])];
         }
       }
     }
@@ -799,10 +866,15 @@ class DataReadManager {
   /**
    * Returns post set data.
    */
-  private static function collectPostSetData($sets, $setPostIDs, $includeSetPosts = true) {
+  private static function collectPostSetData($sets, $setPostIDs, $includeSetPosts = true, $basicData = false) {
     $postSets = [];
     foreach ($sets as $set) {
-      $postSets[] = self::collectSetExtendedData($set, $setPostIDs, $includeSetPosts);
+      if ($basicData) {
+        $postSets[] = self::collectSetBasicData($set);
+      }
+      else {
+        $postSets[] = self::collectSetExtendedData($set, $setPostIDs, $includeSetPosts);
+      }
     }
     return $postSets;
   }

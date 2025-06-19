@@ -24,6 +24,22 @@ class DataWriteManager {
   }
 
   /**
+   * Ensures that a set exists and returns its ID.
+   */
+  private static function ensureSet($setID, $setUpdateData) {
+    try {
+      $set = DB::getPostSetByID($setID);
+      $setID = intval($set['id']);
+    }
+    catch (\Throwable $e) {
+      // Create a new set.
+      $user = WikiManager::getUserBasicData();
+      $setID = DB::insertSetStub($setUpdateData['name'], $user['id']);
+    }
+    return $setID;
+  }
+
+  /**
    * Checks if any of the post update items have errors.
    */
   public static function hasAnyErrors($postUpdateData) {
@@ -33,6 +49,44 @@ class DataWriteManager {
       }
     }
     return false;
+  }
+
+  /**
+   * Performs a write operation on a single set.
+   */
+  public static function updateSetData($setData, $setUpdateData) {
+    if (self::hasAnyErrors($setUpdateData)) {
+      throw new \Exception('Some submitted data has errors.');
+    }
+    $setOriginalData = self::collectSetOriginalData($setData);
+    $setOriginalData = DataHelper::removeUpdateErrorStubs($setOriginalData);
+    $setUpdateData = DataHelper::removeUpdateErrorStubs($setUpdateData);
+
+    $setPostIDs = array_keys($setUpdateData['posts']);
+    if (count($setPostIDs) < 1) {
+      throw new \Exception('No posts were selected for the set.');
+    }
+    $setPageIDs = array_keys(DB::getPostIDs(null, [reset($setPostIDs)]));
+    $firstPageID = reset($setPageIDs);
+    $isPrimarySet = $setUpdateData['is_primary'] === true;
+
+    $setID = self::ensureSet(@$setData['id'], $setUpdateData);
+    DB::updateSetData($setID, $setUpdateData);
+
+    // As with posts, store the description and notes.
+    foreach (['description', 'notes'] as $subpage) {
+      $hasExistingPage = !empty($setData[$subpage]);
+      if (!empty($setUpdateData[$subpage]) || ($hasExistingPage && $setUpdateData[$subpage] === '')) {
+        $id = WikiManager::updateEntityPageData('set', $setID, $subpage, $setUpdateData[$subpage]);
+        DB::updateSetTextPage($setID, $id, $subpage);
+      }
+    }
+    
+    return [
+      'id' => $setID,
+      'firstPageID' => $firstPageID,
+      'isPrimarySet' => $isPrimarySet,
+    ];
   }
 
   /**
@@ -202,6 +256,9 @@ class DataWriteManager {
    * We still pass some data through the sanitizer funactions since they also transform the data.
    */
   public static function collectPostOriginalData($post) {
+    if (empty($post)) {
+      return self::collectPostStubData();
+    }
     $data = [];
     $data['filename'] = @$post['file']['name'];
     $data['description'] = @$post['description']['content'];
@@ -219,7 +276,7 @@ class DataWriteManager {
   /**
    * As self::collectPostOriginalData(), but generates an empty array.
    */
-  public static function collectPostStubData() {
+  private static function collectPostStubData() {
     $data = [];
     $data['filename'] = '';
     $data['description'] = '';
@@ -232,6 +289,59 @@ class DataWriteManager {
     $data['original_publication_date'] = '';
     
     return DataHelper::addUpdateErrorStubs($data);
+  }
+
+  /**
+   * As self::collectPostOriginalData(), but generates an empty array.
+   */
+  private static function collectSetStubData() {
+    $data = [];
+    $data['name'] = '';
+    $data['description'] = '';
+    $data['notes'] = '';
+    $data['is_primary'] = false;
+    $data['posts'] = [];
+    
+    return DataHelper::addUpdateErrorStubs($data);
+  }
+
+  /**
+   * Converts the original set data into an update array.
+   */
+  public static function collectSetOriginalData($set) {
+    if (empty($set)) {
+      return self::collectSetStubData();
+    }
+    $data = [];
+    $data['name'] = @$set['name'];
+    $data['description'] = @$set['description']['content'];
+    $data['notes'] = @$set['notes']['content'];
+    $data['is_primary'] = @$set['data']['isPrimary'];
+    $data['posts'] = self::sanitizeSetPostsList(self::collectSetPosts(@$set['posts']));
+    
+    return DataHelper::addUpdateErrorStubs($data);
+  }
+
+  /**
+   * Returns the set edit data the user submitted.
+   */
+  public static function collectSetUpdateData() {
+    $request = Request::getRequestData();
+    $params = $request['params'];
+
+    // Check if the user actually submitted the form.
+    if (empty($params['form-type'])) {
+      return [];
+    }
+
+    $data = [];
+    $data['description'] = self::sanitizeDescription(trim($params['description']));
+    $data['notes'] = self::sanitizeDescription(trim($params['notes']));
+    $data['posts'] = self::sanitizeSetPostsList(self::collectSetPostsParams($params));
+    $data['is_primary'] = self::sanitizeBoolean(@$params['is_primary'] === '1');
+    $data['name'] = self::sanitizeSetName(@$params['name'], $data['is_primary']);
+    
+    return $data;
   }
 
   /**
@@ -311,6 +421,46 @@ class DataWriteManager {
       ];
     }
     return $tagSets;
+  }
+
+  /**
+   * Returns set post IDs from a set's posts variable.
+   */
+  private static function collectSetPosts($posts) {
+    $setPosts = [];
+    foreach ($posts as $post) {
+      $setPosts[] = [
+        'postID' => intval($post['id']),
+        'ordering' => intval($post['ordering']),
+      ];
+    }
+    return $setPosts;
+  }
+
+  /**
+   * Collects set post data from the POST parameters.
+   */
+  private static function collectSetPostsParams($params) {
+    $posts = [];
+    foreach ($params as $key => $value) {
+      if (!str_starts_with($key, 'post_id_') && !str_starts_with($key, 'ordering_')) {
+        continue;
+      }
+      $isOrdering = str_starts_with($key, 'ordering_');
+      if (!$isOrdering && empty($value)) {
+        continue;
+      }
+      if (preg_match('/^(post_id|ordering)?_(\d+)$/', $key, $matches)) {
+        $index = $matches[2];
+        $posts[$index][$isOrdering ? 'ordering' : 'postID'] = trim($value);
+      }
+    }
+    foreach ($posts as $key => $value) {
+      if (!isset($value['postID'])) {
+        unset($posts[$key]);
+      }
+    };
+    return array_column($posts, null, 'postID');
   }
 
   /**
@@ -498,6 +648,50 @@ class DataWriteManager {
   }
 
   /**
+   * Sanitizes the set post IDs.
+   * 
+   * This verifies that each ID resolves to a valid post.
+   */
+  private static function sanitizeSetPostsList($postList) {
+    $value = [];
+    $errors = [];
+
+    $postList = array_column($postList, null, 'postID');
+    $postIDs = array_column($postList, 'postID');
+    $existingPostIDs = array_flip(DB::getPostIDs([], $postIDs));
+
+    foreach ($postList as $postID => $post) {
+      foreach (['postID', 'ordering'] as $item) {
+        $itemValue = @$post[$item];
+        try {
+          if ($item === 'postID') {
+            $correspondingPostID = @$existingPostIDs[$postID];
+            if (empty($correspondingPostID)) {
+              throw new \Exception('Post not found.');
+            }
+            $value[$postID][$item] = $itemValue;
+          }
+          if ($item === 'ordering') {
+            if (!empty($itemValue) && !is_numeric($itemValue)) {
+              throw new \Exception('Value must be a number or empty');
+            }
+            $value[$postID][$item] = $itemValue;
+          }
+        }
+        catch (\Throwable $e) {
+          $value[$postID][$item] = $itemValue;
+          $errors[$postID][$item] = $e->getMessage().' - '.trim($itemValue);
+        }
+      }
+    }
+
+    return [
+      'value' => $value,
+      'errors' => $errors,
+    ];
+  }
+
+  /**
    * Sanitizes the post sources.
    * 
    * This verifies that each URL is actually valid.
@@ -547,10 +741,37 @@ class DataWriteManager {
   }
 
   /**
+   * Sanitizes a set name.
+   */
+  private static function sanitizeSetName($setName, $isPrimary) {
+    // Default to a primary set name (must not be an empty string).
+    $isPrimary = is_null($isPrimary) ? true : boolval($isPrimary);
+
+    $value = '';
+    $errors = [];
+
+    try {
+      if (empty($setName) && !$isPrimary) {
+        throw new \Exception('Set name cannot be empty.');
+      }
+      $value = trim($setName);
+    }
+    catch (\Throwable $e) {
+      $value = $setName;
+      $errors[] = $e->getMessage();
+    }
+
+    return [
+      'value' => $value,
+      'errors' => $errors,
+    ];
+  }
+
+  /**
    * Sanitizes a tag name.
    */
   private static function sanitizeTagName($tagName) {
-    $value = [];
+    $value = '';
     $errors = [];
 
     $value = str_replace(' ', '_', trim($tagName));

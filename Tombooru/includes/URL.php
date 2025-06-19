@@ -17,15 +17,31 @@ class URL {
    * This function will automatically include query parameters that need to be preserved,
    * such as the ?search= value.
    */
-  public static function getURL($path, $query = []) {
+  public static function getURL($path, $query = [], $persistParams = []) {
     if (self::$preferPrettyURLs) {
       $url = self::getPrettyURL($path, $query);
     }
     else {
       $url = self::getRegularURL($path, $query);
     }
-    $query = http_build_query($query);
+    $params = self::getPersistentParams($persistParams);
+    $query = http_build_query([...$params, ...$query]);
     return $url.(!empty($query) ? '?'.$query : '');
+  }
+
+  /**
+   * Returns all URL parameters that need to be persisted across links.
+   * 
+   * If the passed parameters value is null, nothing is returned and the parameters will be cleared.
+   */
+  public static function getPersistentParams($persistParams = []) {
+    if (is_null($persistParams)) {
+      return [];
+    }
+    $request = Request::getRequestData();
+    $params = $request['params'];
+    $persistent = ['search', ...$persistParams];
+    return array_intersect_key($params, array_flip($persistent));
   }
 
   /**

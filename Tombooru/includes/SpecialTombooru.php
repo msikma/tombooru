@@ -12,6 +12,7 @@ class SpecialTombooru extends SpecialPage {
 
   public static int $postsBrowsePageSize = 16;
   public static int $postsListPageSize = 48;
+  public static int $setsListPageSize = 48;
   public static int $tagsBrowsePageSize = 50;
 
   public function __construct() {
@@ -115,13 +116,37 @@ class SpecialTombooru extends SpecialPage {
   }
 
   /**
+   * Performs any necessary forced redirects.
+   * 
+   * For example, if the user requests a page number that is known to be out of bounds,
+   * the user is redirected to the last valid page number.
+   * 
+   * Returns true or false for whether a redirect occurred or not.
+   */
+  private function ensureForcedRedirect($data) {
+    $browseURL = @$data['browseURL'];
+    $pagination = @$data['results']['pagination'];
+
+    if (!empty($browseURL) && $pagination['current'] > $pagination['totalPages']) {
+      $this->getOutput()->redirect(URL::getURL($browseURL, ['page' => $pagination['totalPages']]));
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Outputs a template.
    */
   private function outputTemplate($template, $data, $pageMeta = []) {
-    $pagination = @$data['results']['pagination'];
+    $results = @$data['results'];
+    $pagination = @$results['pagination'];
 
     $this->setBodyClasses($pageMeta);
     $this->setBodyPaginationClasses($pagination);
+    if ($this->ensureForcedRedirect($data)) {
+      return;
+    }
 
     return TemplateManager::outputTemplate($template, $data);
   }
@@ -233,6 +258,70 @@ class SpecialTombooru extends SpecialPage {
   }
 
   /**
+   * Displays all post sets.
+   */
+  private function runSetsBrowsePage() {
+    $perPage = self::$setsListPageSize;
+    $page = $this->request['page'];
+    $results = DataReadManager::getPostSets($page, $perPage);
+
+    return self::outputTemplate(
+      'sets/BrowsePage',
+      [
+        'results' => $results,
+        'browseURL' => '/sets',
+      ],
+    );
+  }
+
+  /**
+   * Displays the post set edit (and new) page.
+   */
+  private function runSetsEditPage() {
+    $setID = $this->route['id'];
+
+    // On the set edit page, we'll show post metadata for the posts associated with this set.
+    // If we're making a new set, we'll show the single post we came from.
+    // We'll either grab the ?post-id value from the URL or grab post data from the existing set.
+    [$set, $posts] = DataReadManager::getRequestPostSet($setID);
+    
+    $originalData = DataWriteManager::collectSetOriginalData($set);
+    $updateData = [];
+    $updateError = null;
+    $updateSuccess = false;
+
+    if ($this->verifyFormPost('set-edit')) {
+      try {
+        $updateData = DataWriteManager::collectSetUpdateData();
+        $updateSuccess = DataWriteManager::updateSetData($set, $updateData);
+      }
+      catch (\Throwable $e) {
+        $updateError = $e->getMessage();
+      }
+    }
+
+    if (!empty($updateSuccess) && empty($updateError)) {
+      if ($updateSuccess['isPrimarySet']) {
+        // If we created a primary set, redirect to the set's first post.
+        return $this->getOutput()->redirect(URL::getURL("/posts/view/{$updateSuccess['firstPageID']}", ['result' => 'success']));
+      }
+      else {
+        // Otherwise, redirect to the set's detail page.
+        return $this->getOutput()->redirect(URL::getURL("/sets/view/{$updateSuccess['id']}", ['result' => 'success']));
+      }
+    }
+    
+    return self::outputTemplate('sets/EditPage', [
+      'set' => $set,
+      'post' => reset($posts),
+      'originalData' => $originalData,
+      'updateData' => $updateData,
+      'updateError' => $updateError,
+      'updateSuccess' => $updateSuccess,
+    ]);
+  }
+
+  /**
    * Displays the post data page.
    */
   private function runSetsViewPage() {
@@ -283,6 +372,7 @@ class SpecialTombooru extends SpecialPage {
         'browsePageType' => $type,
         'search' => $query,
         'results' => $results,
+        'browseURL' => '/posts',
       ],
     );
   }
@@ -412,7 +502,7 @@ class SpecialTombooru extends SpecialPage {
     $pageID = WikiManager::getPageID('System/Upload');
     $pageData = WikiManager::getPageData($pageID);
 
-    $originalData = DataWriteManager::collectPostStubData();
+    $originalData = DataWriteManager::collectPostOriginalData(null);
     $updateData = [];
     $updateError = null;
     $updateSuccess = false;
@@ -614,6 +704,11 @@ class SpecialTombooru extends SpecialPage {
         // Post sets pages:
         case '/sets/view':
           return $this->runSetsViewPage();
+        case '/sets/edit':
+        case '/sets/new':
+          return $this->runSetsEditPage();
+        case '/sets':
+          return $this->runSetsBrowsePage();
         // Tag pages:
         case '/tags/view':
           return $this->runTagsViewPage();

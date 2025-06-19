@@ -1,3 +1,6 @@
+<?php
+?>
+
 <?= Template::getComponent('MediaSidebarPanel', ['post' => $post]); ?>
 
 <div class="tombooru-page page-detail subpage-view">
@@ -17,4 +20,7 @@
       <?php endforeach; ?>
     </ul>
   <?php endif; ?>
+  <div class="actions">
+    <a href="<?= URL::getURL("/sets/new/", ['post-id' => $post['pageID']]); ?>" class="item active blue">Create new set</a>
+  </div>
 </div>

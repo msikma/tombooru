@@ -15,7 +15,6 @@ class Hooks {
     $matchesRoute = false;
     $match = [];
 
-
     if (!empty($subChecks)) {
       $match['matchesSub'] = in_array($route['sub'], $subChecks);
     }
@@ -41,6 +40,27 @@ class Hooks {
   /**
    * Navigation tabs for a post detail page.
    */
+  private static function addSetsSingleNavigation($route, &$links, $params) {
+    $user = WikiManager::getUserData();
+    [$primary, $sub, $id] = self::getRouteSegments($route);
+
+    $links['views'][] = [
+      'text' => 'View',
+      'href' => URL::getURL("/{$primary}/view/{$id}", [], ['first-post']),
+      'class' => ['icon-image', self::navClass(['view', 'sets'])],
+      'active' => true,
+    ];
+    $links['views'][] = [
+      'text' => 'Edit',
+      'href' => URL::getURL("/{$primary}/edit/{$id}"),
+      'class' => ['icon-file-code', self::navClass(['edit'])],
+      'active' => true,
+    ];
+  }
+
+  /**
+   * Navigation tabs for a post detail page.
+   */
   private static function addPostsSingleNavigation($route, &$links, $params) {
     $user = WikiManager::getUserData();
     [$primary, $sub, $id] = self::getRouteSegments($route);
@@ -49,7 +69,7 @@ class Hooks {
     // we're actually displaying the post detail page subnav for the first post in the set.
     if ($primary === 'sets') {
       $primary = 'posts';
-      $firstPostPageID = @$params['first-post'];
+      $firstPostPageID = @$params['first-post'] ?? @$params['post-id'];
       $id = $firstPostPageID;
       $sub = 'sets';
     }
@@ -72,18 +92,6 @@ class Hooks {
       'class' => ['icon-package', self::navClass(['data'])],
       'active' => true,
     ];
-    // try {
-    //   $wikiURL = WikiManager::getPageWikiURL($id);
-    //   $links['views'][] = [
-    //     'text' => 'View on wiki',
-    //     'href' => $wikiURL,
-    //     'id' => 'ca-tombooru_viewonwiki',
-    //     'class' => '',
-    //     'active' => true,
-    //   ];
-    // }
-    // catch (\Throwable $e) {
-    // }
   }
 
   /**
@@ -169,6 +177,12 @@ class Hooks {
       'class' => ['icon-list-ordered', self::navClass([], ['posts'], [], $isListBrowsePage)],
       'active' => true,
     ];
+    $links['views'][] = [
+      'text' => 'Sets',
+      'href' => URL::getURL('/sets'),
+      'class' => ['icon-archive', self::navClass([''], ['sets'], [])],
+      'active' => true,
+    ];
 
     // Result filters.
     if ($primary !== 'start') {
@@ -231,31 +245,31 @@ class Hooks {
     $links['namespaces'] = [];
     $links['namespaces']['posts'] = [
       'text' => 'Posts',
-      'href' => URL::getURL("/posts"),
+      'href' => URL::getURL("/posts", [], null),
       'active' => true,
       'class' => ['icon-apps', self::navClass([], [], ['posts', 'sets'])],
     ];
     $links['namespaces']['tags'] = [
       'text' => 'Tags',
-      'href' => URL::getURL("/tags"),
+      'href' => URL::getURL("/tags", [], null),
       'active' => true,
       'class' => ['icon-tag', self::navClass([], [], ['tags', 'tag-categories'])],
     ];
     $links['namespaces']['artists'] = [
       'text' => 'Artists',
-      'href' => URL::getURL("/artists"),
+      'href' => URL::getURL("/artists", [], null),
       'active' => true,
       'class' => ['icon-paintbrush', self::navClass([], [], ['artists'])],
     ];
     $links['namespaces']['upload'] = [
       'text' => 'Upload',
-      'href' => URL::getURL("/page/Upload"),
+      'href' => URL::getURL("/page/Upload", [], null),
       'active' => true,
       'class' => ['icon-upload', self::navClass(['Upload'], ['page'])],
     ];
     $links['namespaces']['help'] = [
       'text' => 'Help',
-      'href' => URL::getURL("/page/Help"),
+      'href' => URL::getURL("/page/Help", [], null),
       'active' => true,
       'class' => ['divider', self::navClass(['Help'], ['page'])],
     ];
@@ -263,7 +277,7 @@ class Hooks {
     if ($user['isAdmin']) {
       $links['namespaces']['admin'] = [
         'text' => 'Admin',
-        'href' => URL::getURL("/page/Admin"),
+        'href' => URL::getURL("/page/Admin", [], null),
         'active' => true,
         'class' => self::navClass(['Admin'], [], ['static']),
       ];
@@ -307,7 +321,10 @@ class Hooks {
     }
     if ($area === 'sets') {
       if ($type === 'single') {
-        self::addPostsSingleNavigation($route, $links, $request['params']);
+        self::addSetsSingleNavigation($route, $links, $request['params']);
+      }
+      if ($type === 'browse') {
+        self::addPostsBrowseNavigation($route, $links);
       }
     }
     if ($area === 'tags' || $area === 'tag-categories' || $area === 'artists') {
