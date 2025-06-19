@@ -10,7 +10,7 @@ class SpecialTombooru extends SpecialPage {
   private array $route;
   private array $params;
 
-  public static int $postsBrowsePageSize = 16;
+  public static int $postsBrowsePageSize = 20;
   public static int $postsListPageSize = 48;
   public static int $setsListPageSize = 48;
   public static int $tagsBrowsePageSize = 50;
