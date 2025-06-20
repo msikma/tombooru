@@ -9,8 +9,8 @@
           <th data-type="number" class="id minimal" data-slug="id" data-direction="asc" data-active="true">#<span class="sorter"></span></th>
           <th data-slug="name" data-direction="asc" data-active="false">Name<span class="sorter"></span></th>
           <th data-slug="category" data-direction="asc" data-active="false">Category<span class="sorter"></span></th>
-          <th data-slug="count" data-direction="asc" data-active="false">Count<span class="sorter"></span></th>
-          <th data-slug="created_at" data-direction="asc" data-active="false" data-is-sortable="false">Created at<span class="sorter"></span></th>
+          <th data-slug="count" data-type="number" data-direction="asc" data-active="false">Count<span class="sorter"></span></th>
+          <th data-slug="created_at" data-type="timestamp" data-direction="asc" data-active="false" data-is-sortable="false">Created at<span class="sorter"></span></th>
         </tr>
         <tr class="separator"><td colspan="999"></td></tr>
         <?php if (count($tags) === 0): ?>
