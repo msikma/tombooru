@@ -82,6 +82,13 @@ class Template {
   }
 
   /**
+   * Capitalizes the first letter of a string.
+   */
+  public static function capitalizeFirst($str) {
+    return mb_strtoupper(mb_substr($str, 0, 1)).mb_substr($str, 1, null);
+  }
+
+  /**
    * Returns a favicon for a given URL.
    */
   public static function getFaviconURL($url) {

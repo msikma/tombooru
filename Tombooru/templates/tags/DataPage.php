@@ -2,7 +2,7 @@
 
 <?php
   $showRawData = false;
-  $descriptionHistory = DataReadManager::getTagDescriptionHistory($tag['id']);
+  $entityHistory = DataReadManager::getEntityUpdateHistory('tag', $tag['id']);
   $pageLinks = DataReadManager::getTagDataLinks($tag);
 
   $base = $request['route']['primary'];
@@ -18,7 +18,7 @@
     <li><a href="?download_data">JSON data file</a></li>
   </ul>
   <h2>History</h2>
-  <?= Template::getComponent('PageHistoryList', ['history' => $descriptionHistory, 'fallback' => 'This tag has no edit history yet.']); ?>
+  <?= Template::getComponent('PageHistoryList', ['history' => $entityHistory, 'fallback' => 'This tag has no edit history yet.']); ?>
   <h2>Links</h2>
   <ul>
     <?php foreach ($pageLinks as $link): ?>

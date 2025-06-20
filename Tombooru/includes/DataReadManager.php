@@ -73,19 +73,22 @@ class DataReadManager {
   }
 
   /**
-   * Returns the metadata history for a given post.
-   * 
-   * Takes the post ID, not the page ID.
+   * Returns update history for a given entity.
    */
-  public static function getPostMetadataHistory($postID) {
-    return self::getEntityDataHistory('post', 'metadata', $postID);
-  }
-
-  /**
-   * Returns the metadata history for a given tag.
-   */
-  public static function getTagDescriptionHistory($tagID) {
-    return self::getEntityDataHistory('tag', 'description', $tagID);
+  public static function getEntityUpdateHistory($entityType, $entityID) {
+    if (!in_array($entityType, ['post', 'tag'])) {
+      throw new \Exception("Unsupported entity type: {$entityType}");
+    }
+    $entityHistory = [];
+    $pageTypes = ['metadata', 'description', 'notes'];
+    foreach ($pageTypes as $pageType) {
+      $history = self::getEntityDataHistory($entityType, $pageType, $entityID);
+      if (!empty($history)) {
+        $entityHistory = array_merge($entityHistory, $history);
+      }
+    }
+    usort($entityHistory, fn($a, $b) => strtotime($b['timestamp']) <=> strtotime($a['timestamp']));
+    return $entityHistory;
   }
 
   /**
@@ -93,9 +96,9 @@ class DataReadManager {
    * 
    * If a post's metadata history is requested, this takes the post ID.
    */
-  public static function getEntityDataHistory($entity, $content, $id) {
-    $basename = WikiManager::makeEntityPageBaseName($entity, $content);
-    $history = WikiManager::getPageHistory($basename.'/'.$id, WikiManager::$pageNamespaceTombooru);
+  public static function getEntityDataHistory($entity, $page, $id) {
+    $basename = WikiManager::makeEntityPageBaseName($entity, $page);
+    $history = WikiManager::getPageHistory($basename.'/'.$id, WikiManager::$pageNamespaceTombooru, $entity, $page);
     return $history;
   }
 

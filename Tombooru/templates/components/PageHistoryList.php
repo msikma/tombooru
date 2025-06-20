@@ -10,6 +10,7 @@
           <a href="<?= htmlentities($rev['url']); ?>"><time datetime="<?= htmlentities($rev['timestamp']); ?>"><?= Template::formatTimestamp($rev['timestamp']); ?></time></a>
           (<a href="<?= htmlentities($rev['urlDiff']); ?>">diff</a>)
         </td>
+        <td><?= htmlentities(Template::capitalizeFirst($rev['pageType'])); ?></td>
         <td>
           <a href="<?= htmlentities($url); ?>"><?= htmlentities($rev['username']); ?></a>
         </td>

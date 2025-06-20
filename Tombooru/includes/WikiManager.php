@@ -127,7 +127,7 @@ class WikiManager {
     return $page;
   }
 
-  public static function getPageHistory($pageName, $pageNamespace, $limit = 10) {
+  public static function getPageHistory($pageName, $pageNamespace, $entityType, $pageType, $limit = 10) {
     $title = Title::newFromText($pageName, $pageNamespace);
     if (!$title || !$title->exists()) {
       return null;
@@ -161,6 +161,8 @@ class WikiManager {
         'size' => $size,
         'diff' => null,
         'urlDiff' => $revDiffURL,
+        'entityType' => $entityType,
+        'pageType' => $pageType,
         'timestamp' => $revTimestamp,
         'comment' => $revReason,
         'username' => $user->getName(),
@@ -581,7 +583,7 @@ class WikiManager {
    * This returns e.g. "Post_description" or "Tag_description".
    * Used by self::updateEntityPageData() to determine where to save a user's input.
    */
-  public static function makeEntityPageBaseName($entityType, $contentType) {
+  public static function makeEntityPageBaseName($entityType, $pageType) {
     $pageEntityName = '';
     $pageDataName = '';
 
@@ -598,7 +600,7 @@ class WikiManager {
       default:
         throw new \Exception('invalid entity type');
     }
-    switch ($contentType) {
+    switch ($pageType) {
       case 'metadata':
         $pageDataName = 'metadata';
         break;

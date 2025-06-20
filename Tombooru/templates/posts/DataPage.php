@@ -1,7 +1,7 @@
 <?= Template::getComponent('MediaSidebarPanel', ['post' => $post]); ?>
 
 <?php
-  $metadataHistory = DataReadManager::getPostMetadataHistory($post['id']);
+  $entityHistory = DataReadManager::getEntityUpdateHistory('post', $post['id']);
   $addedToTombooru = $post['createdAt'];
   $createdByArtist = $post['data']['originalPublicationDate'];
   $originalMedia = $post['file']['media']['original'];
@@ -34,7 +34,7 @@
     <li><a href="?download_data">JSON data file</a></li>
   </ul>
   <h2>History</h2>
-  <?= Template::getComponent('PageHistoryList', ['history' => $metadataHistory, 'fallback' => 'This post has no edit history yet.']); ?>
+  <?= Template::getComponent('PageHistoryList', ['history' => $entityHistory, 'fallback' => 'This post has no edit history yet.']); ?>
   <h2>Links</h2>
   <ul>
     <?php foreach ($fileLinks as $link): ?>
