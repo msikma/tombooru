@@ -1,7 +1,12 @@
 <?php ob_start(); ?>
-<?php $searchString = $search; ?>
+<?php
+  $searchString = $search;
+
+  $base = $request['route']['primary'];
+  $searchName = $base === 'tags' ? 'tags' : 'artists';
+?>
 <div class="vector-menu-content-static">
-  <form action="<?= URL::getURL('/tags') ?>" data-tombooru-component="SidebarTagSearchBar">
+  <form action="<?= URL::getURL("/{$base}") ?>" data-tombooru-component="SidebarTagSearchBar">
     <div class="search-input">
       <input
         type="search"
@@ -45,7 +50,7 @@
 </div>
 <?=
   Template::getComponent('Portlet', [
-    'name' => 'Search tags',
+    'name' => 'Search '.$searchName,
     'id' => 'side_tag_search_bar',
     'content' => ob_get_clean(),
     'portletClass' => 'blue search-panel',
