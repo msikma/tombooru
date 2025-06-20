@@ -36,9 +36,22 @@ class BrowseTags {
    * 
    * This functions just like get(), but with an additional filter that only selects artist tags.
    */
-  public static function artists($search = '', $sort = 'id', $direction = 'desc', $page = 1) {
+  public static function artists($search = '', $sort = 'name', $direction = 'desc', $page = 1) {
     $query = SearchQuery::parseSearchString('category:artist');
-    return self::get($search, $sort, $direction, $page, $query['filters']);
+    $res = self::get($search, $sort, $direction, $page, $query['filters']);
+    return [
+      ...$res,
+      'results' => [
+        ...$res['results'],
+        'layout' => [
+          ['classes' => 'right', 'slug' => 'id'],
+          ['slug' => 'name'],
+          ['slug' => 'count'],
+          ['slug' => 'createdAt'],
+          ['classes' => 'tiny control-panel even-padding', 'slug' => 'actions'],
+        ],
+      ],
+    ];
   }
 
   /**

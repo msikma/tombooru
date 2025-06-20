@@ -6,6 +6,8 @@ use \RequestContext;
 class DataWriteManager {
   // Maximum string length for a source.
   private static int $sourceMaxLength = 495;
+  // Minimum string length for a tag.
+  private static int $tagMinLength = 2;
   // Maximum string length for a tag.
   private static int $tagMaxLength = 50;
 
@@ -295,7 +297,7 @@ class DataWriteManager {
     $data['filename'] = @$post['file']['name'];
     $data['description'] = @$post['description']['content'];
     $data['notes'] = @$post['notes']['content'];
-    $data['tags'] = self::sanitizeTags(self::collectTagsFromPost(@$post['tags']));
+    $data['tags'] = self::sanitizeTags(self::collectTagsFromPost(@$post['tags']), null, false);
     $data['sources'] = self::sanitizeSourceList(DataHelper::convertSourcesToList(@$post['sources']));
     $data['rating'] = @$post['data']['rating'];
     $data['license'] = @$post['data']['license'];
@@ -402,7 +404,7 @@ class DataWriteManager {
     $data['filename'] = self::sanitizeDestinationFilename(@$params['destination_filename'], $source->getName(), $params['form-type']);
     $data['description'] = self::sanitizeDescription(trim($params['description']));
     $data['notes'] = self::sanitizeDescription(trim($params['notes']));
-    $data['tags'] = self::sanitizeTags(self::collectTagParams($params), $tagCategories);
+    $data['tags'] = self::sanitizeTags(self::collectTagParams($params), $tagCategories, true);
     $data['sources'] = self::sanitizeSourceList(self::collectSourceParams($params));
     $data['rating'] = self::sanitizeRating(@$params['rating']);
     $data['license'] = self::sanitizeLicense(trim($params['license']));
@@ -806,12 +808,27 @@ class DataWriteManager {
     $value = '';
     $errors = [];
 
-    $value = str_replace(' ', '_', trim($tagName));
+    $value = str_replace(' ', '_', trim(trim($tagName), '_'));
 
     return [
       'value' => $value,
       'errors' => $errors,
     ];
+  }
+
+  /**
+   * Trims tag values after they've been grouped into sets.
+   */
+  private static function trimTagValues($tagValues, $trimTags) {
+    if (!$trimTags) {
+      return $tagValues;
+    }
+    $sanitized = [];
+    foreach ($tagValues as $tagValue) {
+      $tag = str_replace(' ', '_', trim(trim($tagValue), '_'));
+      $sanitized[] = $tag;
+    }
+    return $sanitized;
   }
 
   /**
@@ -821,7 +838,7 @@ class DataWriteManager {
    * 
    * If $tagCategories is passed, we'll validate that all tag intents are an existing tag.
    */
-  private static function sanitizeTags($tagSets, $tagCategories = null) {
+  private static function sanitizeTags($tagSets, $tagCategories = null, $trimTags = false) {
     $value = [];
     $errors = [];
 
@@ -838,6 +855,9 @@ class DataWriteManager {
           if (strlen($tag) > self::$tagMaxLength) {
             throw new \Exception('This tag is too long: '.substr($tag, 0, 14).'...');
           }
+          if (strlen($tag) < self::$tagMinLength) {
+            throw new \Exception('This tag is too short: '.($tag));
+          }
         }
         if (!empty($tagCategories)) {
           $intentData = @$tagCategories[$set['slug']];
@@ -847,13 +867,13 @@ class DataWriteManager {
         }
         $value[] = [
           'intent' => $set['slug'],
-          'tags' => $set['tags'],
+          'tags' => self::trimTagValues($set['tags'], $trimTags),
         ];
       }
       catch (\Throwable $e) {
         $value[] = [
           'intent' => $set['slug'],
-          'tags' => $set['tags'],
+          'tags' => self::trimTagValues($set['tags'], $trimTags),
         ];
         $errors[] = $e->getMessage();
       }

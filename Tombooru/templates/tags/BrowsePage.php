@@ -1,9 +1,10 @@
 <?= Template::getComponent('TagsSidebarPanel', ['tagCategories' => @$tagCategories, 'search' => @$results['search']]); ?>
 
-<?php
-  $apiEndpoint = 'browse_tags/'.($type === 'tags' ? 'get' : 'artists');
-?>
 <div class="tombooru-page page-tags">
-  <?= Template::getComponent('TagsTable', ['tags' => $results['tags'], 'type' => @$type, 'apiEndpoint' => $apiEndpoint]); ?>
+  <?php if (@$type !== 'artists'): ?>
+    <?= Template::getComponent('TagsTable', ['tags' => $results['tags'], 'apiEndpoint' => 'browse_tags/get']); ?>
+  <?php else: ?>
+    <?= Template::getComponent('ArtistsTable', ['tags' => $results['tags'], 'apiEndpoint' => 'browse_tags/artists']); ?>
+  <?php endif; ?>
   <?= Template::getComponent('Pagination', ['pagination' => @$results['pagination']]); ?>
 </div>
