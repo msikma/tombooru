@@ -6,6 +6,65 @@ use Sanitizer;
 class DataHelper {
   // The generic category is ordered here.
   public static $genericCategoryOrder = 10000;
+
+  // List of recognized social media sites.
+  private static $knownSocialMediaSites = null;
+
+  /**
+   * Returns parsed URLs for all known social media sites.
+   */
+  private static function getKnownSocialMediaSites() {
+    if (!is_null(self::$knownSocialMediaSites)) {
+      return self::$knownSocialMediaSites;
+    }
+    $knownSites = [
+      ['artstation.com', null],
+      ['bandcamp.com', 0, true],
+      ['behance.net', null],
+      ['www.deviantart.com', 1],
+      ['deviantart.com', 0, true],
+      ['dribbble.com', null],
+      ['etsy.com', null],
+      ['facebook.com', 1],
+      ['flickr.com', 2],
+      ['instagram.com', null],
+      ['mastodon.social', 1, true],
+      ['newgrounds.com', 3],
+      ['patreon.com', null],
+      ['pixeljoint.com', null],
+      ['pixiv.net', null],
+      ['redbubble.com', null],
+      ['reddit.com', null],
+      ['soundcloud.com', 1],
+      ['squarespace.com', 0, true],
+      ['teefury.com', null],
+      ['threads.com', 1],
+      ['tiktok.com', 1],
+      ['www.tumblr.com', 3],
+      ['tumblr.com', 0, true],
+      ['twitter.com', 1],
+      ['youtube.com', null],
+    ];
+
+    $parsed = [];
+    foreach ($knownSites as $site) {
+      [$url, $pathSegments] = $site;
+      $host = $site[0];
+      $pathSegments = intval($site[1]);
+      $keepFullURL = is_null($site[1]);
+      $keepSubdomain = @$site[2] ?? false;
+      $parsed[] = [
+        'url' => parse_url("https://{$host}/"),
+        'host' => $host,
+        'pathSegments' => $pathSegments,
+        'keepFullURL' => $keepFullURL,
+        'keepSubdomain' => $keepSubdomain,
+      ];
+    }
+    self::$knownSocialMediaSites = $parsed;
+    return $parsed;
+  }
+
   /**
    * Converts all tags to a plaintext list.
    * 
@@ -493,6 +552,47 @@ class DataHelper {
       return empty($tagCategory['id']);
     }
     return in_array($type, $tagCategory['properties'] ?? []);
+  }
+
+  /**
+   * Parses a URL and determines what social media site this URL is for, if any.
+   */
+  public static function identifySocialMediaSite($userUrlString) {
+    $knownSites = self::getKnownSocialMediaSites();
+    $userUrl = parse_url($userUrlString);
+
+    foreach ($knownSites as $site) {
+      $userFullHost = $userUrl['host'];
+      $userHostSegments = explode('.', $userFullHost);
+      $userHost = implode('.', array_slice($userHostSegments, -2, 2));
+
+      $url = $site['url'];
+      $host = $site['host'];
+      $pathSegments = $site['pathSegments'];
+      $keepFullURL = $site['keepFullURL'];
+      $keepSubdomain = $site['keepSubdomain'];
+      $hasWww = str_contains($host, 'www.');
+
+      $isMatch = $hasWww ? ($userFullHost === $url['host']) : ($userHost === $url['host']);
+
+      if (!$isMatch) {
+        continue;
+      }
+
+      if ($keepFullURL) {
+        return [$host, $userUrlString, $userUrlString];
+      }
+
+      $userBaseHost = $keepSubdomain ? $userFullHost : $userHost;
+      $userPathSegments = explode('/', trim($userUrl['path'], '/'));
+      $userPathSegments = array_slice($userPathSegments, 0, $pathSegments);
+
+      $sourceUrl = $userUrl['scheme'].'://'.$userBaseHost.'/'.implode('/', $userPathSegments);
+      
+      return [$host, $sourceUrl, $userUrlString];
+    }
+
+    return [null, null, $userUrlString];
   }
 
   /**

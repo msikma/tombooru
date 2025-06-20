@@ -810,15 +810,16 @@ class WikiManager {
   /**
    * Renders entity text (description and notes) and returns metadata.
    */
-  public static function getRenderedEntityTextData($entity) {
+  public static function getRenderedEntityTextData($entity, $tagCategories = []) {
     $textData = [];
 
     // Collect rendered data for all text types.
     $textTypes = ['description', 'notes'];
     $textMeta = [];
     foreach ($textTypes as $textType) {
-      $content = @$entity[$textType];
-      $data = self::getRenderedWikiContentData($content);
+      $pageData = @$entity[$textType];
+
+      $data = self::getRenderedWikiContentData($pageData);
       $meta = @$data['meta'] ?: [];
 
       $textData[$textType] = @$data['rendered'];
@@ -833,7 +834,10 @@ class WikiManager {
       return $merged;
     }, []);
 
-    $textData['meta'] = $mergedMeta;
+    $textData['meta'] = [
+      'hasRightPanels' => false,
+      ...$mergedMeta,
+    ];
     
     return $textData;
   }

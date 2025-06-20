@@ -375,6 +375,14 @@ class DataReadManager {
   }
 
   /**
+   * Returns various types of info about an artist.
+   */
+  public static function getArtistInfo($artistID) {
+    $artistInfo = DB::getArtistInfo($artistID);
+    return self::collectArtistInfoData($artistInfo);
+  }
+
+  /**
    * Collects tag data and returns what we need to create tag table data rows.
    */
   public static function collectTagResultRows($resultTags) {
@@ -1014,6 +1022,34 @@ class DataReadManager {
   public static function collectPostPublicData($postData) {
     $postData['tags'] = DataHelper::getFlatPostTags($postData['tags'], true);
     return $postData;
+  }
+
+  /**
+   * Restructures the artist info.
+   */
+  private static function collectArtistInfoData($artistInfo) {
+    if (intval($artistInfo['post_count']) === 0) {
+      return null;
+    }
+    $minYear = intval($artistInfo['min_year']);
+    $maxYear = intval($artistInfo['max_year']);
+    $urls = explode("\n", trim($artistInfo['all_urls']));
+    $postCount = intval($artistInfo['post_count']);
+    
+    $sources = array_filter(array_map(fn($url) => DataHelper::identifySocialMediaSite($url), $urls));
+    $uniqueSources = [];
+    foreach ($sources as $source) {
+      if (!isset($uniqueSources[$source[0]])) {
+        $uniqueSources[$source[0]] = $source[1];
+      }
+    }
+    
+    return [
+      'minYear' => $minYear,
+      'maxYear' => $maxYear,
+      'postCount' => $postCount,
+      'sources' => array_values($uniqueSources),
+    ];
   }
 
   /**

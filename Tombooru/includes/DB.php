@@ -220,6 +220,33 @@ class DB {
   }
 
   /**
+   * Returns various information about an artist.
+   * 
+   * The artist is identified by a tag ID.
+   */
+  public static function getArtistInfo($tagID) {
+    $db = self::instReplicaDB();
+
+    $query = $db->newSelectQueryBuilder()
+      ->select([
+        'min_year' => 'min(year(pd.original_publication_date))',
+        'max_year' => 'max(year(pd.original_publication_date))',
+        'all_urls' => 'group_concat(distinct ps.url order by ps.url separator "\n")',
+        'post_count' => 'count(distinct p.id)'
+      ])
+      ->from('tombooru_post_tag', 'pt')
+      ->join('tombooru_post_data', 'pd', 'pd.id = pt.post_id')
+      ->join('tombooru_post_source', 'ps', 'ps.post_id = pt.post_id')
+      ->join('tombooru_post', 'p', 'p.id = pt.post_id')
+      ->where(['pt.tag_id' => $tagID])
+      ->caller(__METHOD__);
+    
+    $row = (array)$query->fetchRow();
+    
+    return $row;
+  }
+
+  /**
    * Returns a tag ID from a tag name string.
    */
   public static function getTagID($tagName) {

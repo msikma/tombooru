@@ -388,10 +388,17 @@ class SpecialTombooru extends SpecialPage {
    * Displays the tag view page.
    */
   private function runTagsViewPage() {
+    // Whether this is an artist tag.
+    $isArtistTag = $this->route['primary'] === 'artists';
+    
+    // Fetch tag basic information, examples and descriptions.
     $tag = DataReadManager::getTag($this->route['id'], true);
     $tagCategories = DataReadManager::getTagCategories();
     $tagExamples = DataReadManager::getTagExampleResults($tag);
-    $tagTextData = WikiManager::getRenderedEntityTextData($tag);
+    $tagTextData = WikiManager::getRenderedEntityTextData($tag, $tagCategories);
+
+    // Get some additional info if this is an artist tag.
+    $artistInfo = $isArtistTag ? DataReadManager::getArtistInfo($tag['id']) : null;
 
     return self::outputTemplate(
       'tags/ViewPage',
@@ -399,8 +406,12 @@ class SpecialTombooru extends SpecialPage {
         'tag' => $tag,
         'tagCategories' => array_values($tagCategories),
         'tagExamples' => $tagExamples,
+        'artistInfo' => $artistInfo,
       ],
-      @$tagTextData['meta'],
+      [
+        ...$tagTextData['meta'] ?: [],
+        'hasRightPanels' => $tagTextData['meta']['hasRightPanels'] || $isArtistTag,
+      ],
     );
   }
 
@@ -460,26 +471,6 @@ class SpecialTombooru extends SpecialPage {
         'tag' => $tag,
         'tagCategories' => array_values($tagCategories),
       ],
-    );
-  }
-
-  /**
-   * Displays the artist view page.
-   */
-  private function runArtistsViewPage() {
-    $tag = DataReadManager::getTag($this->route['id'], true);
-    $tagCategories = DataReadManager::getTagCategories();
-    $tagExamples = DataReadManager::getTagExampleResults($tag);
-    $tagTextData = WikiManager::getRenderedEntityTextData($tag);
-
-    return self::outputTemplate(
-      'tags/ViewPage',
-      [
-        'tag' => $tag,
-        'tagCategories' => array_values($tagCategories),
-        'tagExamples' => $tagExamples,
-      ],
-      @$tagTextData['meta'],
     );
   }
 
