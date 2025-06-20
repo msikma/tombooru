@@ -420,33 +420,70 @@ class Template {
   }
 
   /**
-   * Returns an HTML table containing metadata about a given post.
-   * 
-   * This is used specifically to store metadata history updates.
-   * 
-   * The data returned by this function is only intended as a quick data preview.
+   * Returns rows we need to include in a post's metadata update table.
    */
-  public static function formatPostMetadataTable($data) {
-    $rows = [
-      'filename' => $data['filename'],
-    ];
+  private static function getPostMetadataTableRows($data) {
+    $rows = [];
+
+    $rows['filename'] = $data['filename'];
+
+    // Add tags.
     $tagN = 0;
+    $tagRows = [];
     foreach ($data['tags'] as $category) {
       foreach ($category['tags'] as $tag) {
-        $rows['tags.'.$tagN] = $tag;
+        $tagRows[$tagN] = $tag;
         $tagN += 1;
       }
     }
+    usort($tagRows, fn($a, $b) => strcmp(mb_strtolower($a), mb_strtolower($b)));
+    foreach ($tagRows as $tagN => $tag) {
+      $rows['tags.'.$tagN] = $tag;
+    }
+
+    // Add sources.
     $sourceN = 0;
     for ($sourceN = 0; $sourceN < count($data['sources']); ++$sourceN) {
       $source = $data['sources'][$sourceN];
       $rows['sources.'.$sourceN.'.url'] = $source['url'];
       $rows['sources.'.$sourceN.'.archiveURL'] = $source['archiveURL'];
     }
+
     $rows['rating'] = $data['rating'];
     $rows['license'] = $data['license'];
     $rows['is_ai_generated'] = $data['is_ai_generated'];
     $rows['original_publication_date'] = $data['original_publication_date'];
+    return $rows;
+  }
+
+  /**
+   * Returns rows we need to include in a tag's metadata update table.
+   */
+  private static function getTagMetadataTableRows($data) {
+    $rows = [];
+    $rows['name'] = $data['name'];
+    $rows['tag_category'] = $data['tagCategory'];
+    $rows['aliased_to'] = $data['aliasedTo'];
+    return $rows;
+  }
+
+  /**
+   * Returns an HTML table containing metadata about a given post.
+   * 
+   * This is used specifically to store metadata history updates.
+   * 
+   * The data returned by this function is only intended as a quick data preview.
+   */
+  public static function formatEntityMetadataTable($entityType, $data) {
+    if ($entityType === 'post') {
+      $rows = self::getPostMetadataTableRows($data);
+    }
+    else if ($entityType === 'tag') {
+      $rows = self::getTagMetadataTableRows($data);
+    }
+    else {
+      throw new \Exception("Unsupported entity type: $entityType");
+    }
     
     $buffer = ['<table class="wikitable align-left">'];
     foreach ($rows as $k => $v) {

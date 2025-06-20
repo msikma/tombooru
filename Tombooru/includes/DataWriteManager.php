@@ -99,11 +99,10 @@ class DataWriteManager {
    * create or edit the pages for the text sections. Then if that succeeds, we'll update the post data
    * to include the new description and notes page IDs.
    */
-  public static function updatePostData($postData, $postUpdateData) {
+  public static function updatePostData($postData, $postOriginalData, $postUpdateData) {
     if (self::hasAnyErrors($postUpdateData)) {
       throw new \Exception('Some submitted data has errors.');
     }
-    $postOriginalData = self::collectPostOriginalData($postData);
     $postOriginalData = DataHelper::removeUpdateErrorStubs($postOriginalData);
     $postUpdateData = DataHelper::removeUpdateErrorStubs($postUpdateData);
     $pageID = $postData['pageID'];
@@ -119,7 +118,7 @@ class DataWriteManager {
     // We store a copy of the post data in a special wiki page as well,
     // so that any updates show up in recent changes as well.
     // This is passively stored; the page's information is not tracked.
-    self::updatePostDataHistory($postID, $postOriginalData, $postUpdateData);
+    self::updateEntityDataHistory('post', $postID, $postOriginalData, $postUpdateData);
 
     // Post descriptions and notes are stored as pages in the imageboard namespace.
     // These pages are created as needed (as soon as the user posts some content),
@@ -136,13 +135,42 @@ class DataWriteManager {
   }
 
   /**
-   * Stores a copy of a post's metadata in its history.
+   * Merges original and update data.
+   * 
+   * This basically hacks around the fact that you can't update certain things after upload,
+   * such as the filename.
+   */
+  private static function mergeEntityData($originalData, $updateData) {
+    $mergedData = [];
+    $allKeys = array_unique([...array_keys($originalData), ...array_keys($updateData)]);
+    $keepOriginalKeys = [
+      // The filename is not updatable after upload.
+      'filename',
+      // Rating will be null if explicit content is entirely turned off.
+      'rating',
+      // Same for AI generated.
+      'is_ai_generated',
+    ];
+    foreach ($allKeys as $key) {
+      $originalValue = @$originalData[$key];
+      $updateValue = @$updateData[$key];
+      if (in_array($key, $keepOriginalKeys)) {
+        $mergedData[$key] = $originalValue;
+        continue;
+      }
+      $mergedData[$key] = $updateValue;
+    }
+    return $mergedData;
+  }
+
+  /**
+   * Stores a copy of an entity's metadata as a page.
    * 
    * If nothing has changed, no edit will occur.
    */
-  public static function updatePostDataHistory($postID, $originalData, $updateData) {
-    $data = array_merge($originalData, $updateData);
-    $pageID = WikiManager::updateEntityPageData('post', $postID, 'metadata', Template::formatPostMetadataTable($data));
+  public static function updateEntityDataHistory($entityType, $entityID, $originalData, $updateData) {
+    $data = self::mergeEntityData($originalData, $updateData);
+    $pageID = WikiManager::updateEntityPageData($entityType, $entityID, 'metadata', Template::formatEntityMetadataTable($entityType, $data));
     return $pageID;
   }
 
@@ -151,7 +179,7 @@ class DataWriteManager {
    * 
    * Same as with posts, we edit the tag description/notes pages separately.
    */
-  public static function updateTagData($tagData, $tagUpdateData) {
+  public static function updateTagData($tagData, $tagOriginalData, $tagUpdateData) {
     if (self::hasAnyErrors($tagUpdateData)) {
       throw new \Exception('Some submitted data has errors.');
     }
@@ -172,10 +200,14 @@ class DataWriteManager {
         throw new \Exception('Can\'t rename tag: name already exists.');
       }
     }
+    $tagOriginalData = DataHelper::removeUpdateErrorStubs($tagOriginalData);
     $tagUpdateData = DataHelper::removeUpdateErrorStubs($tagUpdateData);
     
     // First, update all data *except* for the text.
     DB::updateTagData($tagID, $tagUpdateData);
+    
+    // Store a copy of the update history in a special page.
+    self::updateEntityDataHistory('tag', $tagID, $tagOriginalData, $tagUpdateData);
 
     // Post descriptions are stored e.g. "Tombooru_data/Tag_description/1" pages.
     foreach (['description', 'notes'] as $subpage) {
