@@ -3,6 +3,9 @@
 namespace Tombooru;
 
 class SearchQuery {
+  public static int $postsBrowsePageSize = 20;
+  public static int $postsListPageSize = 48;
+
   /**
    * Parses a user provided search string and returns a set of search tokens.
    * 
@@ -21,6 +24,46 @@ class SearchQuery {
     return [
       'filters' => $filters,
       'searchString' => $string,
+    ];
+  }
+
+  /**
+   * Returns the page size to be used for the current request.
+   */
+  private static function getPostsSearchPageSize() {
+    $isList = SearchQuery::getSearchPageType() === 'list';
+    return $isList ? self::$postsListPageSize : self::$postsBrowsePageSize;
+  }
+
+  /**
+   * Returns the specific browse page type we're viewing.
+   */
+  private static function getSearchPageType() {
+    $request = Request::getRequestData();
+    $params = $request['params'];
+    if (@$params['type'] === 'list') {
+      return 'list';
+    }
+    if (@$params['type'] === 'history') {
+      return 'history';
+    }
+    return 'browse';
+  }
+
+  /**
+   * Prepares all requirements for running a search query.
+   */
+  public static function prepareSearchQuery() {
+    $request = Request::getRequestData();
+    $type = self::getSearchPageType();
+    $perPage = self::getPostsSearchPageSize();
+    $query = SearchQuery::parseSearchString($request['search']);
+
+    return [
+      'query' => $query,
+      'page' => $request['page'],
+      'perPage' => $perPage,
+      'type' => $type,
     ];
   }
 

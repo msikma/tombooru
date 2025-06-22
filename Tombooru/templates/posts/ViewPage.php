@@ -5,6 +5,7 @@
 <?= Template::getComponent('MediaSidebarPanel', ['post' => $post]); ?>
 
 <div class="tombooru-page page-detail subpage-view">
+  <?= Template::getComponent('PostSearchResultInfo', ['adjacentResults' => $adjacentResults, 'search' => $search, 'tags' => $post['tags']]); ?>
   <?= Template::getComponent('MediaEmbed', ['post' => $post]); ?>
   <?= Template::getComponent('MediaPrimarySets', ['post' => $post]); ?>
   <?= Template::getComponent('MediaUserActions', ['post' => $post, 'userPostInteractions' => $userPostInteractions]); ?>

@@ -1566,13 +1566,83 @@ class DB {
   }
 
   /**
-   * Runs a search and returns the results.
-   * 
-   * Takes a search query object, which should include a set of filters we'll search by.
+   * Adds clauses to include a given set of tag groups to a search query.
    */
-  public static function getPostsSearchResult($searchQuery, $page = 1, $perPage = 12, $getPostTextMetadata = false, $orderByPublicationDate = false) {
+  private static function addTagGroupClauses($query, $includeTagGroups, $excludeTagGroups) {
     $db = self::instReplicaDB();
 
+    if (!empty($includeTagGroups)) {
+      $flatTagIDs = array_merge(...$includeTagGroups);
+      $query->where(['t.id' => $flatTagIDs]);
+      $query->having(
+        'count(distinct case '.
+        implode(' ', array_map(
+          fn($group, $i) => 'when t.id in ('.implode(',', array_map('intval', $group)).') then '.($i + 1),
+          $includeTagGroups,
+          array_keys($includeTagGroups)
+        )).
+        ' end) = '.count($includeTagGroups)
+      );
+    }
+
+    foreach ($excludeTagGroups as $group) {
+      if (empty($group)) {
+        continue;
+      }
+
+      $excludeSubquery = $db->newSelectQueryBuilder()
+        ->select('1')
+        ->from('tombooru_post_tag', 'pt_ex')
+        ->where(['pt_ex.post_id = p.id'])
+        ->andWhere(['pt_ex.tag_id' => $group])
+        ->caller(__METHOD__);
+      $excludeSubquerySQL = $excludeSubquery->getSQL();
+
+      $query->andWhere("not exists ({$excludeSubquerySQL})");
+    }
+  }
+
+  /**
+   * Runs a search and returns all matching post and page IDs.
+   */
+  public static function getSearchResultPostIDs($pageID, $searchQuery, $orderByPublicationDate = false) {
+    $db = self::instReplicaDB();
+
+    $searchData = self::prepareSearchResultQuery($searchQuery);
+    $meta = [
+      'orderByPublicationDate' => $orderByPublicationDate,
+      'missingTags' => $searchData['missingTags'],
+      'willAlwaysReturnZero' => $searchData['willAlwaysReturnZero'],
+    ];
+
+    $query = $db->newSelectQueryBuilder()
+      ->select([
+        'p.id',
+        'p.page_id',
+      ])
+      ->from('tombooru_post', 'p')
+      ->join('tombooru_post_data', 'pd', 'p.id = pd.id')
+      ->leftJoin('tombooru_post_tag', 'pt', 'pt.post_id = p.id')
+      ->leftJoin('tombooru_tag', 't', 't.id = pt.tag_id')
+      ->groupBy('p.id')
+      ->caller(__METHOD__);
+
+    if ($orderByPublicationDate) {
+      $query->where('pd.original_publication_date', '!=', null);
+      $query->orderBy('pd.original_publication_date', SelectQueryBuilder::SORT_DESC);
+    }
+
+    $query->orderBy('p.id', SelectQueryBuilder::SORT_DESC);
+    
+    self::addTagGroupClauses($query, $searchData['includeTagGroups'], $searchData['excludeTagGroups']);
+
+    return [self::fetchQueryArray($query), $meta];
+  }
+
+  /**
+   * Runs some preliminary work to be able to do a search query.
+   */
+  private static function prepareSearchResultQuery($searchQuery) {
     // Convert the caller's query filters to a simpler format.
     $queryClauses = self::convertFiltersToQueryClauses($searchQuery);
     $queryData = self::collectQueryClauseGroups($queryClauses);
@@ -1586,15 +1656,35 @@ class DB {
     // the search query should return 0 results rather than returning *all* results.
     $willAlwaysReturnZero = $requestedIncludeTags > 0 && $remainingIncludeTags < 1;
 
+    return [
+      'includeTagGroups' => $includeTagGroups,
+      'excludeTagGroups' => $excludeTagGroups,
+      'missingTagStats' => $missingTagStats,
+      'missingTags' => $missingTags,
+      'willAlwaysReturnZero' => $willAlwaysReturnZero,
+    ];
+  }
+
+  /**
+   * Runs a search and returns the results.
+   * 
+   * Takes a search query object, which should include a set of filters we'll search by.
+   */
+  public static function getPostsSearchResult($searchQuery, $page = 1, $perPage = 12, $getPostTextMetadata = false, $orderByPublicationDate = false) {
+    $db = self::instReplicaDB();
+
+    // Calculate applicable data from the search query.
+    $searchData = self::prepareSearchResultQuery($searchQuery);
+
     // Collect metadata for this search query. Report missing tags back to the caller as well.
     $meta = [
       'getPostTextMetadata' => $getPostTextMetadata,
       'orderByPublicationDate' => $orderByPublicationDate,
-      'missingTags' => $missingTags,
-      'willAlwaysReturnZero' => $willAlwaysReturnZero,
+      'missingTags' => $searchData['missingTags'],
+      'willAlwaysReturnZero' => $searchData['willAlwaysReturnZero'],
     ];
     
-    if ($willAlwaysReturnZero) {
+    if ($searchData['willAlwaysReturnZero']) {
       // If this search result should always return zero, do so now.
       return [[], $meta];
     }
@@ -1623,9 +1713,12 @@ class DB {
       ->from('tombooru_post', 'p')
       ->join('tombooru_post_data', 'pd', 'p.id = pd.id')
       ->leftJoin('tombooru_post_tag', 'pt', 'pt.post_id = p.id')
-      ->leftJoin('tombooru_tag', 't', 't.id = pt.tag_id');
+      ->leftJoin('tombooru_tag', 't', 't.id = pt.tag_id')
+      ->groupBy('p.id')
+      ->limit($perPage)
+      ->offset($offset)
+      ->caller(__METHOD__);
     
-    // Add some additional data if we need it.
     if ($getPostTextMetadata) {
       $query->select([
         'pd.description_page_id',
@@ -1633,62 +1726,33 @@ class DB {
         'group_concat(pt.tag_id) as post_tags',
       ]);
     }
-    
-    // Include tags.
-    if (!empty($includeTagGroups)) {
-      $flatTagIDs = array_merge(...$includeTagGroups);
-      $query->where(['t.id' => $flatTagIDs]);
-      $query->having(
-        'count(distinct case '.
-        implode(' ', array_map(
-          fn($group, $i) => 'when t.id in ('.implode(',', array_map('intval', $group)).') then '.($i + 1),
-          $includeTagGroups,
-          array_keys($includeTagGroups)
-        )).
-        ' end) = '.count($includeTagGroups)
-      );
-    }
 
     if ($orderByPublicationDate) {
       $query->where('pd.original_publication_date', '!=', null);
-    }
-
-    $query
-      ->groupBy('p.id')
-      ->limit($perPage)
-      ->offset($offset)
-      ->caller(__METHOD__);
-    
-    if ($orderByPublicationDate) {
       $query->orderBy('pd.original_publication_date', SelectQueryBuilder::SORT_DESC);
     }
 
     // Note: even if sorting by publication date first, use this to break ties.
     $query->orderBy('p.id', SelectQueryBuilder::SORT_DESC);
     
-    // Exclude tags.
-    foreach ($excludeTagGroups as $group) {
-      if (empty($group)) {
-        continue;
-      }
+    // Add tag clauses.
+    self::addTagGroupClauses($query, $searchData['includeTagGroups'], $searchData['excludeTagGroups']);
 
-      $excludeSubquery = $db->newSelectQueryBuilder()
-        ->select('1')
-        ->from('tombooru_post_tag', 'pt_ex')
-        ->where(['pt_ex.post_id = p.id'])
-        ->andWhere(['pt_ex.tag_id' => $group])
-        ->caller(__METHOD__);
-      $excludeSubquerySQL = $excludeSubquery->getSQL();
+    $posts = self::fetchQueryArray($query);
 
-      $query->andWhere("not exists ({$excludeSubquerySQL})");
-    }
-
-    $res = $query->fetchResultSet();
-    $posts = [];
-    foreach ($res as $row) {
-      $posts[] = (array)$row;
-    }
     return [$posts, $meta];
+  }
+
+  /**
+   * Helper function that fetches a query's result set and returns it as array.
+   */
+  private static function fetchQueryArray($query) {
+    $res = $query->fetchResultSet();
+    $items = [];
+    foreach ($res as $row) {
+      $items[] = (array)$row;
+    }
+    return $items;
   }
 
   /**

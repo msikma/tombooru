@@ -30,6 +30,14 @@ class URL {
   }
 
   /**
+   * Returns the current URL, optionally with some things changed.
+   */
+  public static function getCurrentURL($query = [], $persistParams = []) {
+    $path = self::getCurrentURLPath();
+    return self::getURL($path, $query, $persistParams);
+  }
+
+  /**
    * Returns all URL parameters that need to be persisted across links.
    * 
    * If the passed parameters value is null, nothing is returned and the parameters will be cleared.
@@ -40,7 +48,7 @@ class URL {
     }
     $request = Request::getRequestData();
     $params = $request['params'];
-    $persistent = ['search', ...$persistParams];
+    $persistent = ['search', 'type', ...$persistParams];
     return array_intersect_key($params, array_flip($persistent));
   }
 

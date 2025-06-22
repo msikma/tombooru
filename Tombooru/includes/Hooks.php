@@ -64,6 +64,12 @@ class Hooks {
   private static function addPostsSingleNavigation($route, &$links, $params) {
     $user = WikiManager::getUserData();
     [$primary, $sub, $id] = self::getRouteSegments($route);
+    $adjacentPosts = DataReadManager::getAdjacentPosts($id);
+    $resultSet = $adjacentPosts['resultSet'];
+    $totalCount = $resultSet['meta']['totalCount'];
+    $currentPost = $resultSet['posts']['current'];
+    $previousPost = @$resultSet['posts']['previous'][0];
+    $nextPost = @$resultSet['posts']['next'][0];
 
     // Special case for a set detail page. When we're viewing a set detail page,
     // we're actually displaying the post detail page subnav for the first post in the set.
@@ -90,6 +96,25 @@ class Hooks {
       'text' => 'View data',
       'href' => URL::getURL("/{$primary}/data/{$id}"),
       'class' => ['icon-package', self::navClass(['data'])],
+      'active' => true,
+    ];
+
+    $links['views'][] = [
+      'text' => 'Result '.(intval(@$currentPost['resultIndex']) + 1).' of '.$totalCount,
+      'href' => '#',
+      'class' => 'right numeric inert selected blue unselectable',
+      'active' => true,
+    ];
+    $links['views'][] = [
+      'text' => 'Previous',
+      'href' => $previousPost ? URL::getURL("/posts/view/{$previousPost['pageID']}") : '',
+      'class' => ['right icon-arrow-left no-text stick-right blue', $previousPost ? '' : 'disabled'],
+      'active' => false,
+    ];
+    $links['views'][] = [
+      'text' => 'Next',
+      'href' => $nextPost ? URL::getURL("/posts/view/{$nextPost['pageID']}") : '',
+      'class' => ['right icon-arrow-right no-text stick-left blue', $nextPost ? '' : 'disabled'],
       'active' => true,
     ];
   }
@@ -160,7 +185,7 @@ class Hooks {
     ];
     $links['views'][] = [
       'text' => 'Browse recent',
-      'href' => URL::getURL('/posts'),
+      'href' => URL::getURL('/posts', ['type' => null]),
       'id' => 'ca-tombooru_recent',
       'class' => ['icon-history', self::navClass([], ['posts'], [], !$isListBrowsePage && !$isHistoryBrowsePage)],
       'active' => true,
@@ -202,12 +227,6 @@ class Hooks {
         'text' => 'Next',
         'href' => URL::getPaginationDeltaURL(1),
         'class' => 'nav-browse-page-next right icon-arrow-right no-text selected stick-left blue',
-        'active' => true,
-      ];
-      $links['views'][] = [
-        'text' => 'Settings',
-        'href' => '#',
-        'class' => 'right icon-gear selected yellow',
         'active' => true,
       ];
     }

@@ -10,8 +10,6 @@ class SpecialTombooru extends SpecialPage {
   private array $route;
   private array $params;
 
-  public static int $postsBrowsePageSize = 20;
-  public static int $postsListPageSize = 48;
   public static int $setsListPageSize = 48;
   public static int $tagsBrowsePageSize = 50;
 
@@ -83,27 +81,6 @@ class SpecialTombooru extends SpecialPage {
   }
 
   /**
-   * Returns the specific browse page type we're viewing.
-   */
-  private function getBrowsePageType() {
-    if (@$this->params['type'] === 'list') {
-      return 'list';
-    }
-    if (@$this->params['type'] === 'history') {
-      return 'history';
-    }
-    return 'browse';
-  }
-
-  /**
-   * Returns the page size to be used for the current request.
-   */
-  private function getPostsBrowsePageSize() {
-    $isList = self::getBrowsePageType() === 'list';
-    return $isList ? self::$postsListPageSize : self::$postsBrowsePageSize;
-  }
-
-  /**
    * Outputs raw JSON data.
    */
   private function outputJSON($data) {
@@ -170,16 +147,15 @@ class SpecialTombooru extends SpecialPage {
   private function runPostsViewPage() {
     $pageID = $this->route['id'];
     $post = DataReadManager::getPost($pageID, true);
-    if (empty($post['file']['name'])) {
-      // todo: exception in readmanager
-      throw new \Exception('not_found');
-    }
+    $adjacentPosts = DataReadManager::getAdjacentPosts($pageID);
     $userPostInteractions = DataReadManager::getUserPostInteractions($post['id']);
 
     return self::outputTemplate(
       'posts/ViewPage',
       [
         'post' => $post,
+        'search' => $adjacentPosts['resultSet']['query'],
+        'adjacentResults' => $adjacentPosts['resultSet'],
         'userPostInteractions' => $userPostInteractions,
       ],
     );
@@ -356,22 +332,30 @@ class SpecialTombooru extends SpecialPage {
   }
 
   /**
+   * Searches the database using the currently active query and returns the result posts.
+   */
+  private function getSearchResults() {
+    $query = SearchQuery::prepareSearchQuery();
+    $results = DataReadManager::getPostSearchResults($query['query'], $query['page'], $query['perPage'], true, $query['type']);
+    
+    return [
+      'type' => $query['type'],
+      'resultSet' => $results,
+    ];
+  }
+
+  /**
    * Displays the post browse page.
    */
   private function runPostsBrowsePage() {
-    $type = self::getBrowsePageType();
-    $perPage = self::getPostsBrowsePageSize();
-    $search = $this->request['search'];
-    $page = $this->request['page'];
-    $query = SearchQuery::parseSearchString($search);
-    $results = DataReadManager::getPostSearchResults($query, $page, $perPage, true, $type);
+    $searchResults = self::getSearchResults();
 
     return self::outputTemplate(
       'posts/BrowsePage',
       [
-        'browsePageType' => $type,
-        'search' => $query,
-        'results' => $results,
+        'browsePageType' => $searchResults['type'],
+        'search' => $searchResults['resultSet']['query'],
+        'results' => $searchResults['resultSet'],
         'browseURL' => '/posts',
       ],
     );

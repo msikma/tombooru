@@ -289,6 +289,66 @@ class DataReadManager {
   }
 
   /**
+   * Collects adjacent posts from a full result set.
+   */
+  private static function collectAdjacentPosts($pageID, $postIDs, $amount, $perPage) {
+    $posts = [];
+    for ($n = 0; $n < count($postIDs); ++$n) {
+      $postInfo = $postIDs[$n];
+      $posts[] = [
+        'id' => intval($postInfo['id']),
+        'pageID' => intval($postInfo['page_id']),
+        'resultIndex' => $n,
+        'resultPage' => intval(floor($n / $perPage) + 1),
+      ];
+    }
+
+    $index = array_search($pageID, array_column($posts, 'pageID'));
+    if ($index === false) {
+      return ['previous' => [], 'current' => [], 'next' => []];
+    }
+
+    return [
+      'previous' => array_reverse(array_slice($posts, max(0, $index - $amount), $index - max(0, $index - $amount))),
+      'current' => $posts[$index],
+      'next' => array_slice($posts, $index + 1, $amount),
+    ];
+  }
+
+  /**
+   * Returns the previous and next posts, given the current search query and a specific post ID.
+   * 
+   * This identifies where in the results the post is located, so we can visit the adjacent posts.
+   */
+  public static function getAdjacentPosts($pageID) {
+    $query = SearchQuery::prepareSearchQuery();
+    $results = self::getAdjacentPostResults($pageID, $query['perPage'], $query['query'], $query['type']);
+    
+    return [
+      'type' => $query['type'],
+      'resultSet' => $results,
+    ];
+  }
+
+  /**
+   * Runs a search for a given search query and returns which posts are adjacent to a given page ID.
+   */
+  private static function getAdjacentPostResults($pageID, $perPage, $query, $searchType) {
+    $orderByPublicationDate = $searchType === 'history';
+    [$postIDs, $meta] = DB::getSearchResultPostIDs($pageID, $query, $orderByPublicationDate);
+    $adjacentPosts = self::collectAdjacentPosts($pageID, $postIDs, 1, $perPage);
+
+    return array_filter([
+      'query' => $query,
+      'posts' => $adjacentPosts,
+      'meta' => [
+        ...$meta,
+        'totalCount' => count($postIDs),
+      ],
+    ]);
+  }
+
+  /**
    * Runs a search and returns the results.
    */
   public static function getPostSearchResults($query, $page, $perPage, $getTags, $searchType) {
