@@ -104,7 +104,7 @@ class SpecialTombooru extends SpecialPage {
     $browseURL = @$data['browseURL'];
     $pagination = @$data['results']['pagination'];
 
-    if (!empty($browseURL) && $pagination['current'] > $pagination['totalPages']) {
+    if (!empty($browseURL) && $pagination['current'] > $pagination['totalPages'] && $pagination['totalPages'] > 0) {
       $this->getOutput()->redirect(URL::getURL($browseURL, ['page' => $pagination['totalPages']]));
       return true;
     }
