@@ -28,8 +28,8 @@
             $urlTagEdit = URL::getTagInfoURL($tag, 'edit', $isArtistCategory);
           ?>
           <tr data-tag-category="<?= htmlentities(!empty($tagCategory['slug']) ? $tagCategory['slug'] : ''); ?>">
-            <td class="right highlighted"><span class="inner"><?= htmlentities($tag['id']); ?></span></td>
-            <td><span class="inner"><a href="<?= htmlentities($urlTagView); ?>"><?= htmlentities($tagName); ?></a></span></td>
+            <td class="right"><span class="inner"><?= htmlentities($tag['id']); ?></span></td>
+            <td class="highlighted"><span class="inner"><a href="<?= htmlentities($urlTagView); ?>"><?= htmlentities($tagName); ?></a></span></td>
             <td><span class="inner"><?= htmlentities($tag['count']); ?></span></td>
             <td><span class="inner"><?= Template::getComponent('Timestamp', ['ts' => $tag['createdAt']]); ?></span></td>
             <td class="tiny control-panel even-padding"><span class="inner"><?= Template::getComponent('TagsTableActions', [

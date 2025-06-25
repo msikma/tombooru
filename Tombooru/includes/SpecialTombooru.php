@@ -466,7 +466,7 @@ class SpecialTombooru extends SpecialPage {
     $page = $this->request['page'];
     $search = @$this->request['params']['search'] ?? '';
     $query = SearchQuery::parseSearchString('category:artist');
-    $results = DataReadManager::getTagSearchResults($search, $query['filters'], [], $page, $perPage);
+    $results = DataReadManager::getTagSearchResults($search, $query['filters'], ['sort' => 'name', 'direction' => 'asc'], $page, $perPage);
     return self::outputTemplate(
       'tags/BrowsePage',
       [
