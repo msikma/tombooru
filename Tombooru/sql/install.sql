@@ -103,11 +103,13 @@ create table /*_*/tombooru_post_set (
 create table /*_*/tombooru_post_set_post (
   post_set_id int unsigned not null,            -- fk to tombooru_post_set.id
   post_id int unsigned not null,                -- fk to tombooru_post.id
+  ordering int default 0,
 
   primary key (post_set_id, post_id),
   constraint fk_post_set_post_set foreign key (post_set_id) references /*_*/tombooru_post_set(id) on delete cascade on update cascade,
   constraint fk_post_set_post_post foreign key (post_id) references /*_*/tombooru_post(id) on delete cascade on update cascade,
-  index (post_id)
+  index (post_id),
+  index (ordering)
 );
   
 
