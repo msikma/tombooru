@@ -396,10 +396,20 @@ Tombooru.ComponentSidebarSearchBar = class {
       const name = this.highlightSearchTerm(item.name.replaceAll('_', ' '), searchTerm);
       if (item.attributes.includes('isMoved')) {
         const oldName = this.highlightSearchTerm(item.oldName.replaceAll('_', ' '), searchTerm);
-        buffer.push(`<td class="moved"><a href="#" class="term old">${oldName}</a><span class="arrow">→</span><a href="#" class="term new" data-term="${item.name}">${name}</a></td><td><span>${item.count}</span></td>`);
+        buffer.push(`
+          <td class="moved">
+            <a href="#" class="term old"><span class="name">${oldName}</span></a>
+            <span class="arrow">→</span>
+            <a href="#" class="term new" data-term="${item.name}"><span class="name">${name}</span>&nbsp;<span class="count">${item.count}</span></a>
+          </td>
+        `);
       }
       else {
-        buffer.push(`<td><a href="#" class="term" data-term="${item.name}">${name}</a></td><td><span>${item.count}</span></td>`);
+        buffer.push(`
+          <td>
+            <a href="#" class="term" data-term="${item.name}"><span class="name">${name}</span>&nbsp;<span class="count">${item.count}</span></a>
+          </td>
+        `);
       }
       buffer.push(`</tr>`);
     }

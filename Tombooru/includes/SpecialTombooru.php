@@ -365,7 +365,19 @@ class SpecialTombooru extends SpecialPage {
    * Displays the start page.
    */
   private function runStartPage() {
-    return self::outputTemplate('StartPage', []);
+    $tagExamples = array_filter(array_map(
+      function($tag) {
+        try {
+          $tagData = DataReadManager::getTag(trim($tag), true, true, false);
+          return $tagData;
+        }
+        catch (\Throwable $e) {
+          return null;
+        }
+      },
+      ['tomba', 'koma_pig', 'dwarf_forest', 'pouncing'],
+    ));
+    return self::outputTemplate('StartPage', ['tagExamples' => $tagExamples]);
   }
 
   /**

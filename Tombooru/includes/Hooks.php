@@ -210,7 +210,7 @@ class Hooks {
     ];
 
     // Result filters.
-    if ($primary !== 'start') {
+    if ($primary !== '') {
       $links['views'][] = [
         'text' => 'Page '.($request['page'] ?? 1),
         'href' => '#',

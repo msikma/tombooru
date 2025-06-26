@@ -423,13 +423,16 @@ class DataReadManager {
   /**
    * Returns a single tag by name, including all related data.
    */
-  public static function getTag($tagName, $includeText = false, $recurse = true) {
+  public static function getTag($tagName, $includeText = false, $includeCategory = false, $recurse = true) {
     if (empty($tagName)) {
       throw new \Exception('no_tag_name');
     }
+    if ($includeCategory) {
+      $tagCategories = self::getTagCategories();
+    }
 
     $tagData = DB::getTagData($tagName);
-    $extendedTagData = self::collectPostTagsData([$tagData], $includeText, null);
+    $extendedTagData = self::collectPostTagsData([$tagData], $includeText, @$tagCategories);
     $extendedTagData = end($extendedTagData);
     return self::collectTagAliases($extendedTagData, $includeText, $recurse);
   }

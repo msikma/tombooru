@@ -6,7 +6,7 @@
   $searchName = $base === 'tags' ? 'tags' : 'artists';
 ?>
 <div class="vector-menu-content-static">
-  <form action="<?= URL::getURL("/{$base}") ?>" data-tombooru-component="SidebarTagSearchBar">
+  <form action="<?= URL::getURL("/{$base}") ?>" data-tombooru-component="SidebarTagSearchBar" class="search-bar">
     <div class="search-input">
       <input
         type="search"

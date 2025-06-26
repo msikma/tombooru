@@ -1,7 +1,7 @@
 <?php ob_start(); ?>
 <?php $searchString = @$search['searchString']; ?>
 <div class="vector-menu-content-static">
-  <form action="<?= URL::getURL('/posts') ?>" data-tombooru-component="SidebarSearchBar">
+  <form action="<?= URL::getURL('/posts') ?>" data-tombooru-component="SidebarSearchBar" class="search-bar">
     <div class="search-input">
       <input
         type="search"
@@ -22,7 +22,7 @@
 </div>
 <?=
   Template::getComponent('Portlet', [
-    'name' => 'Search',
+    'name' => 'Search posts',
     'id' => 'side_search_bar',
     'content' => ob_get_clean(),
     'portletClass' => 'blue search-panel',
