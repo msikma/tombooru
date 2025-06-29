@@ -1,1 +1,21 @@
-Tombooru '''about''' page stub.
+'''Tombooru''' is an imageboard dedicated to collecting and preserving fanart of the [[Tomba!|Tomba! video game series]]. It's hosted and run by the [https://tomba.club/ Tomba Club].
+
+== Why this exists ==
+
+With Tomba being a smaller franchise, most of the artwork made by its fans is scattered across the internet and at risk of disappearing over time. Our goal is to build an organized, permanent archive where that art can be preserved and appreciated by fans for years to come.
+
+In the spirit of preservation, we aim to make the archive as well-researched and complete as possible. We require proper sourcing and attribution for all artwork, and we aim to save archived versions of the original posts whenever possible. This is also done as a courtesy to the artists, so they are always properly credited for their work and people can boost their original posts to support them.
+
+== Contributing ==
+
+There's a couple of ways you can contribute to the archive:
+
+* If you've got artwork that isn't in the archive yet, [[Special:Tombooru/page/Upload|upload it!]]
+* You can help by adding and fixing tags of existing images. See our [[Special:Tombooru/page/Help/How_to_tag|tagging guide]] for more information.
+* You can add a description for [[Special:Tombooru/tags|tags]] and [[Special:Tombooru/artists|artists]], explaining how and when these tags are used.
+
+If you'd like to contribute fanart to the archive, please do and help us grow.
+
+== Get in touch ==
+
+Want to get in touch with the Tomba Club? {{Discord|Join us on Discord!}}

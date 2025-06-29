@@ -1,1 +1,64 @@
-Tombooru '''FAQ''' page stub.
+This page attempts to answer common questions that people may have. If you have a question that's not listed here, feel free to ask on {{Discord}}.
+
+== General ==
+
+=== What is the goal of this imageboard? ===
+
+Tombooru exists to archive, organize, and celebrate the creative works made by the Tomba community. With the franchise being relatively obscure, much of its fanmade content is scattered across the internet and at risk of being lost. Our goal is to preserve all that work in one place, properly credited and easy to browse.
+
+=== Does this imageboard serve ads or make money in any way? ===
+
+No, this website is entirely ad-free. We don't make money off the content. We also don't track users. This website is made as a service to Tomba fans worldwide.
+
+=== I have a question not listed here, where should I ask it? ===
+
+{{Discord|Join us on Discord.}}
+
+== Content ==
+
+=== What kind of art is allowed on Tombooru? ===
+
+''See [[Special:Tombooru/page/Help/Content_guide|the content guide]] for the full list of content rules.''
+
+This imageboard is dedicated to fanart about the Tomba series. So: images need to have something related to the Tomba series in them (can be any character, location or thing from the games), and it must be an original fan made creative work of some sort.
+
+That includes drawings, digital paintings, comics, animations and other kinds of creative works.
+
+Artwork must have original input from an artist. Exactly what meets this standard is hard to put into words, but basically anything but extremely low effort works is permitted. For example, taking official art and merely recoloring it is too low effort.
+
+NSFW artwork is not permitted.
+
+=== Can I upload official artwork? ===
+
+No, not unless it has been significantly edited or transformed into something new, to the point where it's basically an original work. Official artwork (like screenshots, promo images, box art or concept art) is something for the [[Main_Page|wiki]], not for the imageboard.
+
+The imageboard is made specifically for fanmade art content. Fanart can contain pieces of official art in them (e.g. as background or comparison), as long as the official art is not the primary focus.
+
+=== Can I post AI generated images? ===
+
+No, we don't accept AI generated images. If you want to show your AI generated artwork, we encourage you to post them on the {{discord|Discord server}} in the appropriate channel.
+
+== Sourcing and attribution ==
+
+=== How do I properly source a post? ===
+
+The two most important things:
+
+* Every upload should have '''at least one source link''' for where it was originally found. This is usually an artist's website, portfolio or social media account.
+* Every upload must have the artist '''properly credited.'''
+
+If possible, we prefer if you could also archive those links by using [https://archive.today/ Archive.today] or [https://web.archive.org/ the Wayback Machine]. This ensures the links will keep on being visible even long after the original site has gone down.
+
+If you don't know who made something, or don't have an original source link, please at least try to find out before posting. If you really can't find it, feel free to post it anyway with whatever information you have so that maybe we can find the artist later on.
+
+=== Why do we require source links, especially archived links? ===
+
+You know how people say "the internet never forgets"? Turns out that's totally false. Sites go down all the time.
+
+We want to credit artists properly, and make sure their work doesn't get lost to time, broken links, or social media shutdowns.
+
+=== What do I do if the source is unknown? ===
+
+If you come across a great piece of art but can't find the original source despite trying, you can still upload it—others might be able to track it down later on.
+
+Images that do not have a known artist should be given an '''<code>unknown_artist</code>''' tag. If the artist deliberately posted the image anonymously, use '''<code>anonymous_artist</code>'''.

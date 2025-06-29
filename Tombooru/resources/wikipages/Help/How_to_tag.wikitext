@@ -1,1 +1,43 @@
-Tombooru '''how to tag''' page stub.
+Tagging helps organize the imageboard and makes it easier to find things. It also makes it possible to compare how different artists interpreted things.
+
+We encourage people to help out by tagging content. Tagging content appropriately isn't difficult, but there are a few nuances to keep in mind.
+
+== Tagging basics ==
+
+Tags are '''space separated''', and tags themselves can not include spaces (use '''underscores''' instead).
+
+Tags can have a category, which changes its color and priority in the list. Categories include: artist, character, enemy, location, in-game item; and others.
+
+To set a tag category, first create the tag (by tagging a post with it), then go to the tag's detail page and edit its category.
+
+Tags preserve the capitalization they get when they're first used. To change a tag's capitalization, edit the tag name in its detail page.
+
+== What tags to add to posts ==
+
+=== Tag what you see ===
+
+The general rule is simple: tag what's visibly present in the image.
+
+If Tomba is in the image, tag it '''<code>Tomba</code>'''. If he's using the Animal Dash, tag it '''<code>Animal_Dash</code>'''. Does the image take place at the Dwarf Forest? Tag it '''<code>Dwarf_Forest</code>''', and so on.
+
+For general, everyday life things that you can see in the images, just use your own judgment. For example, '''<code>sea</code>''' or '''<code>cliff</code>'''. There's no hard rule on what should and shouldn't be tagged in this regard. Just remember that tagging is something we do for convenience, so tag things that people would realistically want to search for.
+
+=== Tag technical details ===
+
+Use tags such as '''<code>digital_art</code>''', '''<code>traditional_media</code>''', '''<code>color</code>''', '''<code>monochrome</code>''' and others where appropriate.
+
+If the artwork was photographed (this is especially common on Instagram posts), use '''<code>camera_capture</code>'''. If the image's capture is especially poor quality (e.g. a low quality photo), use '''<code>lo_res_capture</code>'''.
+
+=== Check existing tags ===
+
+Before making up a new tag, try looking at similar posts to see what tag others have used. This helps keep the tagging system consistent and avoids duplicate or slightly different tags for the same concept.
+
+=== Don't tag the obvious ===
+
+You don't need to tag things that are part of a character's default design or something extremely common.
+
+For example:
+
+* Tomba always has pink hair. So if Tomba is in an image, you don't have to tag it '''<code>pink_hair</code>'''.
+* The imageboard is for fanart, so posts don't have to be tagged as '''<code>fanart</code>'''.
+* Don't use tags like '''<code>item</code>''' if there's an in-game item. Tag what specific item it is.

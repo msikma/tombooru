@@ -1,1 +1,61 @@
-Tombooru '''content guide''' page stub.
+__NOTOC__
+This page explains what kind of content we're aiming to have on the imageboard. Please follow these rules, and report images that violate it.
+
+== Upload rules ==
+
+Please follow these rules when posting content to the imageboard.
+
+<div class="tc-notification type-success icon"><div class="inner">
+=== Please do upload ===
+
+* '''Fanart of Tomba.''' This includes drawings, paintings, digital works, etc., that feature characters, environments, or other things from the [[Tomba!]] series.
+</div></div>
+
+<div class="tc-notification type-error icon"><div class="inner">
+=== Please don't upload ===
+
+* '''Anything sexually explicit in nature.''' This includes nudity, sexual themes, or fetish art.
+* '''Off-topic images.''' Images must be directly related to the Tomba series in some way.
+* '''Unedited or barely edited official artwork.''' There needs to be meaningful creative original input from an artist.
+* '''AI generated images.''' This imageboard is dedicated to human made fanart. Feel free to post AI art in the appropriate channel on our {{Discord}}.
+* '''Non-fanart content.''' For example: a screenshot of your playthrough, or a photo of something that reminds you of something in Tomba. It needs to be fanart.
+</div></div>
+
+=== Edge cases ===
+
+In some cases it's not entirely obvious if an image should be uploaded or not and you have to use your own judgment. Consider not uploading the following:
+
+* For '''suggestive or borderline content,''' even if it's not ''explicitly'' NSFW, ask yourself: does it feel like it's leaning that way? What was the artist's intent?
+* For '''images that seem very WIP,''' maybe wait for the artist to post the final version.
+
+If you're not 100% sure if something should be uploaded or not, ask on Discord.
+
+== Descriptions ==
+
+The main image description field is reserved for the '''original artist's original description'''. You can edit it lightly to take out irrelevant parts from their text or cut it down a bit if it's very long. The text is always displayed with a quotation style.
+
+For the notes field, you shouldn't editorialize or say things like "I really like this image". This field is only meant for relevant information.
+
+== Image series ==
+
+If an artist's original post contains multiple images:
+
+* Only include the ones that are clearly related to Tomba.
+* Don't upload near-identical versions, crops or detail zooms — pick the most complete and high-resolution version.
+* Don't upload the WIP versions.
+
+If a series has several images that seem very similar, feel free to upload just one of them, maybe optionally adding text in the notes section indicating there's more at the source link.
+
+If a set of images goes together, you can make a '''set''' out of them. See the "edit sets" link in the post's sidebar.
+
+== Sourcing and attribution ==
+
+This imageboard was designed to be a long-time archive of creative works made by the Tomba fandom.
+
+Our goal is to preserve fanart permanently, so that even years from now people will be able to find and appreciate the art made around this series. That's why '''attribution''' and '''sourcing''' is important and mandatory.
+
+Please try to find the original source link before uploading, and only upload something without source or attribution if you really can't find it. Other people might be able to figure it out later.
+
+== Anything else ==
+
+If you have any questions, things you're not sure about, or you just want a second opinion on something, feel free to check the FAQ or {{Discord|ask on Discord}}.
