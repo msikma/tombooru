@@ -75,14 +75,14 @@ class DataReadManager {
   /**
    * Returns update history for a given entity.
    */
-  public static function getEntityUpdateHistory($entityType, $entityID) {
+  public static function getEntityUpdateHistory($entityType, $entityID, $includeInitial = true) {
     if (!in_array($entityType, ['post', 'tag'])) {
       throw new \Exception("Unsupported entity type: {$entityType}");
     }
     $entityHistory = [];
     $pageTypes = ['metadata', 'description', 'notes'];
     foreach ($pageTypes as $pageType) {
-      $history = self::getEntityDataHistory($entityType, $pageType, $entityID);
+      $history = self::getEntityDataHistory($entityType, $pageType, $entityID, $includeInitial);
       if (!empty($history)) {
         $entityHistory = array_merge($entityHistory, $history);
       }
@@ -96,9 +96,9 @@ class DataReadManager {
    * 
    * If a post's metadata history is requested, this takes the post ID.
    */
-  public static function getEntityDataHistory($entity, $page, $id) {
+  public static function getEntityDataHistory($entity, $page, $id, $includeInitial = true) {
     $basename = WikiManager::makeEntityPageBaseName($entity, $page);
-    $history = WikiManager::getPageHistory($basename.'/'.$id, WikiManager::$pageNamespaceTombooru, $entity, $page);
+    $history = WikiManager::getPageHistory($basename.'/'.$id, WikiManager::$pageNamespaceTombooru, $entity, $page, 10, $includeInitial);
     return $history;
   }
 

@@ -1,32 +1,38 @@
 <?= Template::getComponent('MediaSidebarPanel', ['post' => $post]); ?>
 
 <?php
-  $entityHistory = DataReadManager::getEntityUpdateHistory('post', $post['id']);
-  $addedToTombooru = $post['createdAt'];
-  $createdByArtist = $post['data']['originalPublicationDate'];
-  $originalMedia = $post['file']['media']['original'];
-  $showRawData = false;
-  $artistTags = DataHelper::findArtistTags($post['tags']);
-  // TODO: handle multiple artists (right now no images have multiple artists).
-  $artistTag = !empty($artistTags) ? reset($artistTags) : null;
+  $entityHistory = DataReadManager::getEntityUpdateHistory('post', $post['id'], false);
+  $tsAddedToTombooru = $post['createdAt'];
+  $tsCreatedByArtist = $post['data']['originalPublicationDate'];
 
+  $originalMedia = $post['file']['media']['original'];
+  $artistTags = array_values(DataHelper::findArtistTags($post['tags']));
+  $uploader = WikiManager::getUserBasicData($post['poster']['id']);
   $fileLinks = DataReadManager::getPostDataLinks($post);
+
+  $showRawData = false;
 ?>
 
 <div class="tombooru-page page-detail subpage-view">
   <h1>Post ID: <?= $post['pageID']; ?></h1>
-  <p>This file was added to the database on <time datetime="<?= htmlentities($addedToTombooru); ?>"><?= htmlentities(Template::formatTimestamp($addedToTombooru)); ?></time>.</p>
+  <p>This file was added to the database on <time datetime="<?= htmlentities($tsAddedToTombooru); ?>"><?= htmlentities(Template::formatTimestamp($tsAddedToTombooru)); ?></time> by user <a href="<?= htmlentities(URL::getWikiUserURL($uploader['name'])); ?>"><?= htmlspecialchars($uploader['name']); ?></a>.</p>
   <p>It was originally created and posted to the internet on
-    <?php if (!empty($createdByArtist)): ?>
-      <time datetime="<?= htmlentities($createdByArtist); ?>"><?= htmlentities(Template::formatTimestamp($createdByArtist)); ?></time>
+    <?php if (!empty($tsCreatedByArtist)): ?>
+      <time datetime="<?= htmlentities($tsCreatedByArtist); ?>"><?= htmlentities(Template::formatTimestamp($tsCreatedByArtist)); ?></time>
     <?php else: ?>
       <em>(unknown date)</em>
     <?php endif; ?>
-    by artist
-    <?php if (!empty($artistTag)): ?>
-      <a href="<?= htmlentities(URL::getTagSearchURL($artistTag)); ?>"><?= htmlentities(str_replace('_', ' ', $artistTag['name'])); ?></a>.
+    by <?= Template::getPlural(count($artistTags), ['artist', 'artists']); ?>
+    <?php if (!empty($artistTags)): ?>
+      <?php
+        for ($n = 0; $n < count($artistTags); ++$n):
+          $artistTag = $artistTags[$n];
+          $isLast = $n === count($artistTags) - 1;
+          if ($n > 0): ?><?= $isLast ? ' and ' : ', '; ?><?php endif; ?><a href="<?= htmlentities(URL::getTagSearchURL($artistTag)); ?>"><?= htmlentities(str_replace('_', ' ', $artistTag['name'])); ?></a><?= $isLast ? "." : ''; ?><?php
+        endfor;
+      ?></p>
     <?php else: ?>
-      <em>(unknown artist)</em>.
+      <em>an unknown artist</em>.</p>
     <?php endif; ?>
   <h2>Download</h2>
   <ul>

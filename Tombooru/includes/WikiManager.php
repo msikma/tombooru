@@ -127,7 +127,7 @@ class WikiManager {
     return $page;
   }
 
-  public static function getPageHistory($pageName, $pageNamespace, $entityType, $pageType, $limit = 10) {
+  public static function getPageHistory($pageName, $pageNamespace, $entityType, $pageType, $limit = 10, $includeInitial = true) {
     $title = Title::newFromText($pageName, $pageNamespace);
     if (!$title || !$title->exists()) {
       return null;
@@ -153,6 +153,7 @@ class WikiManager {
       $revURL = self::getPageRevisionURL($pageTitle, $id);
       $revDiffURL = self::getPageRevisionURL($pageTitle, $id, 'prev');
       $size = $rev->getSize();
+      $isInitial = $revLookup->getPreviousRevision($rev) === null;
 
       // Save a subset of data.
       $revisions[] = [
@@ -166,6 +167,7 @@ class WikiManager {
         'timestamp' => $revTimestamp,
         'comment' => $revReason,
         'username' => $user->getName(),
+        'isInitial' => $isInitial,
       ];
 
       // Grab the previous revision from the current.
@@ -183,6 +185,11 @@ class WikiManager {
     foreach ($reversed as &$rev) {
       $rev['diff'] = $rev['size'] - $prev;
       $prev = $rev['size'];
+    }
+
+    // Remove initial revisions if needed.
+    if (!$includeInitial) {
+      $reversed = array_filter($reversed, fn($rev) => empty($rev['isInitial']));
     }
     
     return array_reverse($reversed);
