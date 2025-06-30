@@ -12,12 +12,16 @@
             <?php
               $url = $source['url'];
               $archiveURL = $source['archiveURL'];
+              $mainURL = !empty($archiveURL) ? $archiveURL : $url;
               $labels = Template::formatURLLabels($url);
             ?>
             <li data-source-id="<?= intval($source['id']); ?>" data-added="<?= htmlspecialchars($source['createdAt']); ?>">
               <span class="site-favicon">
-                <a href="<?= htmlspecialchars($url); ?>" class="external" rel="nofollow noreferrer noopener ugc" target="_blank"><?= htmlspecialchars($labels['long']); ?></a>
+                <a data-url="<?= htmlspecialchars($url); ?>" href="<?= htmlspecialchars($mainURL); ?>" class="external" rel="nofollow noreferrer noopener ugc" target="_blank"><?= htmlspecialchars($labels['long']); ?></a>
               </span>
+              <?php if (!empty($archiveURL)): ?>
+                (archived from <a href="<?= htmlspecialchars($url); ?>" class="external" rel="nofollow noreferrer noopener ugc" target="_blank">the original</a>)
+              <?php endif; ?>
             </li>
           <?php endforeach; ?>
         </ul>
