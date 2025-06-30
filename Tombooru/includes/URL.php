@@ -30,6 +30,13 @@ class URL {
   }
 
   /**
+   * Returns whether we're preferring pretty URLs.
+   */
+  public static function isUsingPrettyURLs() {
+    return self::$preferPrettyURLs;
+  }
+
+  /**
    * Returns the current URL, optionally with some things changed.
    */
   public static function getCurrentURL($query = [], $persistParams = []) {

@@ -872,13 +872,18 @@ class WikiManager {
   /**
    * Renders wikitext to HTML for the current context.
    */
-  public static function renderWikiText($code, $userID = null) {
+  public static function renderWikiText($code, $userID = null, $replaceTombooruLinks = true) {
     $user = self::getUserData($userID);
     $context = RequestContext::getMain();
     $options = ParserOptions::newFromUser($user['user']);
     $options->setSuppressSectionEditLinks(true);
     $parser = MediaWikiServices::getInstance()->getParser();
-    return $parser->parse($code, $context->getTitle(), $options)->getText();
+    $text = $parser->parse($code, $context->getTitle(), $options)->getText();
+    if ($replaceTombooruLinks && URL::isUsingPrettyURLs()) {
+      // Replaces links to the Special:Tombooru special page with our shorthand.
+      $text = str_replace('/wiki/Special:Tombooru/', '/imageboard/', $text);
+    }
+    return $text;
   }
 
   /**
