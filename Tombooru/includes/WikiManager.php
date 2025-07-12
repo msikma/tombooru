@@ -378,10 +378,10 @@ class WikiManager {
     $hasPreview = !empty($previewFileInstance);
     $previewInstance = $hasPreview ? $previewFileInstance : $fileInstance;
 
-    // For video files, we don't have width/height. Use the preview size in that case.
     $originalWidth = $fileInstance->getWidth();
     $originalHeight = $fileInstance->getHeight();
     
+    // For video files, we don't have a width/height. Use the preview size in that case.
     if ($originalWidth === 0 || $originalHeight === 0) {
       $originalWidth = $previewInstance->getWidth();
       $originalHeight = $previewInstance->getHeight();
