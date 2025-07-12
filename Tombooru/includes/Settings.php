@@ -9,7 +9,7 @@ class Settings {
   private static $repoPath = null;
   private static $config = null;
 
-  // A giant list of the major image extensions, used by .
+  // A giant list of the major image extensions, used to check what users can upload.
   // Filetypes not in this list will be ignored even if MediaWiki permits them.
   private static $imageExtensions = ['gif', 'png', 'jpg', 'jpeg', 'jpf', 'tga', 'bmp', 'tif', 'tiff', 'psd', 'eps', 'ai', 'webp', 'avif', 'pcx'];
 
