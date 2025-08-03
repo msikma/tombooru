@@ -682,18 +682,6 @@ class SpecialTombooru extends SpecialPage {
   }
 
   /**
-   * Redirects the user away if they don't have access.
-   */
-  private function ensureAccess() {
-    //
-    $user = WikiManager::getUserData();
-    $userWhitelist = ['Msikma', 'Dada78641', 'SiergiejW', 'Folkin', 'Vervalkon'];
-    if (!in_array($user['name'], $userWhitelist)) {
-      $this->getOutput()->redirect(URL::getWikiMainPageURL());
-    }
-  }
-
-  /**
    * Executes the logic for this page.
    */
   public function execute($par) {
@@ -703,7 +691,6 @@ class SpecialTombooru extends SpecialPage {
 
     try {
       $this::ensureInstallation();
-      $this::ensureAccess();
 
       // Handle all API responses.
       if ($route['primary'] === 'api') {
