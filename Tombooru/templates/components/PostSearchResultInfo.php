@@ -5,7 +5,7 @@
 <div class="page-content-meta<?= empty($search['filters']) ? ' no-filters' : ''; ?>">
   <div class="content-meta">
     <div class="actions narrow-gap search-actions left">
-      <a class="item icon blue" href="<?= URL::getURL('/posts', ['page' => $currentPost['resultPage']]); ?>" <?= Template::setIcon('reply'); ?>>
+      <a class="item icon blue" href="<?= URL::getURL('/posts', ['page' => @$currentPost['resultPage']]); ?>" <?= Template::setIcon('reply'); ?>>
         Back to results
       </a>
     </div>
