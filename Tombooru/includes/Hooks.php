@@ -1,7 +1,7 @@
 <?php
 
 namespace Tombooru;
-use MediaWiki\MediaWikiServices;
+use \MediaWiki\MediaWikiServices;
 
 class Hooks {
   /**

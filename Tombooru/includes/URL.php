@@ -1,8 +1,8 @@
 <?php
 
 namespace Tombooru;
-use MediaWiki\MediaWikiServices;
-use \Title;
+use \MediaWiki\MediaWikiServices;
+use \MediaWiki\Title\Title;
 
 class URL {
   private static string $specialPage = 'Tombooru';
