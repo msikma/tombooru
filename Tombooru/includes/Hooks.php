@@ -275,11 +275,17 @@ class Hooks {
     [$primary, $sub, $id] = self::getRouteSegments($route);
     $area = $route['area'];
     $links['namespaces'] = [];
+    $links['namespaces']['search'] = [
+      'text' => 'Search',
+      'href' => URL::getURL("/", [], null),
+      'active' => true,
+      'class' => ['icon-search', self::navClass([], [''], ['posts', 'sets'])],
+    ];
     $links['namespaces']['posts'] = [
       'text' => 'Posts',
       'href' => URL::getURL("/posts", [], null),
       'active' => true,
-      'class' => ['icon-apps', self::navClass([], [], ['posts', 'sets'])],
+      'class' => ['icon-apps', self::navClass([], ['posts'], ['posts', 'sets'])],
     ];
     $links['namespaces']['tags'] = [
       'text' => 'Tags',
