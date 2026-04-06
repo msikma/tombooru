@@ -490,7 +490,7 @@ class DataReadManager {
     }
 
     // If this tag is aliased to a different tag, grab that tag's data as well.
-    if (!empty($extendedTagData['aliasedTo']) && $recurse) {
+    if (!empty($extendedTagData['aliasedTo']) && !is_array($extendedTagData['aliasedTo']) && $recurse) {
       $aliasedTag = self::getTagByID($extendedTagData['aliasedTo'], $includeText, false);
       $extendedTagData['aliasedTo'] = $aliasedTag;
     }
