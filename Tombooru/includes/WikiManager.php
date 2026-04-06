@@ -10,6 +10,7 @@ use \MediaWiki\Revision\RevisionRecord;
 use \MediaWiki\Revision\SlotRecord;
 use \MediaWiki\Parser\ParserOptions;
 use \MediaWiki\Content\TextContent;
+use \MediaWiki\CommentStore\CommentStoreComment;
 use \User;
 use \RequestContext;
 
@@ -543,6 +544,7 @@ class WikiManager {
     $context = RequestContext::getMain();
     $services = MediaWikiServices::getInstance();
     $wikiPageFactory = $services->getWikiPageFactory();
+    $permissionManager = $services->getPermissionManager();
 
     // Determine where we should save this data.
     $basePage = self::makeEntityPageBaseName($entityType, $contentType);
@@ -553,11 +555,15 @@ class WikiManager {
     // Generate the page content.
     $namespace = self::$pageNamespaceTombooru;
     $title = Title::makeTitleSafe($namespace, $basePage.'/'.$entityID);
+    $permissionManager->throwPermissionErrors('create', $user, $title);
+    $permissionManager->throwPermissionErrors('edit', $user, $title);
     $content = self::makeTitleWikiContent($title, $wikitext);
     $summary = "Updated {$contentType} for imageboard {$entityType} ID {$entityID}.";
 
     $wikiPage = $wikiPageFactory->newFromTitle($title);
-    $wikiPage->doUserEditContent($content, $user, $summary);
+    $pageUpdater = $wikiPage->newPageUpdater($user);
+    $pageUpdater->setContent('main', $content);
+    $pageUpdater->saveRevision(CommentStoreComment::newUnsavedComment($summary));
 
     $pageID = $wikiPage->getId();
 
@@ -782,6 +788,7 @@ class WikiManager {
     $context = RequestContext::getMain();
     $request = $context->getRequest();
     $upload = $request->getUpload('source_filename');
+    $permissionManager = $services->getPermissionManager();
 
     $uploadHandler = new \UploadFromFile();
     $uploadHandler->initialize($postData['filename'], $upload);
@@ -789,6 +796,10 @@ class WikiManager {
     $title = $uploadHandler->getTitle();
     $repoGroup = $services->getRepoGroup();
     $file = $repoGroup->findFile($title);
+
+    // Fetch the currently logged in user. The edit will be under their account.
+    $user = $context->getUser();
+    $permissionManager->throwPermissionErrors('create', $user, $title);
 
     if ($file !== false && $expectOverwrite === false) {
       throw new \Exception('A file with this name already exists.');
